@@ -22,6 +22,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        val prefs = getSharedPreferences("crash_prefs", Context.MODE_PRIVATE)
+        val lastCrash = prefs.getString("last_crash", null)
+        if (lastCrash != null) {
+            prefs.edit().remove("last_crash").apply()
+            android.app.AlertDialog.Builder(this)
+                .setTitle("DosCom Crash Log")
+                .setMessage(lastCrash)
+                .setPositiveButton("OK", null)
+                .show()
+        }
+
         try {
             checkPermissionsAndStart()
         } catch (e: Exception) {
