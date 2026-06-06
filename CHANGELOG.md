@@ -92,4 +92,11 @@
 - Captures the exact screen state *before* the chat input UI expands, caching it directly into `lastScreenshot`.
 - Added 300ms transition delay before exposing the `showChatInput()` mechanism, while dropping `FLAG_NOT_FOCUSABLE` & `FLAG_NOT_TOUCHABLE` from WindowManager to permit keyboard input.
 
+### Added (Phase 6.3 Complete)
+- Created `ChatInputOverlay` view that dynamically injects a rounded-card chat interface at the bottom of the screen.
+- Implemented smooth 250ms slide-up and slide-down `ObjectAnimator` transitions for the UI.
+- Implemented `onQuerySubmitted()` callback to securely pass the user's raw text query alongside the perfectly timed `lastScreenshot` back to the service.
+- Wired up keyboard auto-focus on spawn and keyboard hide on dismiss.
+- Replaced the `showChatInput()` stub in `CompanionOverlayService` to orchestrate the overlay spawn and safely restore `WindowManager` flags upon closure.
+
 

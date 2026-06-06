@@ -314,6 +314,40 @@ class CompanionOverlayService : Service() {
     }
 
     fun showChatInput() {
-        // Stub for Phase 7
+        val chatOverlay = com.devenlucaz.doscom.ui.ChatInputOverlay(
+            this,
+            windowManager,
+            lastScreenshot,
+            onQuerySubmitted = { query, screenshot ->
+                handleQuery(query, screenshot)
+            },
+            onClose = {
+                // Restore flags when dismissed
+                layoutParams.flags = layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                windowManager.updateViewLayout(overlayView, layoutParams)
+                overlayView.setState(CharacterState.IDLE_BOB)
+            }
+        )
+
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+            PixelFormat.TRANSLUCENT
+        )
+
+        try {
+            windowManager.addView(chatOverlay, params)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun handleQuery(query: String, screenshot: Bitmap?) {
+        // Stub for Phase 7 API orchestration
+        layoutParams.flags = layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        windowManager.updateViewLayout(overlayView, layoutParams)
+        overlayView.setState(CharacterState.IDLE_BOB)
     }
 }
