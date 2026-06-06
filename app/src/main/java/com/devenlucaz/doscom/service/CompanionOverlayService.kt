@@ -92,7 +92,7 @@ class CompanionOverlayService : Service() {
         var isDragging = false
 
         val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onLongPress(e: MotionEvent?) {
+            override fun onLongPress(e: MotionEvent) {
                 if (isDragging) return
                 
                 val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -121,7 +121,7 @@ class CompanionOverlayService : Service() {
                 }
             }
             
-            override fun onSingleTapUp(e: MotionEvent?): Boolean {
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
                 return true
             }
         })
