@@ -1,4 +1,4 @@
-# 🤖 DosCom - Your Friendly Screen Companion!
+#  DosCom - Your Friendly Screen Companion!
 
 Welcome to **DosCom**! 🎉 DosCom is a cute, smart, and helpful AI companion that lives right on your Android screen. Imagine a little digital friend that floats around your phone, always ready to help you find things or launch apps!
 
