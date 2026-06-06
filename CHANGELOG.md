@@ -20,3 +20,10 @@
 - Created an 80x80dp colored placeholder view floating at initial coordinates (x=50, y=300).
 - Configured layout parameters with `TYPE_APPLICATION_OVERLAY`, `FLAG_NOT_FOCUSABLE`, and `FLAG_NOT_TOUCHABLE`.
 - Wired the overlay view to be added upon service creation and removed upon destruction.
+
+### Added (Phase 2.3 & 2.4 Complete)
+- Implemented `ScreenMetrics` utility class to easily access screen bounds and system bar dimensions.
+- Added drag-and-drop mechanics to the overlay view via an `OnTouchListener`.
+- Enabled screen edge clamping during drags.
+- Implemented edge snapping animation on touch release using `ValueAnimator`.
+
