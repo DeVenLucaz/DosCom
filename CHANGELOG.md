@@ -55,4 +55,9 @@
 - Implemented node center coordinate calculation using `getBoundsInScreen` for precise interaction targets.
 - Created `KeywordExtractor` utility that automatically removes common natural language filler words (e.g., "how", "do", "i", "tap") from user queries to isolate specific UI targets.
 
+### Added (Phase 4.4 Complete)
+- Created `CoordinateMapper` utility class for converting raw screen targets into clamped layout parameters for the character view.
+- Implemented `fromNodeCoords()` to ensure the character centers precisely on interactive targets without drifting off-screen.
+- Implemented `fromPercent()` to translate vision model percentage coordinates (e.g., Gemini Vision bounding boxes) into real pixel locations.
+
 
