@@ -4,7 +4,7 @@ object KeywordExtractor {
     private val fillerWords = setOf(
         "how", "do", "i", "can", "where", "is", "the", "a", "an", "to",
         "open", "find", "show", "me", "please", "tap", "click", "press",
-        "button", "icon", "app"
+        "button", "icon", "app", "on", "at", "in", "it"
     )
 
     fun extractKeywords(query: String): Pair<String, String> {
