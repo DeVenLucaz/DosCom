@@ -60,4 +60,10 @@
 - Implemented `fromNodeCoords()` to ensure the character centers precisely on interactive targets without drifting off-screen.
 - Implemented `fromPercent()` to translate vision model percentage coordinates (e.g., Gemini Vision bounding boxes) into real pixel locations.
 
+### Added (Phase 5.1 Complete)
+- Created `CompanionAnimator` utility object for orchestrating smooth character movements across the screen.
+- Implemented `walkTo()` function utilizing a `ValueAnimator` to dynamically translate the view, scaling the animation duration relative to distance (400ms - 2000ms).
+- Added automatic visual directional flipping (`scaleX`) and walk state assignment (`WALK_LEFT`, `WALK_RIGHT`) based on target coordinates.
+- Implemented `walkToEdge()` helper function to automate returning the companion to the nearest screen edge.
+
 
