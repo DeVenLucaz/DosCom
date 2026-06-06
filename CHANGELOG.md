@@ -14,3 +14,9 @@
 ### Added (Phase 2.1 Complete)
 - Created `CompanionOverlayService` as a Foreground Service shell with persistent low-priority notification.
 - Added `ServiceManager` utility with functions to start and stop the overlay service safely across Android versions.
+
+### Added (Phase 2.2 Complete)
+- Added `WindowManager` overlay to `CompanionOverlayService`.
+- Created an 80x80dp colored placeholder view floating at initial coordinates (x=50, y=300).
+- Configured layout parameters with `TYPE_APPLICATION_OVERLAY`, `FLAG_NOT_FOCUSABLE`, and `FLAG_NOT_TOUCHABLE`.
+- Wired the overlay view to be added upon service creation and removed upon destruction.
