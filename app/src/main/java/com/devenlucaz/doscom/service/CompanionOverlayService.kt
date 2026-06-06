@@ -367,13 +367,13 @@ class CompanionOverlayService : Service() {
         showSpeechBubble("Let me look...", layoutParams.x, layoutParams.y)
 
         serviceScope.launch {
-            val rootNode = DosComAccessibilityService.instance?.rootInActiveWindow
+            val accessibilityService = DosComAccessibilityService.instance
             val charSizePx = (80 * resources.displayMetrics.density).toInt()
             
             val target = ScreenReader.findTarget(
                 this@CompanionOverlayService,
                 query,
-                rootNode,
+                accessibilityService,
                 screenshot,
                 charSizePx
             )

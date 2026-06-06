@@ -5,7 +5,11 @@ import android.graphics.Bitmap
 import android.view.accessibility.AccessibilityNodeInfo
 import com.devenlucaz.doscom.api.GeminiVisionClient
 
+import android.accessibilityservice.AccessibilityService
+import android.util.Log
+
 object ScreenReader {
+    private const val TAG = "DosComScreenReader"
 
     data class TargetResult(
         val x: Int,
@@ -17,14 +21,39 @@ object ScreenReader {
     suspend fun findTarget(
         context: Context,
         query: String,
-        rootNode: AccessibilityNodeInfo?,
+        accessibilityService: AccessibilityService?,
         screenshot: Bitmap?,
         characterSizePx: Int
     ): TargetResult? {
         // Layer 1: Fast Accessibility Tree Scan
         val keywords = KeywordExtractor.extractKeywords(query).second
-        if (keywords.isNotBlank() && rootNode != null) {
-            val foundNode = AccessibilityScanner.findNodeByText(rootNode, keywords)
+        if (keywords.isNotBlank() && accessibilityService != null) {
+            var foundNode: AccessibilityNodeInfo? = null
+            
+            // First check all windows since homescreens are often not the "active" window
+            val windows = accessibilityService.windows
+            Log.d(TAG, "Scanning ${windows.size} windows for keyword: '$keywords'")
+            
+            for (window in windows) {
+                val rootNode = window.root
+                if (rootNode != null) {
+                    foundNode = AccessibilityScanner.findNodeByText(rootNode, keywords)
+                    if (foundNode != null) {
+                        Log.d(TAG, "Found target in window: ${window.title ?: window.javaClass.simpleName}")
+                        break
+                    }
+                }
+            }
+            
+            // Fallback to active window if not found in windows list
+            if (foundNode == null) {
+                val rootNode = accessibilityService.rootInActiveWindow
+                if (rootNode != null) {
+                    Log.d(TAG, "Scanning fallback rootInActiveWindow")
+                    foundNode = AccessibilityScanner.findNodeByText(rootNode, keywords)
+                }
+            }
+
             if (foundNode != null) {
                 val coords = AccessibilityScanner.getNodeCenterCoords(foundNode)
                 val mapped = CoordinateMapper.fromNodeCoords(context, coords.first, coords.second, characterSizePx)
@@ -34,6 +63,8 @@ object ScreenReader {
                     explanation = "I found exactly what you're looking for natively.",
                     source = "Accessibility"
                 )
+            } else {
+                Log.d(TAG, "Accessibility scan found no matches for '$keywords'")
             }
         }
 
