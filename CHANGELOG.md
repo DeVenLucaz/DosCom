@@ -72,4 +72,10 @@
 - Created `SpeechBubble` view to display AI explanation text inside a rounded-rectangle bubble with fade-in and auto-dismiss (4-second) fade-out mechanics.
 - Added `showSpeechBubble` method in `CompanionOverlayService` that intelligently positions the text above or below the companion based on vertical screen position to avoid clipping.
 
+### Added (Phase 5.4 Complete)
+- Created `ScreenReader` utility class acting as the primary brain for parsing the screen.
+- Implemented `findTarget()` function featuring a two-layer fallback architecture.
+- **Layer 1**: Uses `KeywordExtractor` and `AccessibilityScanner` for lightning-fast, native UI tree matching, mapping raw coordinates via `CoordinateMapper`.
+- **Layer 2**: Created a `GeminiVisionClient` stub to automatically fall back to Vision AI analysis (using `fromPercent` mapping) if the native scan fails.
+
 
