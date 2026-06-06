@@ -201,7 +201,7 @@ class CompanionOverlayService : Service() {
 
         val notification: Notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("DosCom is running")
-            .setSmallIcon(R.drawable.ic_launcher)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .build()
