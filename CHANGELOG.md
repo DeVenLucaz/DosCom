@@ -10,3 +10,7 @@
 - Defined initial foreground and accessibility service declarations (`CompanionOverlayService`, `DosComAccessibilityService`).
 - Created `accessibility_service_config.xml` for screen reading capabilities.
 - Fixed AndroidX compatibility by enabling `android.useAndroidX` and `android.enableJetifier` in `gradle.properties`.
+
+### Added (Phase 2.1 Complete)
+- Created `CompanionOverlayService` as a Foreground Service shell with persistent low-priority notification.
+- Added `ServiceManager` utility with functions to start and stop the overlay service safely across Android versions.
