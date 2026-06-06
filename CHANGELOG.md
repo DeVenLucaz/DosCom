@@ -32,4 +32,10 @@
 - If granted, it automatically calls `ServiceManager.startOverlayService()`.
 - If not granted, it correctly redirects the user to the `ACTION_MANAGE_OVERLAY_PERMISSION` settings screen.
 
+### Added (Phase 3.1 Complete)
+- Created `CharacterState` enum for handling robot states (IDLE, WALK, POINT, REACT, etc.).
+- Created `CompanionRenderer` custom View to draw the character using Canvas API.
+- Replaced the purple placeholder view in `CompanionOverlayService` with the new `CompanionRenderer`.
+- Added logic for tracking state frames to prepare for future sprite animation.
+
 

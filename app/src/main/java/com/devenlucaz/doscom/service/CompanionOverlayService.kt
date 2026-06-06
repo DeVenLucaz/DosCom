@@ -17,6 +17,7 @@ import android.view.View
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.devenlucaz.doscom.R
+import com.devenlucaz.doscom.character.CompanionRenderer
 import com.devenlucaz.doscom.utils.ScreenMetrics
 import kotlin.math.max
 import kotlin.math.min
@@ -24,7 +25,7 @@ import kotlin.math.min
 class CompanionOverlayService : Service() {
 
     private lateinit var windowManager: WindowManager
-    private lateinit var overlayView: View
+    private lateinit var overlayView: CompanionRenderer
     private lateinit var layoutParams: WindowManager.LayoutParams
 
     override fun onCreate() {
@@ -38,9 +39,7 @@ class CompanionOverlayService : Service() {
 
         val sizePx = (80 * resources.displayMetrics.density).toInt()
 
-        overlayView = View(this).apply {
-            setBackgroundColor(Color.parseColor("#FF6200EE")) // Purple placeholder
-        }
+        overlayView = CompanionRenderer(this)
 
         layoutParams = WindowManager.LayoutParams(
             sizePx,
