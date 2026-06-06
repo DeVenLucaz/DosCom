@@ -35,7 +35,16 @@ import android.graphics.Bitmap
 import com.devenlucaz.doscom.utils.ScreenshotHelper
 import kotlin.math.abs
 
+import com.devenlucaz.doscom.character.CompanionAnimator
+import com.devenlucaz.doscom.screen.ScreenReader
+import com.devenlucaz.doscom.service.DosComAccessibilityService
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.withContext
+
 class CompanionOverlayService : Service() {
+
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private lateinit var windowManager: WindowManager
     private lateinit var overlayView: CompanionRenderer
@@ -197,6 +206,7 @@ class CompanionOverlayService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         stopIdleBehaviors()
+        serviceScope.cancel()
         if (::overlayView.isInitialized) {
             windowManager.removeView(overlayView)
         }
@@ -290,9 +300,9 @@ class CompanionOverlayService : Service() {
         }
     }
 
-    fun showConfirmRing(x: Int, y: Int) {
+    fun showConfirmRing(x: Int, y: Int, onComplete: () -> Unit = {}) {
         val sizePx = (100 * resources.displayMetrics.density).toInt()
-        val ringView = com.devenlucaz.doscom.ui.ConfirmRing(this, windowManager)
+        val ringView = com.devenlucaz.doscom.ui.ConfirmRing(this, windowManager, onComplete)
 
         val params = WindowManager.LayoutParams(
             sizePx,
@@ -345,9 +355,51 @@ class CompanionOverlayService : Service() {
     }
 
     private fun handleQuery(query: String, screenshot: Bitmap?) {
-        // Stub for Phase 7 API orchestration
         layoutParams.flags = layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         windowManager.updateViewLayout(overlayView, layoutParams)
-        overlayView.setState(CharacterState.IDLE_BOB)
+        
+        showSpeechBubble("Let me look...", layoutParams.x, layoutParams.y)
+
+        serviceScope.launch {
+            val rootNode = DosComAccessibilityService.instance?.rootInActiveWindow
+            val charSizePx = (80 * resources.displayMetrics.density).toInt()
+            
+            val target = ScreenReader.findTarget(
+                this@CompanionOverlayService,
+                query,
+                rootNode,
+                screenshot,
+                charSizePx
+            )
+
+            withContext(Dispatchers.Main) {
+                if (target == null) {
+                    showSpeechBubble("Hmm, I couldn't find that.", layoutParams.x, layoutParams.y)
+                    overlayView.setState(CharacterState.REACT_WORRY)
+                } else {
+                    val targetCenterX = target.x + charSizePx / 2
+                    val targetCenterY = target.y + charSizePx / 2
+
+                    showConfirmRing(targetCenterX, targetCenterY) {
+                        CompanionAnimator.walkTo(target.x, target.y, overlayView, layoutParams, windowManager) {
+                            showSpeechBubble(target.explanation, target.x, target.y)
+                            overlayView.setState(CharacterState.POINT)
+                            
+                            serviceScope.launch(Dispatchers.Main) {
+                                delay(4000)
+                                CompanionAnimator.walkToEdge(
+                                    this@CompanionOverlayService, 
+                                    overlayView, 
+                                    layoutParams, 
+                                    windowManager
+                                ) {
+                                    overlayView.setState(CharacterState.IDLE_BOB)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

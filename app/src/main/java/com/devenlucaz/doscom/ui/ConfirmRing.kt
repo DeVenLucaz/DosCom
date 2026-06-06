@@ -11,7 +11,11 @@ import android.view.View
 import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 
-class ConfirmRing(context: Context, private val windowManager: WindowManager) : View(context) {
+class ConfirmRing(
+    context: Context, 
+    private val windowManager: WindowManager,
+    private val onComplete: () -> Unit = {}
+) : View(context) {
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#4285F4")
@@ -52,6 +56,7 @@ class ConfirmRing(context: Context, private val windowManager: WindowManager) : 
                     } catch (e: Exception) {
                         // Ignore
                     }
+                    onComplete()
                 }
             })
             start()

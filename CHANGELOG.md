@@ -99,4 +99,10 @@
 - Wired up keyboard auto-focus on spawn and keyboard hide on dismiss.
 - Replaced the `showChatInput()` stub in `CompanionOverlayService` to orchestrate the overlay spawn and safely restore `WindowManager` flags upon closure.
 
+### Added (Phase 6.4 Complete)
+- Orchestrated the complete core action loop inside `handleQuery()` in `CompanionOverlayService`.
+- Wired up background coroutines (`serviceScope`) to query the `ScreenReader` natively without freezing the UI thread.
+- Implemented the "not found" state gracefully showing a `REACT_WORRY` state and an apology bubble.
+- Implemented the "found" state chain: drops a visual `ConfirmRing` precisely on the target, smoothly walks to it using `CompanionAnimator`, points to it while showing an explanation speech bubble, waits 4 seconds, and automatically walks to the nearest screen edge to get out of the way.
+
 
