@@ -66,4 +66,10 @@
 - Added automatic visual directional flipping (`scaleX`) and walk state assignment (`WALK_LEFT`, `WALK_RIGHT`) based on target coordinates.
 - Implemented `walkToEdge()` helper function to automate returning the companion to the nearest screen edge.
 
+### Added (Phase 5.2 & 5.3 Complete)
+- Created `ConfirmRing` custom view to draw an animated pulsing circle (scaling and fading) at specific target coordinates to visually confirm automated clicks.
+- Added `showConfirmRing` method in `CompanionOverlayService` to instantiate and display the ring over the target before automatically destroying itself.
+- Created `SpeechBubble` view to display AI explanation text inside a rounded-rectangle bubble with fade-in and auto-dismiss (4-second) fade-out mechanics.
+- Added `showSpeechBubble` method in `CompanionOverlayService` that intelligently positions the text above or below the companion based on vertical screen position to avoid clipping.
+
 

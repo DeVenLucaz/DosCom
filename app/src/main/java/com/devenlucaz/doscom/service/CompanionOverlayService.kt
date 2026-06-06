@@ -203,4 +203,59 @@ class CompanionOverlayService : Service() {
         val nextDelay = Random.nextLong(3000, 8000)
         idleHandler.postDelayed(idleRunnable, nextDelay)
     }
+
+    fun showSpeechBubble(text: String, dosComX: Int, dosComY: Int) {
+        val speechBubble = com.devenlucaz.doscom.ui.SpeechBubble(this)
+        speechBubble.setText(text)
+
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+        }
+
+        val screenHeight = ScreenMetrics.getScreenHeight(this)
+        val sizePx = (80 * resources.displayMetrics.density).toInt()
+        val bubbleOffset = (100 * resources.displayMetrics.density).toInt()
+
+        params.x = dosComX
+        if (dosComY > screenHeight / 2) {
+            params.y = kotlin.math.max(0, dosComY - bubbleOffset)
+        } else {
+            params.y = dosComY + sizePx + (20 * resources.displayMetrics.density).toInt()
+        }
+
+        try {
+            windowManager.addView(speechBubble, params)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun showConfirmRing(x: Int, y: Int) {
+        val sizePx = (100 * resources.displayMetrics.density).toInt()
+        val ringView = com.devenlucaz.doscom.ui.ConfirmRing(this, windowManager)
+
+        val params = WindowManager.LayoutParams(
+            sizePx,
+            sizePx,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            this.x = x - sizePx / 2
+            this.y = y - sizePx / 2
+        }
+
+        try {
+            windowManager.addView(ringView, params)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }
