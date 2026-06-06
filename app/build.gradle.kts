@@ -17,10 +17,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("../release.keystore")
-            storePassword = "password"
-            keyAlias = "doscom"
-            keyPassword = "password"
+            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "../release.keystore")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "password"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "doscom"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "password"
         }
     }
 
