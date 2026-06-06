@@ -54,6 +54,29 @@ object ScreenReader {
                 }
             }
 
+            // Fallback 2: Check common package names mapping
+            if (foundNode == null) {
+                val targetPackages = AccessibilityScanner.APP_PACKAGE_MAP[keywords.lowercase()]
+                if (targetPackages != null) {
+                    Log.d(TAG, "Falling back to package name search for: $targetPackages")
+                    for (window in windows) {
+                        val rootNode = window.root
+                        if (rootNode != null) {
+                            foundNode = AccessibilityScanner.findNodeByPackageName(rootNode, targetPackages)
+                            if (foundNode != null) {
+                                break
+                            }
+                        }
+                    }
+                    if (foundNode == null) {
+                        val rootNode = accessibilityService.rootInActiveWindow
+                        if (rootNode != null) {
+                            foundNode = AccessibilityScanner.findNodeByPackageName(rootNode, targetPackages)
+                        }
+                    }
+                }
+            }
+
             if (foundNode != null) {
                 val coords = AccessibilityScanner.getNodeCenterCoords(foundNode)
                 val mapped = CoordinateMapper.fromNodeCoords(context, coords.first, coords.second, characterSizePx)
