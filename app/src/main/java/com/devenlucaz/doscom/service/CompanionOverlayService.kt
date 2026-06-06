@@ -209,10 +209,6 @@ class CompanionOverlayService : Service() {
         startForeground(1, notification)
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return START_STICKY
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         stopIdleBehaviors()
