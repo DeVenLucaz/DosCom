@@ -108,5 +108,6 @@
 ### Fixed
 - **Accessibility "Restricted Setting" Bug**: Android 13 blocks accessibility services for side-loaded debug APKs. Fixed by generating a secure `release.keystore`, wiring it into `app/build.gradle.kts` using `signingConfigs`, and modifying the GitHub Actions CI pipeline to build and upload a signed `app-release.apk` instead of debug.
 - **Drag & Long-Press Deadzone Bug**: The floating character could become permanently untouchable when returning to the homescreen because `FLAG_NOT_TOUCHABLE` was aggressively applied on drag completion. Completely re-engineered the touch listener using `GestureDetector` to cleanly distinguish taps, drags, and long-presses without manipulating the window touch flags, restoring flawless interaction.
+- **ColorOS Android 13 Accessibility Hard-Block Bypass**: Re-engineered `MainActivity.kt` to explicitly detect Android 13's "Restricted Setting" accessibility block. Implemented an automated fallback UI that seamlessly hands the user off to `ACTION_APPLICATION_DETAILS_SETTINGS` to whitelist the app, followed by `ACTION_ACCESSIBILITY_SETTINGS` to safely enable the core service, completely resolving the ColorOS sideloading lock.
 
 
