@@ -29,10 +29,10 @@ class MainActivity : AppCompatActivity() {
                 when (status) {
                     android.content.pm.PackageInstaller.STATUS_PENDING_USER_ACTION -> {
                         val confirmationIntent = if (android.os.Build.VERSION.SDK_INT >= 33) {
-                            intent.getParcelableExtra(android.content.pm.PackageInstaller.EXTRA_INTENT, Intent::class.java)
+                            intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
                         } else {
                             @Suppress("DEPRECATION")
-                            intent.getParcelableExtra(android.content.pm.PackageInstaller.EXTRA_INTENT)
+                            intent.getParcelableExtra(Intent.EXTRA_INTENT)
                         }
                         if (confirmationIntent != null) {
                             confirmationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -59,11 +59,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(null) // Prevent saved state crash loops
         
-        android.content.ContextCompat.registerReceiver(
+        androidx.core.content.ContextCompat.registerReceiver(
             this,
             installReceiver,
             android.content.IntentFilter("com.devenlucaz.doscom.INSTALL_COMPLETE"),
-            android.content.ContextCompat.RECEIVER_EXPORTED
+            androidx.core.content.ContextCompat.RECEIVER_EXPORTED
         )
         
         val prefs = getSharedPreferences("crash_prefs", Context.MODE_PRIVATE)
