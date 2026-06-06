@@ -105,4 +105,8 @@
 - Implemented the "not found" state gracefully showing a `REACT_WORRY` state and an apology bubble.
 - Implemented the "found" state chain: drops a visual `ConfirmRing` precisely on the target, smoothly walks to it using `CompanionAnimator`, points to it while showing an explanation speech bubble, waits 4 seconds, and automatically walks to the nearest screen edge to get out of the way.
 
+### Fixed
+- **Accessibility "Restricted Setting" Bug**: Android 13 blocks accessibility services for side-loaded debug APKs. Fixed by generating a secure `release.keystore`, wiring it into `app/build.gradle.kts` using `signingConfigs`, and modifying the GitHub Actions CI pipeline to build and upload a signed `app-release.apk` instead of debug.
+- **Drag & Long-Press Deadzone Bug**: The floating character could become permanently untouchable when returning to the homescreen because `FLAG_NOT_TOUCHABLE` was aggressively applied on drag completion. Completely re-engineered the touch listener using `GestureDetector` to cleanly distinguish taps, drags, and long-presses without manipulating the window touch flags, restoring flawless interaction.
+
 

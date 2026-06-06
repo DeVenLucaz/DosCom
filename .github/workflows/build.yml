@@ -23,11 +23,11 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DosCom-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: DosCom-release
+          path: app/build/outputs/apk/release/app-release.apk

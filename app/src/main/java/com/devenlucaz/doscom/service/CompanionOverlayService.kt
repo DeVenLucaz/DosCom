@@ -34,6 +34,7 @@ import kotlinx.coroutines.delay
 import android.graphics.Bitmap
 import com.devenlucaz.doscom.utils.ScreenshotHelper
 import kotlin.math.abs
+import android.view.GestureDetector
 
 import com.devenlucaz.doscom.character.CompanionAnimator
 import com.devenlucaz.doscom.screen.ScreenReader
@@ -88,48 +89,49 @@ class CompanionOverlayService : Service() {
         var initialY = 0
         var initialTouchX = 0f
         var initialTouchY = 0f
-        var isLongPressed = false
+        var isDragging = false
 
-        val longPressHandler = Handler(Looper.getMainLooper())
-        var longPressRunnable: Runnable? = null
+        val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onLongPress(e: MotionEvent) {
+                if (isDragging) return
+                
+                val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(50)
+                }
+
+                overlayView.setState(CharacterState.LISTEN)
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
+                    
+                    delay(300)
+                    
+                    layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
+                    windowManager.updateViewLayout(overlayView, layoutParams)
+                    
+                    showChatInput()
+                }
+            }
+            
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                return true
+            }
+        })
 
         overlayView.setOnTouchListener { view, event ->
+            gestureDetector.onTouchEvent(event)
+            
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    isLongPressed = false
-                    layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
-                    windowManager.updateViewLayout(overlayView, layoutParams)
                     initialX = layoutParams.x
                     initialY = layoutParams.y
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
-
-                    longPressRunnable = Runnable {
-                        isLongPressed = true
-                        
-                        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-                        } else {
-                            @Suppress("DEPRECATION")
-                            vibrator.vibrate(50)
-                        }
-
-                        overlayView.setState(CharacterState.LISTEN)
-
-                        CoroutineScope(Dispatchers.Main).launch {
-                            lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
-                            
-                            delay(300)
-                            
-                            layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
-                            layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
-                            windowManager.updateViewLayout(overlayView, layoutParams)
-                            
-                            showChatInput()
-                        }
-                    }
-                    longPressHandler.postDelayed(longPressRunnable!!, 500)
+                    isDragging = false
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
@@ -137,33 +139,26 @@ class CompanionOverlayService : Service() {
                     val deltaY = (event.rawY - initialTouchY).toInt()
 
                     if (abs(deltaX) > 10 || abs(deltaY) > 10) {
-                        longPressRunnable?.let { longPressHandler.removeCallbacks(it) }
+                        isDragging = true
                     }
 
-                    if (!isLongPressed) {
-                        val newX = initialX + deltaX
-                        val newY = initialY + deltaY
-
+                    if (isDragging) {
                         val screenWidth = ScreenMetrics.getScreenWidth(this)
                         val screenHeight = ScreenMetrics.getScreenHeight(this)
                         val statusBarHeight = ScreenMetrics.getStatusBarHeight(this)
 
-                        layoutParams.x = max(0, min(newX, screenWidth - view.width))
-                        layoutParams.y = max(0, min(newY, screenHeight - view.height - statusBarHeight))
+                        layoutParams.x = max(0, min(initialX + deltaX, screenWidth - view.width))
+                        layoutParams.y = max(0, min(initialY + deltaY, screenHeight - view.height - statusBarHeight))
 
                         windowManager.updateViewLayout(overlayView, layoutParams)
                     }
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    longPressRunnable?.let { longPressHandler.removeCallbacks(it) }
-                    
-                    if (!isLongPressed) {
-                        layoutParams.flags = layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                        layoutParams.flags = layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                        windowManager.updateViewLayout(overlayView, layoutParams)
+                    if (isDragging) {
                         snapToNearestEdge()
                     }
+                    isDragging = false
                     true
                 }
                 else -> false
