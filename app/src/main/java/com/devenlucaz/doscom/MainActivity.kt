@@ -14,14 +14,10 @@ import com.devenlucaz.doscom.service.ServiceManager
 
 class MainActivity : AppCompatActivity() {
 
-    private val apkPickerLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            installApk(uri)
-        }
-    }
+    private lateinit var apkPickerLauncher: androidx.activity.result.ActivityResultLauncher<Array<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        super.onCreate(null) // Prevent saved state crash loops
         
         val prefs = getSharedPreferences("crash_prefs", Context.MODE_PRIVATE)
         val lastCrash = prefs.getString("last_crash", null)
@@ -36,6 +32,12 @@ class MainActivity : AppCompatActivity() {
             scrollView.addView(textView)
             setContentView(scrollView)
             return // STOP EXECUTION! Do not initialize anything else.
+        }
+        
+        apkPickerLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                installApk(uri)
+            }
         }
 
         try {
