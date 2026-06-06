@@ -27,8 +27,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (Settings.canDrawOverlays(this) && isAccessibilityServiceEnabled(this, DosComAccessibilityService::class.java)) {
-            ServiceManager.startOverlayService(this)
+        val overlayGranted = Settings.canDrawOverlays(this)
+        val accessibilityGranted = isAccessibilityServiceEnabled(this, DosComAccessibilityService::class.java)
+        
+        if (overlayGranted && accessibilityGranted) {
+            try {
+                ServiceManager.startOverlayService(this)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this, "Failed to start service: ${e.message}", Toast.LENGTH_LONG).show()
+            }
             finish()
         }
     }
@@ -37,10 +45,7 @@ class MainActivity : AppCompatActivity() {
         val overlayGranted = Settings.canDrawOverlays(this)
         val accessibilityGranted = isAccessibilityServiceEnabled(this, DosComAccessibilityService::class.java)
 
-        if (overlayGranted && accessibilityGranted) {
-            ServiceManager.startOverlayService(this)
-            finish()
-        } else {
+        if (!overlayGranted || !accessibilityGranted) {
             showPermissionUI(overlayGranted, accessibilityGranted)
         }
     }

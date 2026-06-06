@@ -92,7 +92,7 @@ class CompanionOverlayService : Service() {
         var isDragging = false
 
         val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onLongPress(e: MotionEvent) {
+            override fun onLongPress(e: MotionEvent?) {
                 if (isDragging) return
                 
                 val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -106,7 +106,11 @@ class CompanionOverlayService : Service() {
                 overlayView.setState(CharacterState.LISTEN)
 
                 CoroutineScope(Dispatchers.Main).launch {
-                    lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
+                    try {
+                        lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                     
                     delay(300)
                     
@@ -117,12 +121,14 @@ class CompanionOverlayService : Service() {
                 }
             }
             
-            override fun onSingleTapUp(e: MotionEvent): Boolean {
+            override fun onSingleTapUp(e: MotionEvent?): Boolean {
                 return true
             }
         })
 
         overlayView.setOnTouchListener { view, event ->
+            if (event == null) return@setOnTouchListener false
+            
             gestureDetector.onTouchEvent(event)
             
             when (event.action) {
