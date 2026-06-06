@@ -17,16 +17,27 @@ import android.view.View
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.devenlucaz.doscom.R
+import android.os.Handler
+import android.os.Looper
+import com.devenlucaz.doscom.character.CharacterState
 import com.devenlucaz.doscom.character.CompanionRenderer
 import com.devenlucaz.doscom.utils.ScreenMetrics
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.random.Random
 
 class CompanionOverlayService : Service() {
 
     private lateinit var windowManager: WindowManager
     private lateinit var overlayView: CompanionRenderer
     private lateinit var layoutParams: WindowManager.LayoutParams
+
+    private val idleHandler = Handler(Looper.getMainLooper())
+    private val idleRunnable = object : Runnable {
+        override fun run() {
+            scheduleNextIdleBehavior()
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -97,6 +108,7 @@ class CompanionOverlayService : Service() {
         }
 
         windowManager.addView(overlayView, layoutParams)
+        startIdleBehaviors()
     }
 
     private fun startForegroundServiceNotification() {
@@ -130,6 +142,7 @@ class CompanionOverlayService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        stopIdleBehaviors()
         if (::overlayView.isInitialized) {
             windowManager.removeView(overlayView)
         }
@@ -156,5 +169,38 @@ class CompanionOverlayService : Service() {
             }
         }
         animator.start()
+    }
+
+    private fun startIdleBehaviors() {
+        scheduleNextIdleBehavior()
+    }
+
+    private fun stopIdleBehaviors() {
+        idleHandler.removeCallbacks(idleRunnable)
+    }
+
+    private fun scheduleNextIdleBehavior() {
+        val states = listOf(
+            CharacterState.IDLE_BOB,
+            CharacterState.IDLE_BLINK,
+            CharacterState.IDLE_LOOK_LEFT,
+            CharacterState.IDLE_LOOK_RIGHT
+        )
+        val weights = listOf(0.2f, 0.4f, 0.2f, 0.2f)
+        val r = Random.nextFloat()
+        var cumulative = 0f
+        var selectedState = CharacterState.IDLE_BOB
+        for (i in states.indices) {
+            cumulative += weights[i]
+            if (r <= cumulative) {
+                selectedState = states[i]
+                break
+            }
+        }
+        
+        overlayView.setState(selectedState)
+        
+        val nextDelay = Random.nextLong(3000, 8000)
+        idleHandler.postDelayed(idleRunnable, nextDelay)
     }
 }

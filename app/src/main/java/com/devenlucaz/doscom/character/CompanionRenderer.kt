@@ -6,6 +6,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.view.View
+import android.os.Handler
+import android.os.Looper
 
 class CompanionRenderer(context: Context) : View(context) {
 
@@ -22,6 +24,25 @@ class CompanionRenderer(context: Context) : View(context) {
         color = Color.DKGRAY 
         strokeWidth = 6f
         style = Paint.Style.STROKE
+    }
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val animationRunnable = object : Runnable {
+        override fun run() {
+            nextFrame()
+            invalidate()
+            handler.postDelayed(this, 150L)
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        handler.post(animationRunnable)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        handler.removeCallbacks(animationRunnable)
     }
 
     fun setState(state: CharacterState) {
@@ -42,6 +63,14 @@ class CompanionRenderer(context: Context) : View(context) {
         val w = width.toFloat()
         val h = height.toFloat()
 
+        var bodyOffsetY = 0f
+        if (currentState == CharacterState.IDLE_BOB) {
+            bodyOffsetY = (Math.sin(System.currentTimeMillis() / 200.0) * (h * 0.05f)).toFloat()
+        }
+
+        canvas.save()
+        canvas.translate(0f, bodyOffsetY)
+
         // Antenna line
         canvas.drawLine(w * 0.5f, h * 0.1f, w * 0.5f, h * 0.3f, linePaint)
         // Antenna ball
@@ -51,13 +80,37 @@ class CompanionRenderer(context: Context) : View(context) {
         val bodyRect = RectF(w * 0.2f, h * 0.3f, w * 0.8f, h * 0.8f)
         canvas.drawRoundRect(bodyRect, w * 0.1f, w * 0.1f, bodyPaint)
 
-        // Left Eye
-        canvas.drawCircle(w * 0.35f, h * 0.5f, w * 0.1f, eyePaint)
-        canvas.drawCircle(w * 0.35f, h * 0.5f, w * 0.05f, pupilPaint)
+        val eyeCy = h * 0.5f
 
-        // Right Eye
-        canvas.drawCircle(w * 0.65f, h * 0.5f, w * 0.1f, eyePaint)
-        canvas.drawCircle(w * 0.65f, h * 0.5f, w * 0.05f, pupilPaint)
+        if (currentState == CharacterState.IDLE_BLINK && currentFrame == 3) {
+            canvas.drawLine(w * 0.25f, eyeCy, w * 0.45f, eyeCy, linePaint)
+            canvas.drawLine(w * 0.55f, eyeCy, w * 0.75f, eyeCy, linePaint)
+        } else {
+            var leftPupilX = w * 0.35f
+            var rightPupilX = w * 0.65f
+
+            when (currentState) {
+                CharacterState.IDLE_LOOK_LEFT -> {
+                    leftPupilX -= w * 0.03f
+                    rightPupilX -= w * 0.03f
+                }
+                CharacterState.IDLE_LOOK_RIGHT -> {
+                    leftPupilX += w * 0.03f
+                    rightPupilX += w * 0.03f
+                }
+                else -> {}
+            }
+
+            // Left Eye
+            canvas.drawCircle(w * 0.35f, eyeCy, w * 0.1f, eyePaint)
+            canvas.drawCircle(leftPupilX, eyeCy, w * 0.05f, pupilPaint)
+
+            // Right Eye
+            canvas.drawCircle(w * 0.65f, eyeCy, w * 0.1f, eyePaint)
+            canvas.drawCircle(rightPupilX, eyeCy, w * 0.05f, pupilPaint)
+        }
+
+        canvas.restore()
 
         // Legs
         val legWidth = w * 0.15f

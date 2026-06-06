@@ -38,4 +38,11 @@
 - Replaced the purple placeholder view in `CompanionOverlayService` with the new `CompanionRenderer`.
 - Added logic for tracking state frames to prepare for future sprite animation.
 
+### Added (Phase 3.2 & 3.3 Complete)
+- Added an animation loop using `Handler` and `Runnable` in `CompanionRenderer` running at 150ms intervals.
+- Implemented `IDLE_BOB` logic with a sine-wave Y-offset to make the robot float dynamically.
+- Implemented `IDLE_BLINK` logic that draws closed eyes on specific frames.
+- Implemented a random idle behavior scheduler in `CompanionOverlayService` that transitions between idle states every 3-8 seconds.
+- Added pupil-shifting logic for `IDLE_LOOK_LEFT` and `IDLE_LOOK_RIGHT` states.
+
 
