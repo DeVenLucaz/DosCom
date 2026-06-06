@@ -8,10 +8,9 @@
 ## PRE-FLIGHT (Run this first, manually in Termux)
 
 ```bash
-mkdir -p ~/projects/DosCom
-cd ~/projects/DosCom
-git init
-gh repo create DeVenLucaz/DosCom --public --source=. --remote=origin
+cd ~
+git clone https://github.com/DeVenLucaz/DosCom.git
+cd ~/DosCom
 ```
 
 ---
