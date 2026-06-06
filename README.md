@@ -49,3 +49,11 @@ Using DosCom is super easy!
 If DosCom can't find it on your screen, it will let you know. Make sure the app you're looking for is actually visible on your screen!
 
 Enjoy your new AI screen buddy! 🎈
+
+## 🚀 Upcoming features in your DosCom buddy
+
+DosCom is getting smarter every day! Here is what we are working on adding next:
+
+- **Talk to DosCom (Voice Commands) 🎙️**: Tired of typing? Soon you'll be able to just press a microphone button and ask DosCom to find things using your voice!
+- **Google Gemini Brain 🧠**: DosCom will soon be able to connect directly to Google's powerful Gemini AI app. If you ask a general question, DosCom will instantly pull up Gemini to help you out!
+- **Smart "Human-like" Vision 👁️**: Right now, DosCom "reads" the names of apps on the screen. Soon, if it can't read them, it will actually take a picture of the screen and use AI to "look" for the icon just like a human would!
