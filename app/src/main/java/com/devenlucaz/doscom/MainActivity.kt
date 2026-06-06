@@ -27,11 +27,15 @@ class MainActivity : AppCompatActivity() {
         val lastCrash = prefs.getString("last_crash", null)
         if (lastCrash != null) {
             prefs.edit().remove("last_crash").apply()
-            android.app.AlertDialog.Builder(this)
-                .setTitle("DosCom Crash Log")
-                .setMessage(lastCrash)
-                .setPositiveButton("OK", null)
-                .show()
+            val scrollView = android.widget.ScrollView(this)
+            val textView = TextView(this).apply {
+                text = "FATAL CRASH PREVENTED. LOG:\n\n$lastCrash"
+                setPadding(32, 32, 32, 32)
+                setTextIsSelectable(true)
+            }
+            scrollView.addView(textView)
+            setContentView(scrollView)
+            return // STOP EXECUTION! Do not initialize anything else.
         }
 
         try {
