@@ -9,3 +9,4 @@
 - Declared all required permissions in `AndroidManifest.xml` (SYSTEM_ALERT_WINDOW, FOREGROUND_SERVICE, etc.).
 - Defined initial foreground and accessibility service declarations (`CompanionOverlayService`, `DosComAccessibilityService`).
 - Created `accessibility_service_config.xml` for screen reading capabilities.
+- Fixed AndroidX compatibility by enabling `android.useAndroidX` and `android.enableJetifier` in `gradle.properties`.
