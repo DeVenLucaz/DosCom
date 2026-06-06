@@ -17,9 +17,54 @@ import com.devenlucaz.doscom.service.ServiceManager
 class MainActivity : AppCompatActivity() {
 
     private lateinit var apkPickerLauncher: androidx.activity.result.ActivityResultLauncher<Array<String>>
+    private var installTimeoutHandler: android.os.Handler? = null
+    private var installTimeoutRunnable: Runnable? = null
+
+    private val installReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "com.devenlucaz.doscom.INSTALL_COMPLETE") {
+                installTimeoutHandler?.removeCallbacks(installTimeoutRunnable!!)
+                val status = intent.getIntExtra(android.content.pm.PackageInstaller.EXTRA_STATUS, -1)
+                val message = intent.getStringExtra(android.content.pm.PackageInstaller.EXTRA_STATUS_MESSAGE)
+                when (status) {
+                    android.content.pm.PackageInstaller.STATUS_PENDING_USER_ACTION -> {
+                        val confirmationIntent = if (android.os.Build.VERSION.SDK_INT >= 33) {
+                            intent.getParcelableExtra(android.content.pm.PackageInstaller.EXTRA_INTENT, Intent::class.java)
+                        } else {
+                            @Suppress("DEPRECATION")
+                            intent.getParcelableExtra(android.content.pm.PackageInstaller.EXTRA_INTENT)
+                        }
+                        if (confirmationIntent != null) {
+                            confirmationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            try {
+                                startActivity(confirmationIntent)
+                            } catch (e: Exception) {
+                                Toast.makeText(this@MainActivity, "Failed to start install UI: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
+                        } else {
+                            Toast.makeText(this@MainActivity, "Install failed: No confirmation intent", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                    android.content.pm.PackageInstaller.STATUS_SUCCESS -> {
+                        Toast.makeText(this@MainActivity, "Install succeeded!", Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        Toast.makeText(this@MainActivity, "Install failed ($status): $message", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(null) // Prevent saved state crash loops
+        
+        android.content.ContextCompat.registerReceiver(
+            this,
+            installReceiver,
+            android.content.IntentFilter("com.devenlucaz.doscom.INSTALL_COMPLETE"),
+            android.content.ContextCompat.RECEIVER_EXPORTED
+        )
         
         val prefs = getSharedPreferences("crash_prefs", Context.MODE_PRIVATE)
         val lastCrash = prefs.getString("last_crash", null)
@@ -48,6 +93,16 @@ class MainActivity : AppCompatActivity() {
             e.printStackTrace()
             Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            unregisterReceiver(installReceiver)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        installTimeoutHandler?.removeCallbacks(installTimeoutRunnable!!)
     }
 
     override fun onResume() {
@@ -150,6 +205,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun installApk(uri: Uri) {
         Toast.makeText(this, "Preparing installation... Please wait.", Toast.LENGTH_SHORT).show()
+        
+        installTimeoutHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        installTimeoutRunnable = Runnable {
+            Toast.makeText(this, "Installation timed out. Please try again.", Toast.LENGTH_LONG).show()
+        }
+        installTimeoutHandler?.postDelayed(installTimeoutRunnable!!, 10000)
+
         Thread {
             try {
                 val packageInstaller = packageManager.packageInstaller
@@ -166,9 +228,10 @@ class MainActivity : AppCompatActivity() {
                 session.fsync(outStream)
                 outStream.close()
 
-                val intent = Intent(this, MainActivity::class.java)
-                intent.action = "com.devenlucaz.doscom.INSTALL_COMPLETE"
-                val pendingIntent = android.app.PendingIntent.getActivity(
+                val intent = Intent("com.devenlucaz.doscom.INSTALL_COMPLETE").apply {
+                    setPackage(packageName)
+                }
+                val pendingIntent = android.app.PendingIntent.getBroadcast(
                     this, 0, intent,
                     android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_MUTABLE
                 )
@@ -177,6 +240,7 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {
+                    installTimeoutHandler?.removeCallbacks(installTimeoutRunnable!!)
                     Toast.makeText(this, "Install failed: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
