@@ -78,4 +78,11 @@
 - **Layer 1**: Uses `KeywordExtractor` and `AccessibilityScanner` for lightning-fast, native UI tree matching, mapping raw coordinates via `CoordinateMapper`.
 - **Layer 2**: Created a `GeminiVisionClient` stub to automatically fall back to Vision AI analysis (using `fromPercent` mapping) if the native scan fails.
 
+### Added (Phase 6.1 Complete)
+- Created `ScreenshotHelper` utility wrapper for Android's `MediaProjection` API.
+- Implemented `requestPermission` and `onPermissionResult` to securely acquire and cache screen capture permissions.
+- Implemented asynchronous `captureScreen` function utilizing `ImageReader` and `VirtualDisplay` to capture screen frames without blocking the main thread.
+- Automatically crops stride padding and resizes raw bitmaps to a maximum of 800px width.
+- Implemented `bitmapToBase64()` helper to optimize payloads with JPEG 70% compression and Base64 string encoding for Vision API readiness.
+
 
