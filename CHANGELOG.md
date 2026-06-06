@@ -50,4 +50,9 @@
 - Added a companion object with a static `instance` and `isConnected()` method for global state checking.
 - Verified service is correctly registered in `AndroidManifest.xml` with proper intent filters and permissions.
 
+### Added (Phase 4.2 & 4.3 Complete)
+- Created `AccessibilityScanner` utility for traversing the Android accessibility node tree to find UI elements by matching text or `contentDescription`.
+- Implemented node center coordinate calculation using `getBoundsInScreen` for precise interaction targets.
+- Created `KeywordExtractor` utility that automatically removes common natural language filler words (e.g., "how", "do", "i", "tap") from user queries to isolate specific UI targets.
+
 
