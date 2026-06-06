@@ -27,3 +27,9 @@
 - Enabled screen edge clamping during drags.
 - Implemented edge snapping animation on touch release using `ValueAnimator`.
 
+### Fixed (Overlay Launch Bug)
+- Fixed `MainActivity.kt` so that it correctly checks for `Settings.canDrawOverlays` permission on app launch.
+- If granted, it automatically calls `ServiceManager.startOverlayService()`.
+- If not granted, it correctly redirects the user to the `ACTION_MANAGE_OVERLAY_PERMISSION` settings screen.
+
+
