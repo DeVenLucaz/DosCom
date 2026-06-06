@@ -60,10 +60,19 @@ class CompanionOverlayService : Service() {
         }
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_NOT_STICKY
+    }
+
     override fun onCreate() {
         super.onCreate()
-        startForegroundServiceNotification()
-        setupOverlayView()
+        try {
+            startForegroundServiceNotification()
+            setupOverlayView()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            stopSelf()
+        }
     }
 
     private fun setupOverlayView() {

@@ -22,7 +22,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        checkPermissionsAndStart()
+        try {
+            checkPermissionsAndStart()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onResume() {
@@ -51,69 +56,76 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showPermissionUI(overlayGranted: Boolean, accessibilityGranted: Boolean) {
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(64, 64, 64, 64)
-        }
-
-        val title = TextView(this).apply {
-            text = "DosCom Permissions Required"
-            textSize = 24f
-            setPadding(0, 0, 0, 32)
-        }
-        layout.addView(title)
-
-        if (!overlayGranted) {
-            val btnOverlay = Button(this).apply {
-                text = "1. Grant Overlay Permission"
-                setOnClickListener {
-                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-                    startActivity(intent)
-                }
+        try {
+            val scrollView = android.widget.ScrollView(this)
+            val layout = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(64, 64, 64, 64)
             }
-            layout.addView(btnOverlay)
-        }
+            scrollView.addView(layout)
 
-        if (!accessibilityGranted) {
-            val desc = TextView(this).apply {
-                text = "Android 13 restricts Accessibility for sideloaded apps.\n\nOption A (Stock Android): Open App Info, tap 3-dots, 'Allow restricted settings'.\n\nOption B (ColorOS): The 3-dots menu is missing. You MUST bypass it by reinstalling the APK through this app itself. Click 'ColorOS Bypass', select the doscom app-release.apk you downloaded, and click Update."
-                setPadding(0, 32, 0, 32)
+            val title = TextView(this).apply {
+                text = "DosCom Permissions Required"
+                textSize = 24f
+                setPadding(0, 0, 0, 32)
             }
-            layout.addView(desc)
+            layout.addView(title)
 
-            val btnAppInfo = Button(this).apply {
-                text = "Option A: Open App Info"
-                setOnClickListener {
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
-                    startActivity(intent)
-                }
-            }
-            layout.addView(btnAppInfo)
-            
-            val btnBypass = Button(this).apply {
-                text = "Option B: ColorOS Bypass (Select APK)"
-                setOnClickListener {
-                    apkPickerLauncher.launch(arrayOf("*/*"))
-                }
-            }
-            layout.addView(btnBypass)
-
-            val btnAccessibility = Button(this).apply {
-                text = "Step 2: Open Accessibility Settings"
-                setOnClickListener {
-                    try {
-                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                        startActivity(intent)
-                    } catch (e: Exception) {
-                        val intent = Intent(Settings.ACTION_SETTINGS)
+            if (!overlayGranted) {
+                val btnOverlay = Button(this).apply {
+                    text = "1. Grant Overlay Permission"
+                    setOnClickListener {
+                        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
                         startActivity(intent)
                     }
                 }
+                layout.addView(btnOverlay)
             }
-            layout.addView(btnAccessibility)
-        }
 
-        setContentView(layout)
+            if (!accessibilityGranted) {
+                val desc = TextView(this).apply {
+                    text = "Android 13 restricts Accessibility for sideloaded apps.\n\nOption A (Stock Android): Open App Info, tap 3-dots, 'Allow restricted settings'.\n\nOption B (ColorOS): The 3-dots menu is missing. You MUST bypass it by reinstalling the APK through this app itself. Click 'ColorOS Bypass', select the doscom app-release.apk you downloaded, and click Update."
+                    setPadding(0, 32, 0, 32)
+                }
+                layout.addView(desc)
+
+                val btnAppInfo = Button(this).apply {
+                    text = "Option A: Open App Info"
+                    setOnClickListener {
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+                        startActivity(intent)
+                    }
+                }
+                layout.addView(btnAppInfo)
+                
+                val btnBypass = Button(this).apply {
+                    text = "Option B: ColorOS Bypass (Select APK)"
+                    setOnClickListener {
+                        apkPickerLauncher.launch(arrayOf("*/*"))
+                    }
+                }
+                layout.addView(btnBypass)
+
+                val btnAccessibility = Button(this).apply {
+                    text = "Step 2: Open Accessibility Settings"
+                    setOnClickListener {
+                        try {
+                            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                            startActivity(intent)
+                        } catch (e: Exception) {
+                            val intent = Intent(Settings.ACTION_SETTINGS)
+                            startActivity(intent)
+                        }
+                    }
+                }
+                layout.addView(btnAccessibility)
+            }
+
+            setContentView(scrollView)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "UI Error: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun installApk(uri: Uri) {
