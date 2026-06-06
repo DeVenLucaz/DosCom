@@ -45,4 +45,9 @@
 - Implemented a random idle behavior scheduler in `CompanionOverlayService` that transitions between idle states every 3-8 seconds.
 - Added pupil-shifting logic for `IDLE_LOOK_LEFT` and `IDLE_LOOK_RIGHT` states.
 
+### Added (Phase 4.1 Complete)
+- Created `DosComAccessibilityService` extending Android's `AccessibilityService`.
+- Added a companion object with a static `instance` and `isConnected()` method for global state checking.
+- Verified service is correctly registered in `AndroidManifest.xml` with proper intent filters and permissions.
+
 
