@@ -85,4 +85,11 @@
 - Automatically crops stride padding and resizes raw bitmaps to a maximum of 800px width.
 - Implemented `bitmapToBase64()` helper to optimize payloads with JPEG 70% compression and Base64 string encoding for Vision API readiness.
 
+### Added (Phase 6.2 Complete)
+- Added Long-Press gesture detection directly to the companion's floating UI touch handler (`CompanionOverlayService`).
+- Implemented 500ms delay threshold with a 10px slop movement cancellation to differentiate from drag gestures.
+- Upon successful long-press: triggers 50ms haptic vibration, sets character to `LISTEN` state, and immediately fires `ScreenshotHelper.captureScreen()`.
+- Captures the exact screen state *before* the chat input UI expands, caching it directly into `lastScreenshot`.
+- Added 300ms transition delay before exposing the `showChatInput()` mechanism, while dropping `FLAG_NOT_FOCUSABLE` & `FLAG_NOT_TOUCHABLE` from WindowManager to permit keyboard input.
+
 

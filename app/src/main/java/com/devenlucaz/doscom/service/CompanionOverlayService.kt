@@ -25,12 +25,23 @@ import com.devenlucaz.doscom.utils.ScreenMetrics
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
+import android.os.Vibrator
+import android.os.VibrationEffect
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import android.graphics.Bitmap
+import com.devenlucaz.doscom.utils.ScreenshotHelper
+import kotlin.math.abs
 
 class CompanionOverlayService : Service() {
 
     private lateinit var windowManager: WindowManager
     private lateinit var overlayView: CompanionRenderer
     private lateinit var layoutParams: WindowManager.LayoutParams
+    
+    var lastScreenshot: Bitmap? = null
 
     private val idleHandler = Handler(Looper.getMainLooper())
     private val idleRunnable = object : Runnable {
@@ -68,39 +79,82 @@ class CompanionOverlayService : Service() {
         var initialY = 0
         var initialTouchX = 0f
         var initialTouchY = 0f
+        var isLongPressed = false
+
+        val longPressHandler = Handler(Looper.getMainLooper())
+        var longPressRunnable: Runnable? = null
 
         overlayView.setOnTouchListener { view, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    isLongPressed = false
                     layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
                     windowManager.updateViewLayout(overlayView, layoutParams)
                     initialX = layoutParams.x
                     initialY = layoutParams.y
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
+
+                    longPressRunnable = Runnable {
+                        isLongPressed = true
+                        
+                        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+                        } else {
+                            @Suppress("DEPRECATION")
+                            vibrator.vibrate(50)
+                        }
+
+                        overlayView.setState(CharacterState.LISTEN)
+
+                        CoroutineScope(Dispatchers.Main).launch {
+                            lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
+                            
+                            delay(300)
+                            
+                            layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+                            layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
+                            windowManager.updateViewLayout(overlayView, layoutParams)
+                            
+                            showChatInput()
+                        }
+                    }
+                    longPressHandler.postDelayed(longPressRunnable!!, 500)
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val deltaX = (event.rawX - initialTouchX).toInt()
                     val deltaY = (event.rawY - initialTouchY).toInt()
 
-                    val newX = initialX + deltaX
-                    val newY = initialY + deltaY
+                    if (abs(deltaX) > 10 || abs(deltaY) > 10) {
+                        longPressRunnable?.let { longPressHandler.removeCallbacks(it) }
+                    }
 
-                    val screenWidth = ScreenMetrics.getScreenWidth(this)
-                    val screenHeight = ScreenMetrics.getScreenHeight(this)
-                    val statusBarHeight = ScreenMetrics.getStatusBarHeight(this)
+                    if (!isLongPressed) {
+                        val newX = initialX + deltaX
+                        val newY = initialY + deltaY
 
-                    layoutParams.x = max(0, min(newX, screenWidth - view.width))
-                    layoutParams.y = max(0, min(newY, screenHeight - view.height - statusBarHeight))
+                        val screenWidth = ScreenMetrics.getScreenWidth(this)
+                        val screenHeight = ScreenMetrics.getScreenHeight(this)
+                        val statusBarHeight = ScreenMetrics.getStatusBarHeight(this)
 
-                    windowManager.updateViewLayout(overlayView, layoutParams)
+                        layoutParams.x = max(0, min(newX, screenWidth - view.width))
+                        layoutParams.y = max(0, min(newY, screenHeight - view.height - statusBarHeight))
+
+                        windowManager.updateViewLayout(overlayView, layoutParams)
+                    }
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    layoutParams.flags = layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                    windowManager.updateViewLayout(overlayView, layoutParams)
-                    snapToNearestEdge()
+                    longPressRunnable?.let { longPressHandler.removeCallbacks(it) }
+                    
+                    if (!isLongPressed) {
+                        layoutParams.flags = layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                        layoutParams.flags = layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                        windowManager.updateViewLayout(overlayView, layoutParams)
+                        snapToNearestEdge()
+                    }
                     true
                 }
                 else -> false
@@ -257,5 +311,9 @@ class CompanionOverlayService : Service() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    fun showChatInput() {
+        // Stub for Phase 7
     }
 }
