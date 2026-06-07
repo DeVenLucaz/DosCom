@@ -2,275 +2,203 @@ package com.devenlucaz.doscom
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.provider.Settings
+import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.devenlucaz.doscom.api.GeminiVisionClient
+import com.devenlucaz.doscom.onboarding.OnboardingActivity
 import com.devenlucaz.doscom.service.DosComAccessibilityService
 import com.devenlucaz.doscom.service.ServiceManager
+import com.devenlucaz.doscom.utils.ConfigManager
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var apkPickerLauncher: androidx.activity.result.ActivityResultLauncher<Array<String>>
-    private var installTimeoutHandler: android.os.Handler? = null
-    private var installTimeoutRunnable: Runnable? = null
-
-    private val installReceiver = object : android.content.BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "com.devenlucaz.doscom.INSTALL_COMPLETE") {
-                installTimeoutHandler?.removeCallbacks(installTimeoutRunnable!!)
-                val status = intent.getIntExtra(android.content.pm.PackageInstaller.EXTRA_STATUS, -1)
-                val message = intent.getStringExtra(android.content.pm.PackageInstaller.EXTRA_STATUS_MESSAGE)
-                when (status) {
-                    android.content.pm.PackageInstaller.STATUS_PENDING_USER_ACTION -> {
-                        val confirmationIntent = if (android.os.Build.VERSION.SDK_INT >= 33) {
-                            intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
-                        } else {
-                            @Suppress("DEPRECATION")
-                            intent.getParcelableExtra(Intent.EXTRA_INTENT)
-                        }
-                        if (confirmationIntent != null) {
-                            confirmationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            try {
-                                startActivity(confirmationIntent)
-                            } catch (e: Exception) {
-                                Toast.makeText(this@MainActivity, "Failed to start install UI: ${e.message}", Toast.LENGTH_LONG).show()
-                            }
-                        } else {
-                            Toast.makeText(this@MainActivity, "Install failed: No confirmation intent", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                    android.content.pm.PackageInstaller.STATUS_SUCCESS -> {
-                        Toast.makeText(this@MainActivity, "Install succeeded!", Toast.LENGTH_SHORT).show()
-                    }
-                    else -> {
-                        Toast.makeText(this@MainActivity, "Install failed ($status): $message", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(null) // Prevent saved state crash loops
-        
-        androidx.core.content.ContextCompat.registerReceiver(
-            this,
-            installReceiver,
-            android.content.IntentFilter("com.devenlucaz.doscom.INSTALL_COMPLETE"),
-            androidx.core.content.ContextCompat.RECEIVER_EXPORTED
-        )
-        
-        val prefs = getSharedPreferences("crash_prefs", Context.MODE_PRIVATE)
-        val lastCrash = prefs.getString("last_crash", null)
-        if (lastCrash != null) {
-            prefs.edit().remove("last_crash").apply()
-            val scrollView = android.widget.ScrollView(this)
-            val textView = TextView(this).apply {
-                text = "FATAL CRASH PREVENTED. LOG:\n\n$lastCrash"
-                setPadding(32, 32, 32, 32)
-                setTextIsSelectable(true)
-            }
-            scrollView.addView(textView)
-            setContentView(scrollView)
-            return // STOP EXECUTION! Do not initialize anything else.
-        }
-        
-        apkPickerLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            if (uri != null) {
-                installApk(uri)
-            }
+        super.onCreate(savedInstanceState)
+
+        // Load API key on start
+        val apiKey = ConfigManager.loadApiKey(this)
+        if (apiKey != null) {
+            GeminiVisionClient.configure(apiKey)
         }
 
-        try {
-            checkPermissionsAndStart()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Init Error: ${e.message}", Toast.LENGTH_LONG).show()
-        }
-    }
+        val prefs = getSharedPreferences("doscom_prefs", Context.MODE_PRIVATE)
+        val onboardingComplete = prefs.getBoolean("onboarding_complete", false)
 
-    override fun onDestroy() {
-        super.onDestroy()
-        try {
-            unregisterReceiver(installReceiver)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        if (!onboardingComplete) {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+            finish()
+            return
         }
-        installTimeoutHandler?.removeCallbacks(installTimeoutRunnable!!)
+
+        // Check critical permissions
+        if (!Settings.canDrawOverlays(this)) {
+            // Reset onboarding if overlay permission was revoked
+            prefs.edit().putBoolean("onboarding_complete", false).apply()
+            startActivity(Intent(this, OnboardingActivity::class.java))
+            finish()
+            return
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        val overlayGranted = Settings.canDrawOverlays(this)
-        val accessibilityGranted = isAccessibilityServiceEnabled(this, DosComAccessibilityService::class.java)
-        val audioGranted = androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        
-        if (overlayGranted && accessibilityGranted && audioGranted) {
-            try {
-                ServiceManager.startOverlayService(this)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Toast.makeText(this, "Failed to start service: ${e.message}", Toast.LENGTH_LONG).show()
-            }
-            finish()
-        }
-    }
 
-    private fun checkPermissionsAndStart() {
-        val overlayGranted = Settings.canDrawOverlays(this)
-        val accessibilityGranted = isAccessibilityServiceEnabled(this, DosComAccessibilityService::class.java)
-        val audioGranted = androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val prefs = getSharedPreferences("doscom_prefs", Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("onboarding_complete", false)) return
+        if (!Settings.canDrawOverlays(this)) return
 
-        if (!overlayGranted || !accessibilityGranted || !audioGranted) {
-            showPermissionUI(overlayGranted, accessibilityGranted, audioGranted)
-        }
-    }
-
-    private fun showPermissionUI(overlayGranted: Boolean, accessibilityGranted: Boolean, audioGranted: Boolean) {
+        // Start service and show control panel
         try {
-            val scrollView = android.widget.ScrollView(this)
-            val layout = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(64, 64, 64, 64)
-            }
-            scrollView.addView(layout)
-
-            val title = TextView(this).apply {
-                text = "DosCom Permissions Required"
-                textSize = 24f
-                setPadding(0, 0, 0, 32)
-            }
-            layout.addView(title)
-
-            if (!overlayGranted) {
-                val btnOverlay = Button(this).apply {
-                    text = "1. Grant Overlay Permission"
-                    setOnClickListener {
-                        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-                        startActivity(intent)
-                    }
-                }
-                layout.addView(btnOverlay)
-            }
-
-            if (!audioGranted) {
-                val btnAudio = Button(this).apply {
-                    text = "2. Grant Audio Permission (for Mic)"
-                    setOnClickListener {
-                        requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), 101)
-                    }
-                }
-                layout.addView(btnAudio)
-            }
-
-            if (!accessibilityGranted) {
-                val desc = TextView(this).apply {
-                    text = "Android 13 restricts Accessibility for sideloaded apps.\n\nOption A (Stock Android): Open App Info, tap 3-dots, 'Allow restricted settings'.\n\nOption B (ColorOS): The 3-dots menu is missing. You MUST bypass it by reinstalling the APK through this app itself. Click 'ColorOS Bypass', select the doscom app-release.apk you downloaded, and click Update."
-                    setPadding(0, 32, 0, 32)
-                }
-                layout.addView(desc)
-
-                val btnAppInfo = Button(this).apply {
-                    text = "Option A: Open App Info"
-                    setOnClickListener {
-                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
-                        startActivity(intent)
-                    }
-                }
-                layout.addView(btnAppInfo)
-                
-                val btnBypass = Button(this).apply {
-                    text = "Option B: ColorOS Bypass (Select APK)"
-                    setOnClickListener {
-                        apkPickerLauncher.launch(arrayOf("*/*"))
-                    }
-                }
-                layout.addView(btnBypass)
-
-                val btnAccessibility = Button(this).apply {
-                    text = "Step 2: Open Accessibility Settings"
-                    setOnClickListener {
-                        try {
-                            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                            startActivity(intent)
-                        } catch (e: Exception) {
-                            val intent = Intent(Settings.ACTION_SETTINGS)
-                            startActivity(intent)
-                        }
-                    }
-                }
-                layout.addView(btnAccessibility)
-            }
-
-            setContentView(scrollView)
+            ServiceManager.startOverlayService(this)
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "UI Error: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Failed to start DosCom: ${e.message}", Toast.LENGTH_LONG).show()
         }
+
+        showControlPanel()
     }
 
-    private fun installApk(uri: Uri) {
-        Toast.makeText(this, "Preparing installation... Please wait.", Toast.LENGTH_SHORT).show()
-        
-        installTimeoutHandler = android.os.Handler(android.os.Looper.getMainLooper())
-        installTimeoutRunnable = Runnable {
-            Toast.makeText(this, "Installation timed out. Please try again.", Toast.LENGTH_LONG).show()
+    private fun showControlPanel() {
+        val density = resources.displayMetrics.density
+        val dp = { value: Int -> (value * density).toInt() }
+
+        val scrollView = ScrollView(this)
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(32), dp(48), dp(32), dp(32))
+            gravity = Gravity.CENTER_HORIZONTAL
         }
-        installTimeoutHandler?.postDelayed(installTimeoutRunnable!!, 10000)
+        scrollView.addView(layout)
 
-        Thread {
-            try {
-                val packageInstaller = packageManager.packageInstaller
-                val params = android.content.pm.PackageInstaller.SessionParams(
-                    android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL
-                )
-                val sessionId = packageInstaller.createSession(params)
-                val session = packageInstaller.openSession(sessionId)
+        val iconView = TextView(this).apply {
+            text = "\uD83E\uDD16"
+            textSize = 64f
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, dp(16))
+        }
+        layout.addView(iconView)
 
-                val outStream = session.openWrite("doscom_update", 0, -1)
-                contentResolver.openInputStream(uri)?.use { inStream ->
-                    inStream.copyTo(outStream)
-                }
-                session.fsync(outStream)
-                outStream.close()
+        val titleView = TextView(this).apply {
+            text = "DosCom is running"
+            textSize = 24f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.parseColor("#212121"))
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, dp(8))
+        }
+        layout.addView(titleView)
 
-                val intent = Intent("com.devenlucaz.doscom.INSTALL_COMPLETE").apply {
-                    setPackage(packageName)
-                }
-                val pendingIntent = android.app.PendingIntent.getBroadcast(
-                    this, 0, intent,
-                    android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_MUTABLE
-                )
+        val descView = TextView(this).apply {
+            text = "Your AI companion is floating on your screen.\nLong-press DosCom to ask a question."
+            textSize = 16f
+            setTextColor(Color.parseColor("#616161"))
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, dp(32))
+        }
+        layout.addView(descView)
 
-                session.commit(pendingIntent.intentSender)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                runOnUiThread {
-                    installTimeoutHandler?.removeCallbacks(installTimeoutRunnable!!)
-                    Toast.makeText(this, "Install failed: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+        // Status indicators
+        val statusLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#F5F5F5"))
+                cornerRadius = dp(12).toFloat()
             }
-        }.start()
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp(24)
+            }
+        }
+
+        val overlayStatus = Settings.canDrawOverlays(this)
+        val accessibilityStatus = DosComAccessibilityService.isConnected()
+        val visionStatus = GeminiVisionClient.isConfigured()
+
+        addStatusRow(statusLayout, "Overlay", overlayStatus, dp)
+        addStatusRow(statusLayout, "Accessibility", accessibilityStatus, dp)
+        addStatusRow(statusLayout, "Vision API", visionStatus, dp)
+
+        layout.addView(statusLayout)
+
+        val stopButton = Button(this).apply {
+            text = "Stop DosCom"
+            setTextColor(Color.WHITE)
+            textSize = 16f
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#F44336"))
+                cornerRadius = dp(12).toFloat()
+            }
+            setPadding(dp(32), dp(16), dp(32), dp(16))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp(12)
+            }
+            setOnClickListener {
+                ServiceManager.stopOverlayService(this@MainActivity)
+                Toast.makeText(this@MainActivity, "DosCom stopped", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
+        layout.addView(stopButton)
+
+        val resetButton = Button(this).apply {
+            text = "Re-run Setup"
+            setTextColor(Color.parseColor("#6200EE"))
+            setBackgroundColor(Color.TRANSPARENT)
+            textSize = 14f
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            setOnClickListener {
+                getSharedPreferences("doscom_prefs", Context.MODE_PRIVATE)
+                    .edit().putBoolean("onboarding_complete", false).apply()
+                startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
+                finish()
+            }
+        }
+        layout.addView(resetButton)
+
+        setContentView(scrollView)
     }
 
-    private fun isAccessibilityServiceEnabled(context: Context, service: Class<*>): Boolean {
-        val enabledServices = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
-        val colonSplitter = android.text.TextUtils.SimpleStringSplitter(':')
-        if (enabledServices != null) {
-            colonSplitter.setString(enabledServices)
-            while (colonSplitter.hasNext()) {
-                val componentName = colonSplitter.next()
-                if (componentName.equals(context.packageName + "/" + service.name, ignoreCase = true)) {
-                    return true
-                }
-            }
+    private fun addStatusRow(parent: LinearLayout, label: String, active: Boolean, dp: (Int) -> Int) {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(4), 0, dp(4))
         }
-        return false
+
+        val dot = TextView(this).apply {
+            text = if (active) "\u25CF" else "\u25CB"
+            setTextColor(if (active) Color.parseColor("#4CAF50") else Color.parseColor("#F44336"))
+            textSize = 16f
+            setPadding(0, 0, dp(8), 0)
+        }
+        row.addView(dot)
+
+        val labelView = TextView(this).apply {
+            text = "$label: ${if (active) "Active" else "Inactive"}"
+            textSize = 14f
+            setTextColor(Color.parseColor("#424242"))
+        }
+        row.addView(labelView)
+
+        parent.addView(row)
     }
 }

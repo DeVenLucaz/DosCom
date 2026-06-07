@@ -92,9 +92,9 @@ object ScreenReader {
         }
 
         // Layer 2: Fallback to Gemini Vision API
-        if (screenshot != null) {
+        if (screenshot != null && GeminiVisionClient.isConfigured()) {
             val visionResult = GeminiVisionClient.analyze(screenshot, query)
-            if (visionResult != null) {
+            if (visionResult != null && visionResult.found) {
                 val mapped = CoordinateMapper.fromPercent(
                     context, 
                     visionResult.xPercent, 

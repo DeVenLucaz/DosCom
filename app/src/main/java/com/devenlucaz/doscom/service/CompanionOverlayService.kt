@@ -42,6 +42,9 @@ import com.devenlucaz.doscom.service.DosComAccessibilityService
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class CompanionOverlayService : Service() {
 
@@ -60,6 +63,13 @@ class CompanionOverlayService : Service() {
         }
     }
 
+    private val notificationReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val reactionType = intent?.getStringExtra(DosComNotificationListener.EXTRA_REACTION_TYPE) ?: return
+            handleNotificationReaction(reactionType)
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_NOT_STICKY
     }
@@ -69,6 +79,10 @@ class CompanionOverlayService : Service() {
         try {
             startForegroundServiceNotification()
             setupOverlayView()
+            LocalBroadcastManager.getInstance(this).registerReceiver(
+                notificationReceiver,
+                IntentFilter(DosComNotificationListener.ACTION_NOTIFICATION_REACTION)
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             stopSelf()
@@ -211,6 +225,7 @@ class CompanionOverlayService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationReceiver)
         stopIdleBehaviors()
         serviceScope.cancel()
         if (::overlayView.isInitialized) {
@@ -412,6 +427,30 @@ class CompanionOverlayService : Service() {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun handleNotificationReaction(reactionType: String) {
+        when (reactionType) {
+            DosComNotificationListener.REACTION_WAVE -> {
+                overlayView.setState(CharacterState.REACT_WAVE)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    overlayView.setState(CharacterState.IDLE_BOB)
+                }, 2000)
+            }
+            DosComNotificationListener.REACTION_WORRY -> {
+                overlayView.setState(CharacterState.REACT_WORRY)
+                showSpeechBubble("Low battery!", layoutParams.x, layoutParams.y)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    overlayView.setState(CharacterState.IDLE_BOB)
+                }, 3000)
+            }
+            DosComNotificationListener.REACTION_HAPPY -> {
+                overlayView.setState(CharacterState.REACT_HAPPY)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    overlayView.setState(CharacterState.IDLE_BOB)
+                }, 2000)
             }
         }
     }

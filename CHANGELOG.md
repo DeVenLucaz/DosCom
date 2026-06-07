@@ -133,3 +133,26 @@
 - Added live partial result streaming so users can watch their speech transcribe in real-time, giving them the option to correct it manually instead of auto-submitting.
 - Added a pulsing red circular animation to the Mic button and a rapid blinking red animation to the companion's antenna during the active listening state.
 - Handled error states gracefully by falling back to the `IDLE_BOB` state and displaying a "Couldn't hear that, try typing?" speech bubble.
+
+### Added (Phase 8 Complete — Gemini Integration)
+- Implemented full `GeminiVisionClient` with Gemini 1.5 Flash API integration for screenshot-based UI element detection (Layer 2 fallback).
+- Sends base64-encoded screenshots with structured prompts; parses JSON response with `found`, `x_percent`, `y_percent`, `explanation`, and `element_description` fields.
+- Added `configure(key)` and `isConfigured()` methods for API key management at runtime.
+- Added markdown code fence stripping for robust response parsing.
+- Created `GeminiIntentBridge` for deep-linking queries to the Gemini app with Play Store fallback.
+- Updated `ScreenReader` Layer 2 to check `isConfigured()` before calling Vision API and validate the `found` flag.
+
+### Added (Phase 9 Complete — Notification Reactions)
+- Created `DosComNotificationListener` extending `NotificationListenerService` to react to incoming notifications.
+- Categorizes notifications into `wave` (messages), `worry` (battery/status), and `happy` (charging/system) reactions.
+- Broadcasts reaction type via `LocalBroadcastManager` to `CompanionOverlayService`.
+- `CompanionOverlayService` registers a `BroadcastReceiver` that triggers character animations: `REACT_WAVE` (2s), `REACT_WORRY` with "Low battery!" speech bubble (3s), `REACT_HAPPY` (2s).
+- Added `localbroadcastmanager` dependency to `build.gradle.kts`.
+
+### Added (Phase 10 Complete — Onboarding & Polish)
+- Created `OnboardingActivity` with an 8-step guided setup flow: Welcome, Overlay Permission, Accessibility Service, Screen Capture, Battery Optimization, Auto-Launch (Oppo/ColorOS), Microphone Permission, and optional Vision API Key entry.
+- Each step shows an emoji icon, title, description, and an action button that turns green with a checkmark once the permission is granted.
+- Created `ConfigManager` to securely store and retrieve the Gemini API key in app-private JSON storage.
+- Created `BatteryOptimizationHelper` to request and check battery optimization exemption.
+- Completely rewrote `MainActivity` as a minimal control panel: shows "DosCom is running" with live status indicators for Overlay, Accessibility, and Vision API, plus "Stop DosCom" and "Re-run Setup" buttons.
+- `MainActivity` now routes to `OnboardingActivity` on first launch and resets onboarding if overlay permission is revoked.
