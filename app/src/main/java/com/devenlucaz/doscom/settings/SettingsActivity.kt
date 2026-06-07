@@ -49,6 +49,25 @@ class SettingsActivity : AppCompatActivity() {
         cardAwake = findViewById(R.id.cardAwake)
         cardAware = findViewById(R.id.cardAware)
 
+        val renderAlive = findViewById<com.devenlucaz.doscom.character.CompanionRenderer>(R.id.render_cardAlive)
+        val renderAwake = findViewById<com.devenlucaz.doscom.character.CompanionRenderer>(R.id.render_cardAwake)
+        val renderAware = findViewById<com.devenlucaz.doscom.character.CompanionRenderer>(R.id.render_cardAware)
+
+        renderAlive.state = com.devenlucaz.doscom.character.AnimationState()
+        
+        renderAwake.state = com.devenlucaz.doscom.character.AnimationState(
+            eyesWide = true,
+            leftArmAngle = -45f,
+            rightArmAngle = -45f,
+            mouthOpen = true
+        )
+        
+        renderAware.state = com.devenlucaz.doscom.character.AnimationState(
+            leftArmAngle = -90f,
+            rightArmAngle = -90f,
+            eyesHalf = true
+        )
+
         val currentMode = ModeManager.getMode(this)
         updateModeUI(currentMode)
 

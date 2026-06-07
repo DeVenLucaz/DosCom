@@ -17,10 +17,16 @@ class ConfirmRing(
     private val onComplete: () -> Unit = {}
 ) : View(context) {
 
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#4285F4")
         style = Paint.Style.STROKE
         strokeWidth = 6f * context.resources.displayMetrics.density
+    }
+
+    private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#4285F4")
+        style = Paint.Style.FILL
+        alpha = 40 // Semi-transparent glass fill
     }
 
     private var currentScale = 0.5f
@@ -43,7 +49,8 @@ class ConfirmRing(
                 currentScale = 0.5f + (1.5f - 0.5f) * progress
                 currentAlpha = (255 * (1f - progress)).toInt()
                 
-                paint.alpha = currentAlpha
+                strokePaint.alpha = currentAlpha
+                fillPaint.alpha = (40 * (1f - progress)).toInt()
                 scaleX = currentScale
                 scaleY = currentScale
                 invalidate()
@@ -67,9 +74,10 @@ class ConfirmRing(
         super.onDraw(canvas)
         val cx = width / 2f
         val cy = height / 2f
-        val radius = (minOf(width, height) - paint.strokeWidth) / 2f
+        val radius = (minOf(width, height) - strokePaint.strokeWidth) / 2f
         if (radius > 0) {
-            canvas.drawCircle(cx, cy, radius, paint)
+            canvas.drawCircle(cx, cy, radius, fillPaint)
+            canvas.drawCircle(cx, cy, radius, strokePaint)
         }
     }
 

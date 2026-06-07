@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-alpha.12] - 2026-06-07
+### Added (V2 Phase 11 Complete — Glassmorphism UI)
+- Rewrote `ChatInputOverlay` with a custom translucent glass bar, custom SVG icon buttons, and sliding animations.
+- Upgraded `SpeechBubble` with a frosted glass aesthetic and directional tail based on on-screen position.
+- Updated `ConfirmRing` visual aesthetic with glass strokes and semi-transparent fill.
+- Polished `SettingsActivity` with glass effect cards and live `CompanionRenderer` previews for each mode.
+
 ## [2.0.0-alpha.11] - 2026-06-07
 ### Added (V2 Phase 10 Complete — Birthday System)
 - Created `BirthdaySystem` to store and retrieve the user's birthdate and DosCom's install date using persistent storage.

@@ -520,7 +520,10 @@ class CompanionOverlayService : Service() {
         val bubbleOffset = (100 * resources.displayMetrics.density).toInt()
 
         params.x = dosComX
-        if (dosComY > screenHeight / 2) {
+        val isAbove = dosComY > screenHeight / 2
+        speechBubble.setDirection(isAbove)
+        
+        if (isAbove) {
             params.y = kotlin.math.max(0, dosComY - bubbleOffset)
         } else {
             params.y = dosComY + sizePx + (20 * resources.displayMetrics.density).toInt()
