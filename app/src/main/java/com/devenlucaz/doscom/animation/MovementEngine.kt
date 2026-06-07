@@ -7,20 +7,20 @@ object MovementEngine {
         // direction: 1 = down, -1 = up
         return listOf(
             AnimationState(
-                leftArmAngle = -135f, rightArmAngle = -45f,
-                leftLegAngle = -45f, rightLegAngle = 0f
+                leftArmAngle = -67.5f, rightArmAngle = -22.5f,
+                leftLegAngle = -22.5f, rightLegAngle = 0f
             ),
             AnimationState(
-                leftArmAngle = -90f, rightArmAngle = -90f,
-                leftLegAngle = -20f, rightLegAngle = -20f
+                leftArmAngle = -22.5f, rightArmAngle = -22.5f,
+                leftLegAngle = -10f, rightLegAngle = -10f
             ),
             AnimationState(
-                leftArmAngle = -45f, rightArmAngle = -135f,
-                leftLegAngle = 0f, rightLegAngle = -45f
+                leftArmAngle = -22.5f, rightArmAngle = -67.5f,
+                leftLegAngle = 0f, rightLegAngle = -22.5f
             ),
             AnimationState(
-                leftArmAngle = -90f, rightArmAngle = -90f,
-                leftLegAngle = -20f, rightLegAngle = -20f
+                leftArmAngle = -22.5f, rightArmAngle = -22.5f,
+                leftLegAngle = -10f, rightLegAngle = -10f
             )
         )
     }
@@ -29,24 +29,24 @@ object MovementEngine {
         // direction: 1 = right, -1 = left
         return listOf(
             AnimationState(
-                leftArmAngle = -45f, rightArmAngle = 45f,
-                leftLegAngle = 45f, rightLegAngle = -45f,
-                bodyRotation = 90f
+                leftArmAngle = -22.5f, rightArmAngle = 22.5f,
+                leftLegAngle = 22.5f, rightLegAngle = -22.5f,
+                bodyRotation = 45f
             ),
             AnimationState(
                 leftArmAngle = 0f, rightArmAngle = 0f,
                 leftLegAngle = 0f, rightLegAngle = 0f,
-                bodyRotation = 90f
+                bodyRotation = 45f
             ),
             AnimationState(
-                leftArmAngle = 45f, rightArmAngle = -45f,
-                leftLegAngle = -45f, rightLegAngle = 45f,
-                bodyRotation = 90f
+                leftArmAngle = 22.5f, rightArmAngle = -22.5f,
+                leftLegAngle = -22.5f, rightLegAngle = 22.5f,
+                bodyRotation = 45f
             ),
             AnimationState(
                 leftArmAngle = 0f, rightArmAngle = 0f,
                 leftLegAngle = 0f, rightLegAngle = 0f,
-                bodyRotation = 90f
+                bodyRotation = 45f
             )
         )
     }

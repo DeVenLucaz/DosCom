@@ -66,10 +66,11 @@ class CompanionRenderer @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         
-        val w = width.toFloat()
-        val h = height.toFloat()
-        val cx = w / 2f
-        val cy = h / 2f
+        val density = context.resources.displayMetrics.density
+        val w = 80f * density
+        val h = 80f * density
+        val cx = width.toFloat() / 2f
+        val cy = height.toFloat() / 2f
         
         // --- Proportions Base ---
         val headH = 0.38f * h

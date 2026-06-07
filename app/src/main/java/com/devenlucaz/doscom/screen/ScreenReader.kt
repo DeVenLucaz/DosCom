@@ -14,6 +14,8 @@ object ScreenReader {
     data class TargetResult(
         val x: Int,
         val y: Int,
+        val width: Int,
+        val height: Int,
         val explanation: String,
         val source: String
     )
@@ -78,11 +80,13 @@ object ScreenReader {
             }
 
             if (foundNode != null) {
-                val coords = AccessibilityScanner.getNodeCenterCoords(foundNode)
-                val mapped = CoordinateMapper.fromNodeCoords(context, coords.first, coords.second, characterSizePx)
+                val rect = android.graphics.Rect()
+                foundNode.getBoundsInScreen(rect)
                 return TargetResult(
-                    x = mapped.first,
-                    y = mapped.second,
+                    x = rect.centerX(),
+                    y = rect.centerY(),
+                    width = rect.width(),
+                    height = rect.height(),
                     explanation = "I found exactly what you're looking for natively.",
                     source = "Accessibility"
                 )
@@ -95,15 +99,16 @@ object ScreenReader {
         if (screenshot != null && GeminiVisionClient.isConfigured()) {
             val visionResult = GeminiVisionClient.analyze(screenshot, query)
             if (visionResult != null && visionResult.found) {
-                val mapped = CoordinateMapper.fromPercent(
-                    context, 
-                    visionResult.xPercent, 
-                    visionResult.yPercent, 
-                    characterSizePx
-                )
+                val normX = if (visionResult.xPercent > 1f) visionResult.xPercent / 100f else visionResult.xPercent
+                val normY = if (visionResult.yPercent > 1f) visionResult.yPercent / 100f else visionResult.yPercent
+                val rawX = (com.devenlucaz.doscom.utils.ScreenMetrics.getScreenWidth(context) * normX).toInt()
+                val rawY = (com.devenlucaz.doscom.utils.ScreenMetrics.getScreenHeight(context) * normY).toInt()
+
                 return TargetResult(
-                    x = mapped.first,
-                    y = mapped.second,
+                    x = rawX,
+                    y = rawY,
+                    width = 0,
+                    height = 0,
                     explanation = visionResult.explanation,
                     source = "GeminiVision"
                 )

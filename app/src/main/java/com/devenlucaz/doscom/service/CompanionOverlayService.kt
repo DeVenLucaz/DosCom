@@ -106,6 +106,8 @@ class CompanionOverlayService : Service() {
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
         val sizePx = (80 * resources.displayMetrics.density).toInt()
+        val paddingPx = (40 * resources.displayMetrics.density).toInt()
+        val paddedSizePx = sizePx + paddingPx * 2
 
         overlayView = CompanionRenderer(this)
 
@@ -123,16 +125,18 @@ class CompanionOverlayService : Service() {
         idleEngine.animSpeedMultiplier = 1f
         idleEngine.sleepTimerMs = 5 * 60 * 1000L
 
+        val screenWidth = ScreenMetrics.getScreenWidth(this)
+        val screenHeight = ScreenMetrics.getScreenHeight(this)
         layoutParams = WindowManager.LayoutParams(
-            sizePx,
-            sizePx,
+            paddedSizePx,
+            paddedSizePx,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 50
-            y = 300
+            x = screenWidth - paddedSizePx
+            y = screenHeight / 2 - paddedSizePx / 2
         }
 
         var initialX = 0
@@ -331,9 +335,9 @@ class CompanionOverlayService : Service() {
 
     private fun snapToNearestEdge() {
         val screenWidth = resources.displayMetrics.widthPixels
-        val sizePx = (80 * resources.displayMetrics.density).toInt()
-        val centerX = layoutParams.x + sizePx / 2
-        val targetX = if (centerX < screenWidth / 2) 0 else screenWidth - sizePx
+        val viewW = overlayView.width
+        val centerX = layoutParams.x + viewW / 2
+        val targetX = if (centerX < screenWidth / 2) 0 else screenWidth - viewW
 
         val animator = ValueAnimator.ofInt(layoutParams.x, targetX)
         animator.duration = 200
@@ -553,29 +557,92 @@ class CompanionOverlayService : Service() {
                     showSpeechBubble("Hmm, I couldn't find that.", layoutParams.x, layoutParams.y)
                     idleEngine.targetState.mouthExpression = 2 // REACT_WORRY
                 } else {
-                    val targetCenterX = target.x + charSizePx / 2
-                    val targetCenterY = target.y + charSizePx / 2
+                    val targetCenterX = target.x
+                    val targetCenterY = target.y
+                    
+                    val screenWidth = ScreenMetrics.getScreenWidth(this@CompanionOverlayService)
+                    val screenHeight = ScreenMetrics.getScreenHeight(this@CompanionOverlayService)
+                    
+                    val leftSpace = target.x - target.width / 2
+                    val rightSpace = screenWidth - (target.x + target.width / 2)
+                    val topSpace = target.y - target.height / 2
+                    val bottomSpace = screenHeight - (target.y + target.height / 2)
+
+                    var bestSide = "RIGHT"
+                    var maxSpace = rightSpace
+                    if (leftSpace > maxSpace) { maxSpace = leftSpace; bestSide = "LEFT" }
+                    if (topSpace > maxSpace) { maxSpace = topSpace; bestSide = "TOP" }
+                    if (bottomSpace > maxSpace) { maxSpace = bottomSpace; bestSide = "BOTTOM" }
+                    
+                    val charSize = overlayView.width
+                    
+                    var finalX = 0
+                    var finalY = 0
+                    var pointingArmAngle = 0f
+                    var isLeftArm = false
+                    
+                    when (bestSide) {
+                        "RIGHT" -> {
+                            finalX = target.x + target.width / 2 + 10
+                            finalY = target.y - charSize / 2
+                            isLeftArm = true
+                            pointingArmAngle = 90f
+                        }
+                        "LEFT" -> {
+                            finalX = target.x - target.width / 2 - charSize - 10
+                            finalY = target.y - charSize / 2
+                            isLeftArm = false
+                            pointingArmAngle = -90f
+                        }
+                        "TOP" -> {
+                            finalX = target.x - charSize / 2
+                            finalY = target.y - target.height / 2 - charSize - 10
+                            isLeftArm = false
+                            pointingArmAngle = 180f
+                        }
+                        "BOTTOM" -> {
+                            finalX = target.x - charSize / 2
+                            finalY = target.y + target.height / 2 + 10
+                            isLeftArm = false
+                            pointingArmAngle = 0f
+                        }
+                    }
+                    
+                    finalX = kotlin.math.max(0, kotlin.math.min(finalX, screenWidth - charSize))
+                    finalY = kotlin.math.max(0, kotlin.math.min(finalY, screenHeight - charSize))
 
                     showConfirmRing(targetCenterX, targetCenterY) {
-                        val animator = ValueAnimator.ofInt(layoutParams.x, target.x)
+                        val animator = ValueAnimator.ofInt(layoutParams.x, finalX)
+                        val yAnimator = ValueAnimator.ofInt(layoutParams.y, finalY)
                         animator.duration = 500
+                        yAnimator.duration = 500
+                        
                         animator.addUpdateListener { anim ->
                             layoutParams.x = anim.animatedValue as Int
-                            layoutParams.y = target.y
+                        }
+                        yAnimator.addUpdateListener { anim ->
+                            layoutParams.y = anim.animatedValue as Int
                             windowManager.updateViewLayout(overlayView, layoutParams)
                         }
+                        
                         animator.addListener(object : android.animation.AnimatorListenerAdapter() {
                             override fun onAnimationEnd(anim: android.animation.Animator) {
-                                showSpeechBubble(target.explanation, target.x, target.y)
-                                idleEngine.targetState.rightArmAngle = -90f // POINT equivalent
+                                showSpeechBubble(target.explanation, finalX, finalY)
+                                if (isLeftArm) {
+                                    idleEngine.targetState.leftArmAngle = pointingArmAngle
+                                } else {
+                                    idleEngine.targetState.rightArmAngle = pointingArmAngle
+                                }
                                 serviceScope.launch(Dispatchers.Main) {
                                     delay(4000)
                                     snapToNearestEdge()
-                                    idleEngine.targetState.rightArmAngle = 0f // reset point
+                                    idleEngine.targetState.leftArmAngle = 0f
+                                    idleEngine.targetState.rightArmAngle = 0f
                                 }
                             }
                         })
                         animator.start()
+                        yAnimator.start()
                     }
                 }
             }

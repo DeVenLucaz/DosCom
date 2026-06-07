@@ -60,7 +60,7 @@ class IdleAnimationEngine(
             fallAsleep()
         }
         
-        val rate = 0.08f * animSpeedMultiplier
+        val rate = 0.03f * animSpeedMultiplier
         lerpState(currentState, targetState, rate)
         
         onUpdateState(currentState)
