@@ -228,8 +228,6 @@ class IdleAnimationEngine(
             targetState.mouthOpen = false
             targetState.eyesClosed = true
             targetState.bodyRotation = 10f 
-            targetState.leftLegAngle = -45f
-            targetState.rightLegAngle = -45f
             targetState.bodyOffsetY = 15f
         }, 3000)
     }
