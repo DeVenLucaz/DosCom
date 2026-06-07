@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-alpha.5] - 2026-06-07
+### Added (V2 Phase 4 Complete)
+- Created `MovementEngine` to dynamically generate sequential AnimationState frames for 4-step climbing and crawling cycles.
+- Wired dragging listeners in `CompanionOverlayService` to interpret real-time drag distance and edge proximity.
+- Enabled physical synchronization between user drag speed and limb actuation (the robot now actively mimes climbing up/down side edges and crawling along top/bottom edges as it is dragged).
+
+
 ## [2.0.0-alpha.4] - 2026-06-07
 ### Added (V2 Phase 3 Complete)
 - Created `PoseEngine` to calculate screen bounds and dynamically assign position-aware poses (`HANG_LEFT`, `HANG_RIGHT`, `GRIP_TOP`, `SIT_BOTTOM`, `FLOATING`).

@@ -113,6 +113,10 @@ class CompanionOverlayService : Service() {
         var initialTouchX = 0f
         var initialTouchY = 0f
         var isDragging = false
+        var lastDragX = 0f
+        var lastDragY = 0f
+        var dragFrameIndex = 0
+        var dragDistanceAccumulator = 0f
 
         val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
             override fun onLongPress(e: MotionEvent) {
@@ -160,6 +164,9 @@ class CompanionOverlayService : Service() {
                     initialY = layoutParams.y
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
+                    lastDragX = event.rawX
+                    lastDragY = event.rawY
+                    dragDistanceAccumulator = 0f
                     isDragging = false
                     true
                 }
@@ -180,6 +187,41 @@ class CompanionOverlayService : Service() {
                         layoutParams.y = max(0, min(initialY + deltaY, screenHeight - view.height - statusBarHeight))
 
                         windowManager.updateViewLayout(overlayView, layoutParams)
+                        
+                        val dx = event.rawX - lastDragX
+                        val dy = event.rawY - lastDragY
+                        val dist = kotlin.math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+                        
+                        lastDragX = event.rawX
+                        lastDragY = event.rawY
+                        
+                        dragDistanceAccumulator += dist
+                        if (dragDistanceAccumulator > 20f) {
+                            dragDistanceAccumulator = 0f
+                            dragFrameIndex = (dragFrameIndex + 1) % 4
+                            
+                            val pose = com.devenlucaz.doscom.animation.PoseEngine.detectPose(
+                                layoutParams.x, layoutParams.y,
+                                screenWidth, screenHeight,
+                                view.width, view.height
+                            )
+                            
+                            val stateList = when (pose) {
+                                com.devenlucaz.doscom.animation.RobotPose.HANG_LEFT, com.devenlucaz.doscom.animation.RobotPose.HANG_RIGHT -> {
+                                    val dir = if (dy < 0) -1 else 1 
+                                    com.devenlucaz.doscom.animation.MovementEngine.generateClimbFrames(dir)
+                                }
+                                com.devenlucaz.doscom.animation.RobotPose.GRIP_TOP, com.devenlucaz.doscom.animation.RobotPose.SIT_BOTTOM -> {
+                                    val dir = if (dx > 0) 1 else -1 
+                                    com.devenlucaz.doscom.animation.MovementEngine.generateCrawlFrames(dir)
+                                }
+                                else -> null
+                            }
+                            
+                            if (stateList != null) {
+                                overlayView.state = stateList[dragFrameIndex]
+                            }
+                        }
                     }
                     true
                 }
