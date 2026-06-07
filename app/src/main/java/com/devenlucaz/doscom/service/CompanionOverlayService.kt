@@ -19,8 +19,9 @@ import androidx.core.app.NotificationCompat
 import com.devenlucaz.doscom.R
 import android.os.Handler
 import android.os.Looper
-import com.devenlucaz.doscom.character.CharacterState
 import com.devenlucaz.doscom.character.CompanionRenderer
+import com.devenlucaz.doscom.animation.IdleAnimationEngine
+import com.devenlucaz.doscom.character.AnimationQueue
 import com.devenlucaz.doscom.utils.ScreenMetrics
 import kotlin.math.max
 import kotlin.math.min
@@ -36,7 +37,6 @@ import com.devenlucaz.doscom.utils.ScreenshotHelper
 import kotlin.math.abs
 import android.view.GestureDetector
 
-import com.devenlucaz.doscom.character.CompanionAnimator
 import com.devenlucaz.doscom.screen.ScreenReader
 import com.devenlucaz.doscom.service.DosComAccessibilityService
 import kotlinx.coroutines.SupervisorJob
@@ -56,12 +56,10 @@ class CompanionOverlayService : Service() {
     
     var lastScreenshot: Bitmap? = null
 
-    private val idleHandler = Handler(Looper.getMainLooper())
-    private val idleRunnable = object : Runnable {
-        override fun run() {
-            scheduleNextIdleBehavior()
-        }
-    }
+    private val animationQueue = AnimationQueue()
+    private lateinit var idleEngine: IdleAnimationEngine
+
+
 
     private val notificationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -95,6 +93,20 @@ class CompanionOverlayService : Service() {
         val sizePx = (80 * resources.displayMetrics.density).toInt()
 
         overlayView = CompanionRenderer(this)
+
+        idleEngine = IdleAnimationEngine(
+            queue = animationQueue,
+            onUpdateState = { state ->
+                overlayView.state = state
+                overlayView.invalidate()
+            },
+            onDrawZzz = { particles ->
+                overlayView.zzzParticles = particles
+                overlayView.invalidate()
+            }
+        )
+        idleEngine.animSpeedMultiplier = 1f
+        idleEngine.sleepTimerMs = 5 * 60 * 1000L
 
         layoutParams = WindowManager.LayoutParams(
             sizePx,
@@ -130,7 +142,8 @@ class CompanionOverlayService : Service() {
                     vibrator.vibrate(50)
                 }
 
-                overlayView.setState(CharacterState.LISTEN)
+                idleEngine.interact()
+                idleEngine.targetState.mouthExpression = 1 // LISTEN
 
                 CoroutineScope(Dispatchers.Main).launch {
                     try {
@@ -313,15 +326,9 @@ class CompanionOverlayService : Service() {
         
         if (pose == com.devenlucaz.doscom.animation.RobotPose.FLOATING) {
             lerpAnimationState(overlayView.state, targetState, 400L) {
-                CompanionAnimator.walkToEdge(
-                    this@CompanionOverlayService,
-                    overlayView,
-                    layoutParams,
-                    windowManager
-                ) {
-                    val idleState = com.devenlucaz.doscom.character.AnimationState()
-                    lerpAnimationState(overlayView.state, idleState, 200L)
-                }
+                snapToNearestEdge()
+                val idleState = com.devenlucaz.doscom.character.AnimationState()
+                lerpAnimationState(overlayView.state, idleState, 200L)
             }
         } else {
             if (pose == com.devenlucaz.doscom.animation.RobotPose.HANG_LEFT || pose == com.devenlucaz.doscom.animation.RobotPose.HANG_RIGHT) {
@@ -377,30 +384,13 @@ class CompanionOverlayService : Service() {
     }
 
     private fun startIdleBehaviors() {
-        scheduleNextIdleBehavior()
+        idleEngine.start()
     }
 
     private fun stopIdleBehaviors() {
-        idleHandler.removeCallbacks(idleRunnable)
+        idleEngine.stop()
     }
 
-    private fun scheduleNextIdleBehavior() {
-        val states = listOf(
-            CharacterState.IDLE_BOB,
-            CharacterState.IDLE_BLINK,
-            CharacterState.IDLE_LOOK_LEFT,
-            CharacterState.IDLE_LOOK_RIGHT
-        )
-        val weights = listOf(0.2f, 0.4f, 0.2f, 0.2f)
-        val r = Random.nextFloat()
-        var cumulative = 0f
-        var selectedState = CharacterState.IDLE_BOB
-        for (i in states.indices) {
-            cumulative += weights[i]
-            if (r <= cumulative) {
-                selectedState = states[i]
-                break
-            }
         }
         
         overlayView.setState(selectedState)
@@ -476,14 +466,21 @@ class CompanionOverlayService : Service() {
                 // Restore flags when dismissed
                 layoutParams.flags = layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                 windowManager.updateViewLayout(overlayView, layoutParams)
-                overlayView.setState(CharacterState.IDLE_BOB)
+                idleEngine.interact()
+                idleEngine.targetState.mouthExpression = 0
+                idleEngine.targetState.leftArmAngle = 0f
+                idleEngine.targetState.bodyOffsetY = 0f
             },
             onVoiceStart = {
-                overlayView.setState(CharacterState.LISTEN)
+                idleEngine.interact()
+                idleEngine.targetState.mouthExpression = 1 // LISTEN
             },
             onVoiceError = {
                 showSpeechBubble("Couldn't hear that, try typing?", layoutParams.x, layoutParams.y)
-                overlayView.setState(CharacterState.IDLE_BOB)
+                idleEngine.interact()
+                idleEngine.targetState.mouthExpression = 0
+                idleEngine.targetState.leftArmAngle = 0f
+                idleEngine.targetState.bodyOffsetY = 0f
             }
         )
 
@@ -523,7 +520,7 @@ class CompanionOverlayService : Service() {
             withContext(Dispatchers.Main) {
                 if (target == null) {
                     showSpeechBubble("Hmm, I couldn't find that.", layoutParams.x, layoutParams.y)
-                    overlayView.setState(CharacterState.REACT_WORRY)
+                    idleEngine.targetState.mouthExpression = 2 // REACT_WORRY
                 } else {
                     val targetCenterX = target.x + charSizePx / 2
                     val targetCenterY = target.y + charSizePx / 2
@@ -541,7 +538,10 @@ class CompanionOverlayService : Service() {
                                     layoutParams, 
                                     windowManager
                                 ) {
-                                    overlayView.setState(CharacterState.IDLE_BOB)
+                                    idleEngine.interact()
+                idleEngine.targetState.mouthExpression = 0
+                idleEngine.targetState.leftArmAngle = 0f
+                idleEngine.targetState.bodyOffsetY = 0f
                                 }
                             }
                         }
@@ -554,22 +554,34 @@ class CompanionOverlayService : Service() {
     private fun handleNotificationReaction(reactionType: String) {
         when (reactionType) {
             DosComNotificationListener.REACTION_WAVE -> {
-                overlayView.setState(CharacterState.REACT_WAVE)
+                idleEngine.interact()
+                idleEngine.targetState.leftArmAngle = -160f
                 Handler(Looper.getMainLooper()).postDelayed({
-                    overlayView.setState(CharacterState.IDLE_BOB)
+                    idleEngine.interact()
+                idleEngine.targetState.mouthExpression = 0
+                idleEngine.targetState.leftArmAngle = 0f
+                idleEngine.targetState.bodyOffsetY = 0f
                 }, 2000)
             }
             DosComNotificationListener.REACTION_WORRY -> {
-                overlayView.setState(CharacterState.REACT_WORRY)
+                idleEngine.targetState.mouthExpression = 2 // REACT_WORRY
                 showSpeechBubble("Low battery!", layoutParams.x, layoutParams.y)
                 Handler(Looper.getMainLooper()).postDelayed({
-                    overlayView.setState(CharacterState.IDLE_BOB)
+                    idleEngine.interact()
+                idleEngine.targetState.mouthExpression = 0
+                idleEngine.targetState.leftArmAngle = 0f
+                idleEngine.targetState.bodyOffsetY = 0f
                 }, 3000)
             }
             DosComNotificationListener.REACTION_HAPPY -> {
-                overlayView.setState(CharacterState.REACT_HAPPY)
+                idleEngine.interact()
+                idleEngine.targetState.mouthExpression = 1
+                idleEngine.targetState.bodyOffsetY = -10f
                 Handler(Looper.getMainLooper()).postDelayed({
-                    overlayView.setState(CharacterState.IDLE_BOB)
+                    idleEngine.interact()
+                idleEngine.targetState.mouthExpression = 0
+                idleEngine.targetState.leftArmAngle = 0f
+                idleEngine.targetState.bodyOffsetY = 0f
                 }, 2000)
             }
         }

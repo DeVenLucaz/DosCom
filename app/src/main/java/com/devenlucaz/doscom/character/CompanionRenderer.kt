@@ -13,24 +13,11 @@ class CompanionRenderer @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : View(context, attrs, defStyleAttr), Choreographer.FrameCallback {
-
-    // --- V1 COMPATIBILITY STUBS ---
-    var currentState: CharacterState = CharacterState.IDLE_BOB
-        private set
-    var currentFrame: Int = 0
-        private set
-    fun setState(characterState: CharacterState) {
-        currentState = characterState
-        currentFrame = 0
-    }
-    fun nextFrame() {
-        currentFrame = (currentFrame + 1) % 4
-    }
-    // ------------------------------
+) : View(context, attrs, defStyleAttr) {
 
     // Phase 2b: Animation State
     var state = AnimationState()
+    var zzzParticles = listOf<com.devenlucaz.doscom.animation.ZzzParticle>()
 
     var antennaColor: Int = Color.WHITE
 
@@ -74,20 +61,7 @@ class CompanionRenderer @JvmOverloads constructor(
         setLayerType(LAYER_TYPE_SOFTWARE, null)
     }
 
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        Choreographer.getInstance().postFrameCallback(this)
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        Choreographer.getInstance().removeFrameCallback(this)
-    }
-
-    override fun doFrame(frameTimeNanos: Long) {
-        invalidate()
-        Choreographer.getInstance().postFrameCallback(this)
-    }
+    // Removed Choreographer logic
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -234,6 +208,18 @@ class CompanionRenderer @JvmOverloads constructor(
         // Props
         if (state.activeProp != PropType.NONE) {
             drawProp(canvas, cx, headY, headW, headH, armLeftX, armY, w, h)
+        }
+
+        // Draw Zzz particles
+        if (zzzParticles.isNotEmpty()) {
+            val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                textSize = 0.1f * h
+                color = Color.parseColor("#C8C8C8")
+            }
+            for (p in zzzParticles) {
+                textPaint.alpha = p.alpha
+                canvas.drawText("Z", cx + 0.2f * w + p.x, headY - headH/2f + p.y, textPaint)
+            }
         }
 
         // Restore global transform

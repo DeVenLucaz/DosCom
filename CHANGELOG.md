@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-alpha.6] - 2026-06-07
+### Added (V2 Phase 5 Complete)
+- Created `IdleAnimationEngine` to seamlessly blend animation states using continuous lerp evaluation inside a 60fps Choreographer loop.
+- Introduced `ZzzParticle` sleep state, triggering automatically after a configurable idle delay with cute curl-up and Zzz visual rendering.
+- Added various sub-animations (Stretch, Hiccup, Sneeze, Yawn, Coin flip, Phone check) dynamically scheduled during inactive periods.
+- Replaced the deprecated `CompanionAnimator` and `CharacterState` (V1 concepts) entirely with the new declarative `AnimationState` architecture and `IdleAnimationEngine` driver.
+
+
 ## [2.0.0-alpha.5] - 2026-06-07
 ### Added (V2 Phase 4 Complete)
 - Created `MovementEngine` to dynamically generate sequential AnimationState frames for 4-step climbing and crawling cycles.
