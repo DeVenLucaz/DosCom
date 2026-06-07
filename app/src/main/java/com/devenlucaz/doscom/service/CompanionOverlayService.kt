@@ -135,7 +135,7 @@ class CompanionOverlayService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = screenWidth - paddedSizePx
+            x = screenWidth - paddedSizePx + paddingPx
             y = screenHeight / 2 - paddedSizePx / 2
         }
 
@@ -214,9 +214,10 @@ class CompanionOverlayService : Service() {
                         val screenWidth = ScreenMetrics.getScreenWidth(this)
                         val screenHeight = ScreenMetrics.getScreenHeight(this)
                         val statusBarHeight = ScreenMetrics.getStatusBarHeight(this)
+                        val paddingPx = (40 * resources.displayMetrics.density).toInt()
 
-                        layoutParams.x = max(0, min(initialX + deltaX, screenWidth - view.width))
-                        layoutParams.y = max(0, min(initialY + deltaY, screenHeight - view.height - statusBarHeight))
+                        layoutParams.x = max(-paddingPx, min(initialX + deltaX, screenWidth - view.width + paddingPx))
+                        layoutParams.y = max(-paddingPx, min(initialY + deltaY, screenHeight - view.height - statusBarHeight + paddingPx))
 
                         windowManager.updateViewLayout(overlayView, layoutParams)
                         
@@ -336,8 +337,9 @@ class CompanionOverlayService : Service() {
     private fun snapToNearestEdge() {
         val screenWidth = resources.displayMetrics.widthPixels
         val viewW = overlayView.width
+        val paddingPx = (40 * resources.displayMetrics.density).toInt()
         val centerX = layoutParams.x + viewW / 2
-        val targetX = if (centerX < screenWidth / 2) 0 else screenWidth - viewW
+        val targetX = if (centerX < screenWidth / 2) -paddingPx else screenWidth - viewW + paddingPx
 
         val animator = ValueAnimator.ofInt(layoutParams.x, targetX)
         animator.duration = 200
@@ -562,11 +564,15 @@ class CompanionOverlayService : Service() {
                     
                     val screenWidth = ScreenMetrics.getScreenWidth(this@CompanionOverlayService)
                     val screenHeight = ScreenMetrics.getScreenHeight(this@CompanionOverlayService)
+                    val statusBarHeight = ScreenMetrics.getStatusBarHeight(this@CompanionOverlayService)
+                    val paddingPx = (40 * resources.displayMetrics.density).toInt()
+                    
+                    val targetWMY = target.y - statusBarHeight
                     
                     val leftSpace = target.x - target.width / 2
                     val rightSpace = screenWidth - (target.x + target.width / 2)
-                    val topSpace = target.y - target.height / 2
-                    val bottomSpace = screenHeight - (target.y + target.height / 2)
+                    val topSpace = targetWMY - target.height / 2
+                    val bottomSpace = screenHeight - (targetWMY + target.height / 2)
 
                     var bestSide = "RIGHT"
                     var maxSpace = rightSpace
@@ -575,41 +581,47 @@ class CompanionOverlayService : Service() {
                     if (bottomSpace > maxSpace) { maxSpace = bottomSpace; bestSide = "BOTTOM" }
                     
                     val charSize = overlayView.width
+                    val coreSize = charSize - paddingPx * 2
                     
                     var finalX = 0
                     var finalY = 0
                     var pointingArmAngle = 0f
                     var isLeftArm = false
                     
+                    val targetLeft = target.x - target.width / 2
+                    val targetRight = target.x + target.width / 2
+                    val targetTop = targetWMY - target.height / 2
+                    val targetBottom = targetWMY + target.height / 2
+                    
                     when (bestSide) {
                         "RIGHT" -> {
-                            finalX = target.x + target.width / 2 + 10
-                            finalY = target.y - charSize / 2
+                            finalX = targetRight + 10 - paddingPx
+                            finalY = targetWMY - charSize / 2
                             isLeftArm = true
                             pointingArmAngle = 90f
                         }
                         "LEFT" -> {
-                            finalX = target.x - target.width / 2 - charSize - 10
-                            finalY = target.y - charSize / 2
+                            finalX = targetLeft - 10 - coreSize - paddingPx
+                            finalY = targetWMY - charSize / 2
                             isLeftArm = false
                             pointingArmAngle = -90f
                         }
                         "TOP" -> {
                             finalX = target.x - charSize / 2
-                            finalY = target.y - target.height / 2 - charSize - 10
+                            finalY = targetTop - 10 - coreSize - paddingPx
                             isLeftArm = false
                             pointingArmAngle = 180f
                         }
                         "BOTTOM" -> {
                             finalX = target.x - charSize / 2
-                            finalY = target.y + target.height / 2 + 10
+                            finalY = targetBottom + 10 - paddingPx
                             isLeftArm = false
                             pointingArmAngle = 0f
                         }
                     }
                     
-                    finalX = kotlin.math.max(0, kotlin.math.min(finalX, screenWidth - charSize))
-                    finalY = kotlin.math.max(0, kotlin.math.min(finalY, screenHeight - charSize))
+                    finalX = kotlin.math.max(-paddingPx, kotlin.math.min(finalX, screenWidth - charSize + paddingPx))
+                    finalY = kotlin.math.max(-paddingPx, kotlin.math.min(finalY, screenHeight - charSize + paddingPx))
 
                     showConfirmRing(targetCenterX, targetCenterY) {
                         val animator = ValueAnimator.ofInt(layoutParams.x, finalX)
