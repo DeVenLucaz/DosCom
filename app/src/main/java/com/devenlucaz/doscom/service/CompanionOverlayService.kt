@@ -391,13 +391,7 @@ class CompanionOverlayService : Service() {
         idleEngine.stop()
     }
 
-        }
-        
-        overlayView.setState(selectedState)
-        
-        val nextDelay = Random.nextLong(3000, 8000)
-        idleHandler.postDelayed(idleRunnable, nextDelay)
-    }
+
 
     fun showSpeechBubble(text: String, dosComX: Int, dosComY: Int) {
         val speechBubble = com.devenlucaz.doscom.ui.SpeechBubble(this)
@@ -526,25 +520,25 @@ class CompanionOverlayService : Service() {
                     val targetCenterY = target.y + charSizePx / 2
 
                     showConfirmRing(targetCenterX, targetCenterY) {
-                        CompanionAnimator.walkTo(target.x, target.y, overlayView, layoutParams, windowManager) {
-                            showSpeechBubble(target.explanation, target.x, target.y)
-                            overlayView.setState(CharacterState.POINT)
-                            
-                            serviceScope.launch(Dispatchers.Main) {
-                                delay(4000)
-                                CompanionAnimator.walkToEdge(
-                                    this@CompanionOverlayService, 
-                                    overlayView, 
-                                    layoutParams, 
-                                    windowManager
-                                ) {
-                                    idleEngine.interact()
-                idleEngine.targetState.mouthExpression = 0
-                idleEngine.targetState.leftArmAngle = 0f
-                idleEngine.targetState.bodyOffsetY = 0f
+                        val animator = ValueAnimator.ofInt(layoutParams.x, target.x)
+                        animator.duration = 500
+                        animator.addUpdateListener { anim ->
+                            layoutParams.x = anim.animatedValue as Int
+                            layoutParams.y = target.y
+                            windowManager.updateViewLayout(overlayView, layoutParams)
+                        }
+                        animator.addListener(object : android.animation.AnimatorListenerAdapter() {
+                            override fun onAnimationEnd(anim: android.animation.Animator) {
+                                showSpeechBubble(target.explanation, target.x, target.y)
+                                idleEngine.targetState.rightArmAngle = -90f // POINT equivalent
+                                serviceScope.launch(Dispatchers.Main) {
+                                    delay(4000)
+                                    snapToNearestEdge()
+                                    idleEngine.targetState.rightArmAngle = 0f // reset point
                                 }
                             }
-                        }
+                        })
+                        animator.start()
                     }
                 }
             }
