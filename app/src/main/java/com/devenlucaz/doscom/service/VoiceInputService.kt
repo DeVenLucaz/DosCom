@@ -43,7 +43,11 @@ class VoiceInputService(private val context: Context) {
             override fun onEvent(eventType: Int, params: Bundle?) {}
         })
 
-        speechRecognizer.startListening(intent)
+        try {
+            speechRecognizer.startListening(intent)
+        } catch (e: Exception) {
+            onError()
+        }
     }
 
     fun isAvailable(): Boolean = SpeechRecognizer.isRecognitionAvailable(context)

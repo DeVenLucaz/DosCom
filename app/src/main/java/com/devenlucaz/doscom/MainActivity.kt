@@ -109,8 +109,9 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         val overlayGranted = Settings.canDrawOverlays(this)
         val accessibilityGranted = isAccessibilityServiceEnabled(this, DosComAccessibilityService::class.java)
+        val audioGranted = androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
         
-        if (overlayGranted && accessibilityGranted) {
+        if (overlayGranted && accessibilityGranted && audioGranted) {
             try {
                 ServiceManager.startOverlayService(this)
             } catch (e: Exception) {
@@ -124,13 +125,14 @@ class MainActivity : AppCompatActivity() {
     private fun checkPermissionsAndStart() {
         val overlayGranted = Settings.canDrawOverlays(this)
         val accessibilityGranted = isAccessibilityServiceEnabled(this, DosComAccessibilityService::class.java)
+        val audioGranted = androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
 
-        if (!overlayGranted || !accessibilityGranted) {
-            showPermissionUI(overlayGranted, accessibilityGranted)
+        if (!overlayGranted || !accessibilityGranted || !audioGranted) {
+            showPermissionUI(overlayGranted, accessibilityGranted, audioGranted)
         }
     }
 
-    private fun showPermissionUI(overlayGranted: Boolean, accessibilityGranted: Boolean) {
+    private fun showPermissionUI(overlayGranted: Boolean, accessibilityGranted: Boolean, audioGranted: Boolean) {
         try {
             val scrollView = android.widget.ScrollView(this)
             val layout = LinearLayout(this).apply {
@@ -155,6 +157,16 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 layout.addView(btnOverlay)
+            }
+
+            if (!audioGranted) {
+                val btnAudio = Button(this).apply {
+                    text = "2. Grant Audio Permission (for Mic)"
+                    setOnClickListener {
+                        requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), 101)
+                    }
+                }
+                layout.addView(btnAudio)
             }
 
             if (!accessibilityGranted) {
