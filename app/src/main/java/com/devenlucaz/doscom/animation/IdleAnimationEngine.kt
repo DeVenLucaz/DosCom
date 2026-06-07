@@ -7,7 +7,10 @@ import com.devenlucaz.doscom.character.AnimationState
 import com.devenlucaz.doscom.character.AnimationQueue
 import kotlin.random.Random
 
+import android.content.Context
+
 class IdleAnimationEngine(
+    private val context: Context,
     private val queue: AnimationQueue,
     private val onUpdateState: (AnimationState) -> Unit,
     private val onDrawZzz: (List<ZzzParticle>) -> Unit
@@ -109,12 +112,17 @@ class IdleAnimationEngine(
     }
     
     private fun playRandomSubAnimation() {
+        val inputs = com.devenlucaz.doscom.brain.BrainInput.buildInputs(context)
+        val decisions = com.devenlucaz.doscom.brain.BrainManager.brain.think(inputs)
+        
         if (Random.nextInt(100) < 30) {
-            val toy = com.devenlucaz.doscom.systems.ToyBoxSystem.selectToy()
+            val toy = com.devenlucaz.doscom.systems.ToyBoxSystem.selectToy(context)
             com.devenlucaz.doscom.systems.ToyBoxSystem.startToyActivity(toy, this)
         } else {
+            var animIdx = decisions[1] - 6
+            if (animIdx < 0 || animIdx > 5) animIdx = Random.nextInt(6)
             val anims = listOf(::playStretch, ::playSneeze, ::playHiccup, ::playYawn, ::playCoin, ::playPhoneCheck)
-            anims.random().invoke()
+            anims[animIdx].invoke()
         }
     }
     

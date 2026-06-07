@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-alpha.9] - 2026-06-07
+### Added (V2 Phase 8 Complete — DosCom Brain SNN)
+- Implemented `LIFCore` and `DosCombrain` featuring a Spiking Neural Network (Leaky Integrate-and-Fire) to generate unique behaviors and decision logic per install.
+- Created `BrainInput` to map environmental data (battery, time, activity) into normalized tensor input for the network.
+- Wired the Brain into `ToyBoxSystem` for toy selection, and `IdleAnimationEngine` for idle animation sequence preferences.
+- Created `PersonalityGrowth` engine tracking user interactions and mapping emergent personality types.
+- Updated `CompanionOverlayService` to instantiate and persist network weight updates silently via `BrainManager`.
+
 ## [2.0.0-alpha.8] - 2026-06-07
 ### Added (V2 Phase 7 Complete)
 - Created `PhoneEventReceiver` to react to hardware broadcasts (power connected, low battery, headset plugged, screen state).

@@ -86,6 +86,7 @@ class CompanionOverlayService : Service() {
     override fun onCreate() {
         super.onCreate()
         try {
+            com.devenlucaz.doscom.brain.BrainManager.init(this)
             startForegroundServiceNotification()
             setupOverlayView()
             LocalBroadcastManager.getInstance(this).registerReceiver(
@@ -112,6 +113,7 @@ class CompanionOverlayService : Service() {
         overlayView = CompanionRenderer(this)
 
         idleEngine = IdleAnimationEngine(
+            context = this,
             queue = animationQueue,
             onUpdateState = { state ->
                 overlayView.state = state
