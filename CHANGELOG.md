@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-alpha.10] - 2026-06-07
+### Added (V2 Phase 9 Complete — Emotional Memory & Reactions)
+- Created `EmotionalMemory` system to persist sentiment scores based on user reactions over time.
+- Implemented `MoodEngine` to adjust animation speeds and character state based on user's current mood.
+- Built `ReactionBox` UI component displaying interactive glassmorphism reaction buttons on long-press.
+- Wired ReactionBox to reward/penalize `DosCombrain` network and update emotional memory accordingly.
+- Updated `BrainInput` to leverage actual persistent sentiment values from `EmotionalMemory`.
+
 ## [2.0.0-alpha.9] - 2026-06-07
 ### Added (V2 Phase 8 Complete — DosCom Brain SNN)
 - Implemented `LIFCore` and `DosCombrain` featuring a Spiking Neural Network (Leaky Integrate-and-Fire) to generate unique behaviors and decision logic per install.

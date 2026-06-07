@@ -33,8 +33,8 @@ object BrainInput {
         // 3: session length (mock for now, assume 0.5)
         inputs[3] = 0.5f
 
-        // 4: recent interaction sentiment (stub from Phase 9, assume 0.5)
-        inputs[4] = 0.5f
+        // 4: recent interaction sentiment
+        inputs[4] = com.devenlucaz.doscom.personality.EmotionalMemory.getSentiment(context)
 
         // 5: screen position (mock for now, assume 0.5)
         inputs[5] = 0.5f

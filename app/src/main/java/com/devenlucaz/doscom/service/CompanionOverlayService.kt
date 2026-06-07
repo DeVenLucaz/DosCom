@@ -165,22 +165,44 @@ class CompanionOverlayService : Service() {
                 }
 
                 idleEngine.interact()
-                idleEngine.targetState.mouthExpression = 1 // LISTEN
 
-                CoroutineScope(Dispatchers.Main).launch {
-                    try {
-                        lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                val reactionBox = com.devenlucaz.doscom.ui.ReactionBox(
+                    context = this@CompanionOverlayService,
+                    windowManager = windowManager,
+                    dosComX = layoutParams.x,
+                    dosComY = layoutParams.y,
+                    onChatClicked = {
+                        idleEngine.targetState.mouthExpression = 1 // LISTEN
+                        CoroutineScope(Dispatchers.Main).launch {
+                            try {
+                                lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                            delay(300)
+                            layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
+                            windowManager.updateViewLayout(overlayView, layoutParams)
+                            showChatInput()
+                        }
+                    },
+                    onReactedPositive = {
+                        idleEngine.targetState.blushVisible = true
+                        idleEngine.targetState.bodyOffsetY = -20f
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            idleEngine.targetState.blushVisible = false
+                            idleEngine.targetState.bodyOffsetY = 0f
+                        }, 2000)
+                    },
+                    onReactedNegative = {
+                        idleEngine.targetState.antennaGlow = 0.2f
+                        idleEngine.targetState.mouthExpression = 2 // worried
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            idleEngine.targetState.antennaGlow = 1.0f
+                            idleEngine.targetState.mouthExpression = 0
+                        }, 30000)
                     }
-                    
-                    delay(300)
-                    
-                    layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
-                    windowManager.updateViewLayout(overlayView, layoutParams)
-                    
-                    showChatInput()
-                }
+                )
+                reactionBox.show()
             }
             
             override fun onSingleTapUp(e: MotionEvent): Boolean {
