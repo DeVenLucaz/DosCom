@@ -109,8 +109,13 @@ class IdleAnimationEngine(
     }
     
     private fun playRandomSubAnimation() {
-        val anims = listOf(::playStretch, ::playSneeze, ::playHiccup, ::playYawn, ::playCoin, ::playPhoneCheck)
-        anims.random().invoke()
+        if (Random.nextInt(100) < 30) {
+            val toy = com.devenlucaz.doscom.systems.ToyBoxSystem.selectToy()
+            com.devenlucaz.doscom.systems.ToyBoxSystem.startToyActivity(toy, this)
+        } else {
+            val anims = listOf(::playStretch, ::playSneeze, ::playHiccup, ::playYawn, ::playCoin, ::playPhoneCheck)
+            anims.random().invoke()
+        }
     }
     
     fun playStretch() {

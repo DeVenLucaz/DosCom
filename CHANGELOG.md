@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-alpha.7] - 2026-06-07
+### Added (V2 Phase 6 Complete)
+- Created `ToyBoxSystem` allowing the robot to spontaneously select and interact with virtual props (Fishing Rod, Treasure Map, Book, Magnifying Glass, etc.) when bored.
+- Created `DiscoverySystem` bridging `ToyBoxSystem` exploration to distinct collectible finds (e.g., Pirate Coin, Tiny Bug, Ancient Fossil).
+- Created `HomeCornerSystem` to passively track position and eventually anchor the character to their favorite screen coordinate.
+- Wired `ToyBoxSystem` directly into the `IdleAnimationEngine` with a 30% random-trigger chance per idle-action cycle.
+
+
 ## [2.0.0-alpha.6] - 2026-06-07
 ### Added (V2 Phase 5 Complete)
 - Created `IdleAnimationEngine` to seamlessly blend animation states using continuous lerp evaluation inside a 60fps Choreographer loop.
