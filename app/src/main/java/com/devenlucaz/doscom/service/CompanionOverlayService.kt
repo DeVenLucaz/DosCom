@@ -44,6 +44,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
 import android.content.BroadcastReceiver
 import android.content.IntentFilter
+import android.content.SharedPreferences
+import com.devenlucaz.doscom.mode.ModeManager
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class CompanionOverlayService : Service() {
@@ -56,6 +58,33 @@ class CompanionOverlayService : Service() {
     private var lastScreenshot: android.graphics.Bitmap? = null
     
     private val handler = Handler(Looper.getMainLooper())
+
+    private lateinit var prefs: SharedPreferences
+    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
+        when (key) {
+            "mascot_scale" -> {
+                val scale = sharedPreferences.getInt("mascot_scale", 2)
+                val scaleFloat = 0.5f + (scale * 0.375f) // map 0-4 to 0.5-2.0
+                idleEngine.targetState.scale = scaleFloat
+                idleEngine.targetState.scaleX = scaleFloat
+            }
+            "anim_speed" -> {
+                val speed = sharedPreferences.getInt("anim_speed", 2)
+                val speedFloat = 0.5f + (speed * 0.25f) // map 0-4 to 0.5-1.5
+                idleEngine.animSpeedMultiplier = speedFloat
+            }
+            "sleep_timer" -> {
+                val sleepPos = sharedPreferences.getInt("sleep_timer", 0)
+                idleEngine.sleepTimerMs = when(sleepPos) {
+                    0 -> 60 * 1000L
+                    1 -> 5 * 60 * 1000L
+                    2 -> 10 * 60 * 1000L
+                    else -> Long.MAX_VALUE
+                }
+            }
+        }
+    }
+
 
     private val animationQueue = AnimationQueue()
     private lateinit var idleEngine: IdleAnimationEngine
@@ -326,6 +355,14 @@ class CompanionOverlayService : Service() {
 
         windowManager.addView(overlayView, layoutParams)
         startIdleBehaviors()
+
+        prefs = getSharedPreferences("doscom_prefs", Context.MODE_PRIVATE)
+        prefs.registerOnSharedPreferenceChangeListener(prefsListener)
+        // trigger initial load
+        prefsListener.onSharedPreferenceChanged(prefs, "mascot_scale")
+        prefsListener.onSharedPreferenceChanged(prefs, "anim_speed")
+        prefsListener.onSharedPreferenceChanged(prefs, "sleep_timer")
+
         
         phoneEventReceiver = com.devenlucaz.doscom.events.PhoneEventReceiver(idleEngine) {
             val screenHeight = ScreenMetrics.getScreenHeight(this)
@@ -379,6 +416,7 @@ class CompanionOverlayService : Service() {
         if (::appContextWatcher.isInitialized) appContextWatcher.stop()
         if (::timeReactionEngine.isInitialized) timeReactionEngine.stop()
         stopIdleBehaviors()
+        if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
         serviceScope.cancel()
         if (::overlayView.isInitialized) {
             windowManager.removeView(overlayView)
@@ -484,11 +522,20 @@ class CompanionOverlayService : Service() {
         return start + (end - start) * fraction
     }
 
-    private fun startIdleBehaviors() {
+    private fun startIdleBehaviors()
+
+        prefs = getSharedPreferences("doscom_prefs", Context.MODE_PRIVATE)
+        prefs.registerOnSharedPreferenceChangeListener(prefsListener)
+        // trigger initial load
+        prefsListener.onSharedPreferenceChanged(prefs, "mascot_scale")
+        prefsListener.onSharedPreferenceChanged(prefs, "anim_speed")
+        prefsListener.onSharedPreferenceChanged(prefs, "sleep_timer")
+ {
         idleEngine.start()
     }
 
-    private fun stopIdleBehaviors() {
+    private fun stopIdleBehaviors()
+        if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(prefsListener) {
         idleEngine.stop()
     }
 

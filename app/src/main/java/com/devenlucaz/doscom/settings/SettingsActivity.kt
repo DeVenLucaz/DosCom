@@ -1,6 +1,5 @@
 package com.devenlucaz.doscom.settings
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Color
@@ -16,6 +15,7 @@ import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.devenlucaz.doscom.BuildConfig
 import com.devenlucaz.doscom.R
@@ -23,7 +23,6 @@ import com.devenlucaz.doscom.mode.CompanionMode
 import com.devenlucaz.doscom.mode.ModeManager
 import com.devenlucaz.doscom.utils.ConfigManager
 import com.devenlucaz.doscom.brain.BrainManager
-import com.devenlucaz.doscom.systems.BirthdaySystem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -47,51 +46,42 @@ class SettingsActivity : AppCompatActivity() {
 
         prefs = getSharedPreferences("doscom_prefs", Context.MODE_PRIVATE)
 
+        // Ensure BrainManager is initialized in case we started from launcher
+        BrainManager.init(this)
+
         // Mode Section
         cardAlive = findViewById(R.id.cardAlive)
         cardAwake = findViewById(R.id.cardAwake)
         cardAware = findViewById(R.id.cardAware)
 
-        val renderAlive = findViewById<com.devenlucaz.doscom.character.CompanionRenderer>(R.id.render_cardAlive)
-        val renderAwake = findViewById<com.devenlucaz.doscom.character.CompanionRenderer>(R.id.render_cardAwake)
-        val renderAware = findViewById<com.devenlucaz.doscom.character.CompanionRenderer>(R.id.render_cardAware)
-
-        renderAlive.state = com.devenlucaz.doscom.character.AnimationState()
-        
-        renderAwake.state = com.devenlucaz.doscom.character.AnimationState(
-            eyesWide = true,
-            leftArmAngle = -45f,
-            rightArmAngle = -45f,
-            mouthOpen = true
-        )
-        
-        renderAware.state = com.devenlucaz.doscom.character.AnimationState(
-            leftArmAngle = -90f,
-            rightArmAngle = -90f,
-            eyesHalf = true
-        )
+        val renderAlive = findViewById<View>(R.id.render_cardAlive)
+        val renderAwake = findViewById<View>(R.id.render_cardAwake)
+        val renderAware = findViewById<View>(R.id.render_cardAware)
 
         updateModeUI(ModeManager.getMode(this))
 
         val clickAlive = View.OnClickListener {
             ModeManager.setMode(this@SettingsActivity, CompanionMode.ALIVE)
             updateModeUI(CompanionMode.ALIVE)
+            Toast.makeText(this, "Mode: ALIVE", Toast.LENGTH_SHORT).show()
         }
         val clickAwake = View.OnClickListener {
             ModeManager.setMode(this@SettingsActivity, CompanionMode.AWAKE)
             updateModeUI(CompanionMode.AWAKE)
+            Toast.makeText(this, "Mode: AWAKE", Toast.LENGTH_SHORT).show()
         }
         val clickAware = View.OnClickListener {
             ModeManager.setMode(this@SettingsActivity, CompanionMode.AWARE)
             updateModeUI(CompanionMode.AWARE)
+            Toast.makeText(this, "Mode: AWARE", Toast.LENGTH_SHORT).show()
         }
-        
+
         cardAlive.setOnClickListener(clickAlive)
-        renderAlive.setOnClickListener(clickAlive)
+        renderAlive?.setOnClickListener(clickAlive)
         cardAwake.setOnClickListener(clickAwake)
-        renderAwake.setOnClickListener(clickAwake)
+        renderAwake?.setOnClickListener(clickAwake)
         cardAware.setOnClickListener(clickAware)
-        renderAware.setOnClickListener(clickAware)
+        renderAware?.setOnClickListener(clickAware)
 
         // Appearance Section
         val seekMascotSize = findViewById<SeekBar>(R.id.seekMascotSize)
@@ -102,7 +92,7 @@ class SettingsActivity : AppCompatActivity() {
 
         seekMascotSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                prefs.edit().putInt("mascot_scale", progress).apply()
+                if (fromUser) prefs.edit().putInt("mascot_scale", progress).apply()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
@@ -110,7 +100,7 @@ class SettingsActivity : AppCompatActivity() {
 
         seekAnimSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                prefs.edit().putInt("anim_speed", progress).apply()
+                if (fromUser) prefs.edit().putInt("anim_speed", progress).apply()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
@@ -132,22 +122,24 @@ class SettingsActivity : AppCompatActivity() {
         val ghostAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, arrayOf("Interactive", "Semi-Ghost", "Full Ghost"))
         ghostAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerGhostMode.adapter = ghostAdapter
-        
-        spinnerSleepTimer.setSelection(prefs.getInt("sleep_timer", 0))
-        spinnerBugCatching.setSelection(prefs.getInt("bug_catching", 0))
-        spinnerGhostMode.setSelection(prefs.getInt("ghost_mode", 0))
-        
+
         val spinnerListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (parent == spinnerSleepTimer) prefs.edit().putInt("sleep_timer", position).apply()
-                if (parent == spinnerBugCatching) prefs.edit().putInt("bug_catching", position).apply()
-                if (parent == spinnerGhostMode) prefs.edit().putInt("ghost_mode", position).apply()
+                when (parent?.id) {
+                    R.id.spinnerSleepTimer -> prefs.edit().putInt("sleep_timer", position).apply()
+                    R.id.spinnerBugCatching -> prefs.edit().putInt("bug_catching", position).apply()
+                    R.id.spinnerGhostMode -> prefs.edit().putInt("ghost_mode", position).apply()
+                }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
         spinnerSleepTimer.onItemSelectedListener = spinnerListener
         spinnerBugCatching.onItemSelectedListener = spinnerListener
         spinnerGhostMode.onItemSelectedListener = spinnerListener
+
+        spinnerSleepTimer.setSelection(prefs.getInt("sleep_timer", 0))
+        spinnerBugCatching.setSelection(prefs.getInt("bug_catching", 0))
+        spinnerGhostMode.setSelection(prefs.getInt("ghost_mode", 0))
 
         // Personality Section
         val spinnerMonth = findViewById<Spinner>(R.id.spinnerBirthMonth)
@@ -165,32 +157,6 @@ class SettingsActivity : AppCompatActivity() {
         dayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerDay.adapter = dayAdapter
 
-        val installDateStr = prefs.getString("install_date", null)
-        if (installDateStr == null) {
-            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-            prefs.edit().putString("install_date", dateStr).apply()
-            tvInstallDate.text = "DosCom has been with you since $dateStr"
-        } else {
-            tvInstallDate.text = "DosCom has been with you since $installDateStr"
-        }
-
-        btnResetBrain.setOnClickListener {
-            AlertDialog.Builder(this)
-                .setTitle("Reset Brain?")
-                .setMessage("This will erase all of DosCom's memories and learned behaviors. Are you sure?")
-                .setPositiveButton("Reset") { _, _ -> 
-                    BrainManager.brain.reset(this)
-                    Toast.makeText(this, "Brain Reset!", Toast.LENGTH_SHORT).show() 
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
-        
-        val savedMonth = prefs.getInt("birth_month", 0)
-        val savedDay = prefs.getInt("birth_day", 0)
-        spinnerMonth.setSelection(savedMonth)
-        spinnerDay.setSelection(savedDay)
-        
         val itemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val m = spinnerMonth.selectedItemPosition
@@ -204,18 +170,43 @@ class SettingsActivity : AppCompatActivity() {
         spinnerMonth.onItemSelectedListener = itemSelectedListener
         spinnerDay.onItemSelectedListener = itemSelectedListener
 
+        val savedMonth = prefs.getInt("birth_month", 0)
+        val savedDay = prefs.getInt("birth_day", 0)
+        spinnerMonth.setSelection(savedMonth)
+        spinnerDay.setSelection(savedDay)
+
+        val installDateStr = prefs.getString("install_date", null)
+        if (installDateStr == null) {
+            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            prefs.edit().putString("install_date", dateStr).apply()
+            tvInstallDate.text = "DosCom has been with you since $dateStr"
+        } else {
+            tvInstallDate.text = "DosCom has been with you since $installDateStr"
+        }
+
+        btnResetBrain.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Reset Brain?")
+                .setMessage("This will erase all of DosCom's memories and learned behaviors. Are you sure?")
+                .setPositiveButton("Reset") { _, _ ->
+                    BrainManager.brain.reset(this)
+                    Toast.makeText(this, "Brain Reset Successfully!", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
         // API Section
         val etApiKey = findViewById<EditText>(R.id.etApiKey)
         val btnSaveApiKey = findViewById<Button>(R.id.btnSaveApiKey)
-        
+
         etApiKey.setText(ConfigManager.loadApiKey(this) ?: "")
 
         btnSaveApiKey.setOnClickListener {
             val key = etApiKey.text.toString()
             ConfigManager.saveApiKey(this, key)
-            
-            Toast.makeText(this@SettingsActivity, "Validating API Key...", Toast.LENGTH_SHORT).show()
-            
+            Toast.makeText(this, "Validating API Key...", Toast.LENGTH_SHORT).show()
+
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val url = URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$key")
@@ -223,10 +214,10 @@ class SettingsActivity : AppCompatActivity() {
                     conn.requestMethod = "POST"
                     conn.setRequestProperty("Content-Type", "application/json")
                     conn.doOutput = true
-                    
+
                     val body = """{"contents":[{"parts":[{"text":"hello"}]}]}"""
                     conn.outputStream.write(body.toByteArray())
-                    
+
                     val responseCode = conn.responseCode
                     withContext(Dispatchers.Main) {
                         if (responseCode == 200) {

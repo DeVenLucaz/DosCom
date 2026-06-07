@@ -48,9 +48,11 @@ class IdleAnimationEngine(
     override fun doFrame(frameTimeNanos: Long) {
         frameCount++
         
+        var floatOffset = 0f
+        var glowOffset = 0f
         if (!isSleeping) {
-            targetState.bodyOffsetY = (Math.sin(frameCount * 0.05) * 4.0).toFloat()
-            targetState.antennaGlow = 0.6f + (Math.sin(frameCount * 0.03) * 0.4).toFloat()
+            floatOffset = (Math.sin(frameCount * 0.05) * 4.0).toFloat()
+            glowOffset = (Math.sin(frameCount * 0.03) * 0.4).toFloat()
             
             if (Random.nextInt(100) < 2) {
                 targetState.eyesClosed = true
@@ -66,7 +68,11 @@ class IdleAnimationEngine(
         val rate = 0.03f * animSpeedMultiplier
         lerpState(currentState, targetState, rate)
         
-        onUpdateState(currentState)
+        val drawState = currentState.copy(
+            bodyOffsetY = currentState.bodyOffsetY + floatOffset,
+            antennaGlow = currentState.antennaGlow + glowOffset
+        )
+        onUpdateState(drawState)
         
         if (isSleeping) {
             updateZzzParticles()
