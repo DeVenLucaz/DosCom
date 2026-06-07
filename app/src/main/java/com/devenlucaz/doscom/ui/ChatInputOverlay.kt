@@ -91,8 +91,7 @@ class ChatInputOverlay(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     1f
                 )
-                isClickable = true
-                isFocusable = true
+                setPadding(0, dp(8), 0, dp(8))
                 setOnClickListener {
                     handleReaction(r)
                 }

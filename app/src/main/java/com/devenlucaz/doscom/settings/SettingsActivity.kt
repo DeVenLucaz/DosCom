@@ -47,15 +47,7 @@ class SettingsActivity : AppCompatActivity() {
 
         prefs = getSharedPreferences("doscom_prefs", Context.MODE_PRIVATE)
 
-        initModeSection()
-        initAppearanceSection()
-        initBehaviorSection()
-        initPersonalitySection()
-        initApiSection()
-        initAboutSection()
-    }
-
-    private fun initModeSection() {
+        // Mode Section
         cardAlive = findViewById(R.id.cardAlive)
         cardAwake = findViewById(R.id.cardAwake)
         cardAware = findViewById(R.id.cardAware)
@@ -100,33 +92,8 @@ class SettingsActivity : AppCompatActivity() {
         renderAwake.setOnClickListener(clickAwake)
         cardAware.setOnClickListener(clickAware)
         renderAware.setOnClickListener(clickAware)
-    }
 
-    private fun updateModeUI(mode: CompanionMode) {
-        val unselectedBg = createBorderDrawable(Color.TRANSPARENT)
-        cardAlive.background = unselectedBg
-        cardAwake.background = unselectedBg
-        cardAware.background = unselectedBg
-
-        when (mode) {
-            CompanionMode.ALIVE -> cardAlive.background = createBorderDrawable(Color.WHITE)
-            CompanionMode.AWAKE -> cardAwake.background = createBorderDrawable(Color.parseColor("#00B4FF"))
-            CompanionMode.AWARE -> cardAware.background = createBorderDrawable(Color.parseColor("#00FF88"))
-        }
-    }
-
-    private fun createBorderDrawable(borderColor: Int): GradientDrawable {
-        val drawable = GradientDrawable()
-        drawable.shape = GradientDrawable.RECTANGLE
-        drawable.cornerRadius = 16f
-        drawable.setColor(Color.parseColor("#2A2A3E"))
-        if (borderColor != Color.TRANSPARENT) {
-            drawable.setStroke(4, borderColor)
-        }
-        return drawable
-    }
-
-    private fun initAppearanceSection() {
+        // Appearance Section
         val seekMascotSize = findViewById<SeekBar>(R.id.seekMascotSize)
         val seekAnimSpeed = findViewById<SeekBar>(R.id.seekAnimSpeed)
 
@@ -148,9 +115,8 @@ class SettingsActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
-    }
 
-    private fun initBehaviorSection() {
+        // Behavior Section
         val spinnerSleepTimer = findViewById<Spinner>(R.id.spinnerSleepTimer)
         val spinnerBugCatching = findViewById<Spinner>(R.id.spinnerBugCatching)
         val spinnerGhostMode = findViewById<Spinner>(R.id.spinnerGhostMode)
@@ -171,7 +137,7 @@ class SettingsActivity : AppCompatActivity() {
         spinnerBugCatching.setSelection(prefs.getInt("bug_catching", 0))
         spinnerGhostMode.setSelection(prefs.getInt("ghost_mode", 0))
         
-        val listener = object : AdapterView.OnItemSelectedListener {
+        val spinnerListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (parent == spinnerSleepTimer) prefs.edit().putInt("sleep_timer", position).apply()
                 if (parent == spinnerBugCatching) prefs.edit().putInt("bug_catching", position).apply()
@@ -179,12 +145,11 @@ class SettingsActivity : AppCompatActivity() {
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
-        spinnerSleepTimer.onItemSelectedListener = listener
-        spinnerBugCatching.onItemSelectedListener = listener
-        spinnerGhostMode.onItemSelectedListener = listener
-    }
+        spinnerSleepTimer.onItemSelectedListener = spinnerListener
+        spinnerBugCatching.onItemSelectedListener = spinnerListener
+        spinnerGhostMode.onItemSelectedListener = spinnerListener
 
-    private fun initPersonalitySection() {
+        // Personality Section
         val spinnerMonth = findViewById<Spinner>(R.id.spinnerBirthMonth)
         val spinnerDay = findViewById<Spinner>(R.id.spinnerBirthDay)
         val btnResetBrain = findViewById<Button>(R.id.btnResetBrain)
@@ -238,9 +203,8 @@ class SettingsActivity : AppCompatActivity() {
         }
         spinnerMonth.onItemSelectedListener = itemSelectedListener
         spinnerDay.onItemSelectedListener = itemSelectedListener
-    }
 
-    private fun initApiSection() {
+        // API Section
         val etApiKey = findViewById<EditText>(R.id.etApiKey)
         val btnSaveApiKey = findViewById<Button>(R.id.btnSaveApiKey)
         
@@ -278,9 +242,8 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
         }
-    }
 
-    private fun initAboutSection() {
+        // About Section
         val tvVersion = findViewById<TextView>(R.id.tvVersion)
         val btnResetAll = findViewById<Button>(R.id.btnResetAll)
 
@@ -294,5 +257,29 @@ class SettingsActivity : AppCompatActivity() {
                 .setNegativeButton("Cancel", null)
                 .show()
         }
+    }
+
+    private fun updateModeUI(mode: CompanionMode) {
+        val unselectedBg = createBorderDrawable(Color.TRANSPARENT)
+        cardAlive.background = unselectedBg
+        cardAwake.background = unselectedBg
+        cardAware.background = unselectedBg
+
+        when (mode) {
+            CompanionMode.ALIVE -> cardAlive.background = createBorderDrawable(Color.WHITE)
+            CompanionMode.AWAKE -> cardAwake.background = createBorderDrawable(Color.parseColor("#00B4FF"))
+            CompanionMode.AWARE -> cardAware.background = createBorderDrawable(Color.parseColor("#00FF88"))
+        }
+    }
+
+    private fun createBorderDrawable(borderColor: Int): GradientDrawable {
+        val drawable = GradientDrawable()
+        drawable.shape = GradientDrawable.RECTANGLE
+        drawable.cornerRadius = 16f
+        drawable.setColor(Color.parseColor("#2A2A3E"))
+        if (borderColor != Color.TRANSPARENT) {
+            drawable.setStroke(4, borderColor)
+        }
+        return drawable
     }
 }
