@@ -570,58 +570,30 @@ class CompanionOverlayService : Service() {
                     
                     val targetWMY = target.y - statusBarHeight
                     
-                    val leftSpace = target.x - target.width / 2
-                    val rightSpace = screenWidth - (target.x + target.width / 2)
-                    val topSpace = targetWMY - target.height / 2
-                    val bottomSpace = screenHeight - (targetWMY + target.height / 2)
-
-                    var bestSide = "RIGHT"
-                    var maxSpace = rightSpace
-                    if (leftSpace > maxSpace) { maxSpace = leftSpace; bestSide = "LEFT" }
-                    if (topSpace > maxSpace) { maxSpace = topSpace; bestSide = "TOP" }
-                    if (bottomSpace > maxSpace) { maxSpace = bottomSpace; bestSide = "BOTTOM" }
+                    val targetLeftSpace = target.x
+                    val targetRightSpace = screenWidth - target.x
                     
                     val charSize = overlayView.width
-                    val coreSize = charSize - paddingPx * 2
                     
                     var finalX = 0
-                    var finalY = 0
+                    var finalY = targetWMY - charSize / 2
                     var pointingArmAngle = 0f
                     var isLeftArm = false
                     
-                    val targetLeft = target.x - target.width / 2
-                    val targetRight = target.x + target.width / 2
-                    val targetTop = targetWMY - target.height / 2
-                    val targetBottom = targetWMY + target.height / 2
+                    val visualOffsetPx = (58 * resources.displayMetrics.density).toInt()
                     
-                    when (bestSide) {
-                        "RIGHT" -> {
-                            finalX = targetRight + 10 - paddingPx
-                            finalY = targetWMY - charSize / 2
-                            isLeftArm = true
-                            pointingArmAngle = 90f
-                        }
-                        "LEFT" -> {
-                            finalX = targetLeft - 10 - coreSize - paddingPx
-                            finalY = targetWMY - charSize / 2
-                            isLeftArm = false
-                            pointingArmAngle = -90f
-                        }
-                        "TOP" -> {
-                            finalX = target.x - charSize / 2
-                            finalY = targetTop - 10 - coreSize - paddingPx
-                            isLeftArm = false
-                            pointingArmAngle = 180f
-                        }
-                        "BOTTOM" -> {
-                            finalX = target.x - charSize / 2
-                            finalY = targetBottom + 10 - paddingPx
-                            isLeftArm = false
-                            pointingArmAngle = 0f
-                        }
+                    if (targetRightSpace > targetLeftSpace) {
+                        // More space on right. Place robot on RIGHT EDGE pointing LEFT.
+                        finalX = screenWidth - charSize + visualOffsetPx
+                        isLeftArm = true
+                        pointingArmAngle = 90f
+                    } else {
+                        // More space on left. Place robot on LEFT EDGE pointing RIGHT.
+                        finalX = -visualOffsetPx
+                        isLeftArm = false
+                        pointingArmAngle = -90f
                     }
                     
-                    val visualOffsetPx = (58 * resources.displayMetrics.density).toInt()
                     finalX = kotlin.math.max(-visualOffsetPx, kotlin.math.min(finalX, screenWidth - charSize + visualOffsetPx))
                     finalY = kotlin.math.max(-paddingPx, kotlin.math.min(finalY, screenHeight - charSize + paddingPx))
 
