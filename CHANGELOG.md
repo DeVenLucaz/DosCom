@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-alpha.3] - 2026-06-07
+### Added (V2 Phase 2b Complete)
+- Created `AnimationState` data class to encapsulate all independent transformations (limbs, body position/rotation, scale) and expressions in a single reactive state object.
+- Created `AnimationQueue` to manage prioritization (CRITICAL, HIGH, MEDIUM, LOW, AMBIENT) and queuing/interruption of animation sequences.
+- Wired `AnimationState` directly into `CompanionRenderer`'s `onDraw` method, implementing isolated pivot points (`canvas.rotate`) for independent limb articulation.
+- Registered a `Choreographer.FrameCallback` on window attach to continuously invalidate the view, creating a high-performance 60fps+ rendering loop devoid of `Thread.sleep` or traditional Handlers.
+
+
 ## [2.0.0-alpha.2] - 2026-06-07
 ### Added (V2 Phase 2a Complete)
 - Created `PropType` enum to support various interactive toys and hats (Party Hat, Boombox, Detective Hat, etc.).

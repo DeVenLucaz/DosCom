@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import android.view.Choreographer
 import android.view.View
 import android.util.AttributeSet
 
@@ -12,37 +13,30 @@ class CompanionRenderer @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : View(context, attrs, defStyleAttr) {
+) : View(context, attrs, defStyleAttr), Choreographer.FrameCallback {
 
-    // --- V1 COMPATIBILITY STUBS (to prevent compilation errors until removed in later phases) ---
+    // --- V1 COMPATIBILITY STUBS ---
     var currentState: CharacterState = CharacterState.IDLE_BOB
         private set
     var currentFrame: Int = 0
         private set
-    fun setState(state: CharacterState) {
-        currentState = state
+    fun setState(characterState: CharacterState) {
+        currentState = characterState
         currentFrame = 0
     }
     fun nextFrame() {
         currentFrame = (currentFrame + 1) % 4
     }
-    // ----------------------------------------------------------------------------------------
+    // ------------------------------
+
+    // Phase 2b: Animation State
+    var state = AnimationState()
 
     var antennaColor: Int = Color.WHITE
-    var eyesClosed: Boolean = false
-    var eyesHalf: Boolean = false
-    var eyesWide: Boolean = false
-    var pupilOffsetX: Float = 0f
-    var pupilOffsetY: Float = 0f
-    var mouthExpression: Int = 0  // 0=neutral 1=happy 2=worried
-    var mouthOpen: Boolean = false
-    var blushVisible: Boolean = false
-    var tongueOut: Boolean = false
-    var activeProp: PropType = PropType.NONE
 
     private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#C8C8C8")
-        setShadowLayer(8f, 0f, 4f, Color.argb(51, 0, 0, 0)) // 20% black soft shadow
+        setShadowLayer(8f, 0f, 4f, Color.argb(51, 0, 0, 0)) 
     }
     
     private val shadowlessBodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -76,10 +70,23 @@ class CompanionRenderer @JvmOverloads constructor(
         style = Paint.Style.FILL
     }
 
-    // Disable hardware acceleration on view level if shadow layer has issues, 
-    // but usually small blur radius on simple rects works fine.
     init {
         setLayerType(LAYER_TYPE_SOFTWARE, null)
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        Choreographer.getInstance().postFrameCallback(this)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        Choreographer.getInstance().removeFrameCallback(this)
+    }
+
+    override fun doFrame(frameTimeNanos: Long) {
+        invalidate()
+        Choreographer.getInstance().postFrameCallback(this)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -96,14 +103,17 @@ class CompanionRenderer @JvmOverloads constructor(
         val groupH = headH + 2f + bodyH
         val startY = cy - groupH / 2f
         
-        // Head dimensions: width=0.55W, height=0.38H
         val headW = 0.55f * w
         val headY = startY + headH / 2f
-        
-        // Body dimensions: width=0.45W, height=0.32H
         val bodyW = 0.45f * w
         val bodyY = startY + headH + 2f + bodyH / 2f
         
+        // Transform for entire robot
+        canvas.save()
+        canvas.translate(state.bodyOffsetX, state.bodyOffsetY)
+        canvas.scale(state.scaleX * state.scale, state.scale, cx, cy)
+        canvas.rotate(state.bodyRotation, cx, cy)
+
         // Antenna
         linePaint.color = Color.parseColor("#1A1A1A")
         linePaint.strokeWidth = 3f
@@ -111,7 +121,9 @@ class CompanionRenderer @JvmOverloads constructor(
         canvas.drawLine(cx, headY - headH / 2f, cx, headY - headH / 2f - antennaLen, linePaint)
         
         propPaint.color = antennaColor
+        propPaint.alpha = (255 * state.antennaGlow).toInt().coerceIn(0, 255)
         canvas.drawCircle(cx, headY - headH / 2f - antennaLen, w * 0.03f, propPaint)
+        propPaint.alpha = 255
         
         // Legs
         val legW = 0.12f * w
@@ -120,8 +132,17 @@ class CompanionRenderer @JvmOverloads constructor(
         val legRightX = cx + 0.10f * w
         val legY = bodyY + bodyH / 2f
         
+        // Left Leg
+        canvas.save()
+        canvas.rotate(state.leftLegAngle, legLeftX, legY)
         canvas.drawRoundRect(legLeftX - legW/2f, legY, legLeftX + legW/2f, legY + legH, h * 0.05f, h * 0.05f, shadowlessBodyPaint)
+        canvas.restore()
+
+        // Right Leg
+        canvas.save()
+        canvas.rotate(state.rightLegAngle, legRightX, legY)
         canvas.drawRoundRect(legRightX - legW/2f, legY, legRightX + legW/2f, legY + legH, h * 0.05f, h * 0.05f, shadowlessBodyPaint)
+        canvas.restore()
         
         // Arms
         val armW = 0.10f * w
@@ -130,16 +151,21 @@ class CompanionRenderer @JvmOverloads constructor(
         val armRightX = cx + bodyW / 2f + armW / 2f
         val armY = bodyY - bodyH / 4f
         
+        // Left Arm
+        canvas.save()
+        canvas.rotate(state.leftArmAngle, armLeftX, armY)
         canvas.drawRoundRect(armLeftX - armW/2f, armY, armLeftX + armW/2f, armY + armH, h * 0.04f, h * 0.04f, shadowlessBodyPaint)
-        canvas.drawRoundRect(armRightX - armW/2f, armY, armRightX + armW/2f, armY + armH, h * 0.04f, h * 0.04f, shadowlessBodyPaint)
-        
-        // Hands
         val handRadius = 0.07f * w
-        val handLeftY = armY + armH
-        val handRightY = armY + armH
-        canvas.drawCircle(armLeftX, handLeftY, handRadius, shadowlessBodyPaint)
-        canvas.drawCircle(armRightX, handRightY, handRadius, shadowlessBodyPaint)
-        
+        canvas.drawCircle(armLeftX, armY + armH, handRadius, shadowlessBodyPaint)
+        canvas.restore()
+
+        // Right Arm
+        canvas.save()
+        canvas.rotate(state.rightArmAngle, armRightX, armY)
+        canvas.drawRoundRect(armRightX - armW/2f, armY, armRightX + armW/2f, armY + armH, h * 0.04f, h * 0.04f, shadowlessBodyPaint)
+        canvas.drawCircle(armRightX, armY + armH, handRadius, shadowlessBodyPaint)
+        canvas.restore()
+
         // Body
         canvas.drawRoundRect(cx - bodyW/2f, bodyY - bodyH/2f, cx + bodyW/2f, bodyY + bodyH/2f, h * 0.08f, h * 0.08f, bodyPaint)
         
@@ -152,18 +178,15 @@ class CompanionRenderer @JvmOverloads constructor(
         val eyeRightX = cx + 0.12f * w
         val eyeY = headY - 0.02f * h
         
-        if (eyesClosed) {
+        if (state.eyesClosed) {
             linePaint.color = Color.parseColor("#1A1A1A")
-            // Draw sleeping lines
             canvas.drawLine(eyeLeftX - eyeRadius, eyeY, eyeLeftX + eyeRadius, eyeY, linePaint)
             canvas.drawLine(eyeRightX - eyeRadius, eyeY, eyeRightX + eyeRadius, eyeY, linePaint)
         } else {
-            // Background white
             canvas.drawCircle(eyeLeftX, eyeY, eyeRadius, eyeWhitePaint)
             canvas.drawCircle(eyeRightX, eyeY, eyeRadius, eyeWhitePaint)
             
-            // Half closed overlay
-            if (eyesHalf) {
+            if (state.eyesHalf) {
                 propPaint.color = Color.parseColor("#C8C8C8")
                 canvas.drawRect(eyeLeftX - eyeRadius, eyeY - eyeRadius, eyeLeftX + eyeRadius, eyeY, propPaint)
                 canvas.drawRect(eyeRightX - eyeRadius, eyeY - eyeRadius, eyeRightX + eyeRadius, eyeY, propPaint)
@@ -171,21 +194,18 @@ class CompanionRenderer @JvmOverloads constructor(
                 canvas.drawLine(eyeRightX - eyeRadius, eyeY, eyeRightX + eyeRadius, eyeY, linePaint)
             }
             
-            // Pupils
-            val pupilRadius = if (eyesWide) 0.06f * w else 0.04f * w
-            canvas.drawCircle(eyeLeftX + pupilOffsetX, eyeY + pupilOffsetY, pupilRadius, pupilPaint)
-            canvas.drawCircle(eyeRightX + pupilOffsetX, eyeY + pupilOffsetY, pupilRadius, pupilPaint)
+            val pupilRadius = if (state.eyesWide) 0.06f * w else 0.04f * w
+            canvas.drawCircle(eyeLeftX + state.pupilOffsetX, eyeY + state.pupilOffsetY, pupilRadius, pupilPaint)
+            canvas.drawCircle(eyeRightX + state.pupilOffsetX, eyeY + state.pupilOffsetY, pupilRadius, pupilPaint)
         }
         
         // Blush
-        if (blushVisible) {
+        if (state.blushVisible) {
             val blushW = 0.08f * w
             val blushH = 0.04f * h
             val blushY = eyeY + 0.08f * h
-            val blushLeftX = cx - 0.20f * w
-            val blushRightX = cx + 0.20f * w
-            canvas.drawOval(RectF(blushLeftX - blushW/2f, blushY - blushH/2f, blushLeftX + blushW/2f, blushY + blushH/2f), blushPaint)
-            canvas.drawOval(RectF(blushRightX - blushW/2f, blushY - blushH/2f, blushRightX + blushW/2f, blushY + blushH/2f), blushPaint)
+            canvas.drawOval(RectF(cx - 0.20f * w - blushW/2f, blushY - blushH/2f, cx - 0.20f * w + blushW/2f, blushY + blushH/2f), blushPaint)
+            canvas.drawOval(RectF(cx + 0.20f * w - blushW/2f, blushY - blushH/2f, cx + 0.20f * w + blushW/2f, blushY + blushH/2f), blushPaint)
         }
         
         // Mouth
@@ -193,38 +213,35 @@ class CompanionRenderer @JvmOverloads constructor(
         linePaint.color = Color.parseColor("#1A1A1A")
         linePaint.strokeWidth = 3f
         
-        if (mouthOpen) {
+        if (state.mouthOpen) {
             propPaint.color = Color.parseColor("#1A1A1A")
             canvas.drawOval(RectF(cx - 0.04f * w, mouthY, cx + 0.04f * w, mouthY + 0.06f * h), propPaint)
-            if (tongueOut) {
+            if (state.tongueOut) {
                 canvas.drawRoundRect(cx - 0.02f * w, mouthY + 0.04f * h, cx + 0.02f * w, mouthY + 0.08f * h, 4f, 4f, tonguePaint)
             }
         } else {
             val mouthW = 0.06f * w
-            when (mouthExpression) {
-                0 -> { // Neutral
-                    canvas.drawLine(cx - mouthW/2f, mouthY, cx + mouthW/2f, mouthY, linePaint)
-                }
-                1 -> { // Happy
-                    canvas.drawArc(RectF(cx - mouthW/2f, mouthY - 0.02f * h, cx + mouthW/2f, mouthY + 0.02f * h), 0f, 180f, false, linePaint)
-                }
-                2 -> { // Worried
-                    canvas.drawArc(RectF(cx - mouthW/2f, mouthY - 0.02f * h, cx + mouthW/2f, mouthY + 0.02f * h), 180f, 180f, false, linePaint)
-                }
+            when (state.mouthExpression) {
+                0 -> canvas.drawLine(cx - mouthW/2f, mouthY, cx + mouthW/2f, mouthY, linePaint)
+                1 -> canvas.drawArc(RectF(cx - mouthW/2f, mouthY - 0.02f * h, cx + mouthW/2f, mouthY + 0.02f * h), 0f, 180f, false, linePaint)
+                2 -> canvas.drawArc(RectF(cx - mouthW/2f, mouthY - 0.02f * h, cx + mouthW/2f, mouthY + 0.02f * h), 180f, 180f, false, linePaint)
             }
-            if (tongueOut) {
+            if (state.tongueOut) {
                 canvas.drawRoundRect(cx - 0.02f * w, mouthY, cx + 0.02f * w, mouthY + 0.04f * h, 4f, 4f, tonguePaint)
             }
         }
         
         // Props
-        if (activeProp != PropType.NONE) {
+        if (state.activeProp != PropType.NONE) {
             drawProp(canvas, cx, headY, headW, headH, armLeftX, armY, w, h)
         }
+
+        // Restore global transform
+        canvas.restore()
     }
     
     private fun drawProp(canvas: Canvas, cx: Float, headY: Float, headW: Float, headH: Float, armX: Float, armY: Float, w: Float, h: Float) {
-        when (activeProp) {
+        when (state.activeProp) {
             PropType.PARTY_HAT -> {
                 propPaint.color = Color.parseColor("#FF5252")
                 val path = android.graphics.Path()
@@ -233,7 +250,6 @@ class CompanionRenderer @JvmOverloads constructor(
                 path.lineTo(cx + 0.15f * w, headY - headH/2f)
                 path.close()
                 canvas.drawPath(path, propPaint)
-                
                 propPaint.color = Color.parseColor("#FFEB3B")
                 canvas.drawCircle(cx, headY - headH/2f - 0.2f * h, 0.04f * w, propPaint)
             }
@@ -263,9 +279,7 @@ class CompanionRenderer @JvmOverloads constructor(
                 canvas.drawCircle(cx - 0.1f * w, bbY + 0.1f * h, 0.06f * w, propPaint)
                 canvas.drawCircle(cx + 0.1f * w, bbY + 0.1f * h, 0.06f * w, propPaint)
             }
-            else -> {
-                // other props placeholder
-            }
+            else -> {}
         }
     }
 }
