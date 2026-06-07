@@ -90,12 +90,12 @@ class CompanionRenderer @JvmOverloads constructor(
         val hipY = cy + bodyRadiusY * 0.5f
         
         // Draw Legs
-        drawExtrudedLimb(canvas, hipLeftX, hipY, state.leftLegAngle, legLen, charW * 0.15f)
-        drawExtrudedLimb(canvas, hipRightX, hipY, state.rightLegAngle, legLen, charW * 0.15f)
+        drawExtrudedLimb(canvas, hipLeftX, hipY, state.leftLegAngle, legLen, charW * 0.15f, false)
+        drawExtrudedLimb(canvas, hipRightX, hipY, state.rightLegAngle, legLen, charW * 0.15f, false)
         
-        // Draw Arms
-        drawExtrudedLimb(canvas, shoulderLeftX, shoulderY, state.leftArmAngle, armLen, charW * 0.15f)
-        drawExtrudedLimb(canvas, shoulderRightX, shoulderY, state.rightArmAngle, armLen, charW * 0.15f)
+        // Draw Arms (with hands)
+        drawExtrudedLimb(canvas, shoulderLeftX, shoulderY, state.leftArmAngle, armLen, charW * 0.15f, true)
+        drawExtrudedLimb(canvas, shoulderRightX, shoulderY, state.rightArmAngle, armLen, charW * 0.15f, true)
 
         // Draw Main Body (Blob)
         val bodyPath = Path()
@@ -182,17 +182,25 @@ class CompanionRenderer @JvmOverloads constructor(
         canvas.restore()
     }
     
-    private fun drawExtrudedLimb(canvas: Canvas, rootX: Float, rootY: Float, angle: Float, length: Float, rootWidth: Float) {
+    private fun drawExtrudedLimb(canvas: Canvas, rootX: Float, rootY: Float, angle: Float, length: Float, rootWidth: Float, hasHand: Boolean = false) {
         canvas.save()
         canvas.rotate(angle, rootX, rootY)
         
         val path = Path()
         path.moveTo(rootX - rootWidth / 2f, rootY)
         
-        // Curve down to a sharp tip
+        val tipWidth = if (hasHand) rootWidth * 0.5f else rootWidth * 0.1f
+        
+        // Curve down to left side of tip
         path.quadTo(
             rootX - rootWidth / 4f, rootY + length * 0.5f,
-            rootX, rootY + length
+            rootX - tipWidth / 2f, rootY + length
+        )
+        
+        // Curve bottom
+        path.quadTo(
+            rootX, rootY + length + tipWidth,
+            rootX + tipWidth / 2f, rootY + length
         )
         
         // Curve back up to the other side of the root
@@ -204,8 +212,16 @@ class CompanionRenderer @JvmOverloads constructor(
         
         canvas.drawPath(path, inkPaint)
         
-        // Glowing starry tip
-        canvas.drawCircle(rootX, rootY + length, 3f, tipGlowPaint)
+        if (hasHand) {
+            // Draw a bulbous fluid hand at the tip
+            val handRadius = rootWidth * 0.6f
+            canvas.drawCircle(rootX, rootY + length, handRadius, inkPaint)
+            // Little glowing palm/finger highlight
+            canvas.drawCircle(rootX, rootY + length + handRadius * 0.2f, handRadius * 0.3f, tipGlowPaint)
+        } else {
+            // Glowing starry tip for legs
+            canvas.drawCircle(rootX, rootY + length, 3f, tipGlowPaint)
+        }
         
         canvas.restore()
     }
