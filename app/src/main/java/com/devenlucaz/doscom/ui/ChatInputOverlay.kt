@@ -14,9 +14,13 @@ import android.view.View
 import android.view.WindowManager
 import android.view.animation.DecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import com.devenlucaz.doscom.personality.EmotionalMemory
+import com.devenlucaz.doscom.brain.BrainManager
+import com.devenlucaz.doscom.brain.BrainInput
 
 class ChatInputOverlay(
     context: Context,
@@ -25,7 +29,9 @@ class ChatInputOverlay(
     private val onQuerySubmitted: (String, Bitmap?) -> Unit,
     private val onClose: () -> Unit,
     private val onVoiceStart: () -> Unit,
-    private val onVoiceError: () -> Unit
+    private val onVoiceError: () -> Unit,
+    private val onReactedPositive: () -> Unit = {},
+    private val onReactedNegative: () -> Unit = {}
 ) : FrameLayout(context) {
 
     private val inputField: EditText
@@ -43,27 +49,65 @@ class ChatInputOverlay(
         setBackgroundColor(Color.TRANSPARENT)
 
         container = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(12), 0, dp(12), 0)
+            orientation = LinearLayout.VERTICAL
             
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#BF1A1A2E")) // 75% opacity (191/255 -> BF approx)
+                setColor(Color.parseColor("#BF1A1A2E")) // 75% opacity
                 cornerRadius = dp(28).toFloat()
-                setStroke(1, Color.parseColor("#26FFFFFF")) // 15% opacity (38/255 -> 26)
+                setStroke(1, Color.parseColor("#26FFFFFF")) // 15% opacity
             }
             layoutParams = LayoutParams(
                 LayoutParams.MATCH_PARENT,
-                dp(56)
+                LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.BOTTOM
-                setMargins(dp(16), dp(16), dp(16), dp(16) + dp(48)) // Bottom margin 16dp + nav bar height approx 48dp
+                setMargins(dp(16), dp(16), dp(16), dp(16) + dp(48)) // Bottom margin
             }
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+        }
+
+        // Reaction Row
+        val reactionRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp(8)
+            }
+        }
+
+        val reactions = listOf("♥", "😄", "👍", "😤")
+        for (r in reactions) {
+            val btn = Button(context).apply {
+                text = r
+                textSize = 20f
+                setBackgroundColor(Color.TRANSPARENT)
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+                setOnClickListener {
+                    handleReaction(r)
+                }
+            }
+            reactionRow.addView(btn)
+        }
+
+        // Input Row
+        val inputRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(40)
+            )
         }
 
         val closeButton = CloseButton(context).apply {
             layoutParams = LinearLayout.LayoutParams(dp(24), dp(24)).apply {
-                gravity = Gravity.CENTER_VERTICAL
                 marginEnd = dp(8)
             }
             setOnClickListener { dismiss(false) }
@@ -72,7 +116,7 @@ class ChatInputOverlay(
         inputField = EditText(context).apply {
             hint = "Ask DosCom..."
             setTextColor(Color.WHITE)
-            setHintTextColor(Color.parseColor("#66FFFFFF")) // 40% white
+            setHintTextColor(Color.parseColor("#66FFFFFF"))
             textSize = 14f
             inputType = InputType.TYPE_CLASS_TEXT
             layoutParams = LinearLayout.LayoutParams(
@@ -88,7 +132,6 @@ class ChatInputOverlay(
         val sendButton = SendButton(context).apply {
             layoutParams = LinearLayout.LayoutParams(dp(40), dp(40)).apply {
                 marginStart = dp(8)
-                gravity = Gravity.CENTER_VERTICAL
             }
             setOnClickListener {
                 val query = inputField.text.toString()
@@ -101,7 +144,6 @@ class ChatInputOverlay(
         val micButton = MicButton(context).apply {
             layoutParams = LinearLayout.LayoutParams(dp(40), dp(40)).apply {
                 marginStart = dp(8)
-                gravity = Gravity.CENTER_VERTICAL
             }
             var isListening = false
             var pulseAnimator: ObjectAnimator? = null
@@ -150,13 +192,15 @@ class ChatInputOverlay(
             }
         }
 
-        container.addView(closeButton)
-        container.addView(inputField)
+        inputRow.addView(closeButton)
+        inputRow.addView(inputField)
         if (voiceInputService.isAvailable()) {
-            container.addView(micButton)
+            inputRow.addView(micButton)
         }
-        container.addView(sendButton)
+        inputRow.addView(sendButton)
 
+        container.addView(reactionRow)
+        container.addView(inputRow)
         addView(container)
 
         // Slide in animation
@@ -169,6 +213,26 @@ class ChatInputOverlay(
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showSoftInput(inputField, InputMethodManager.SHOW_IMPLICIT)
         }
+    }
+
+    private fun handleReaction(reaction: String) {
+        val inputs = BrainInput.buildInputs(context)
+        val targetOutputs = IntArray(7) 
+
+        if (reaction == "😤") {
+            EmotionalMemory.recordNegative(context)
+            BrainManager.brain.learn(inputs, targetOutputs, reward = -0.5f)
+            onReactedNegative()
+        } else {
+            EmotionalMemory.recordPositive(context)
+            BrainManager.brain.learn(inputs, targetOutputs, reward = 1.0f)
+            onReactedPositive()
+        }
+        
+        BrainManager.brain.save(context)
+        
+        // Let the user keep typing after reaction, or dismiss. Let's just dismiss.
+        dismiss(false)
     }
 
     private fun dismiss(submitted: Boolean, query: String = "") {
@@ -194,10 +258,10 @@ class ChatInputOverlay(
     }
 
     class MicButton(context: Context) : View(context) {
-        private var bgColor = Color.parseColor("#C81A1A2E") // 200/255 alpha
+        private var bgColor = Color.parseColor("#C81A1A2E")
         private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bgColor }
         private val iconPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { 
-            color = Color.parseColor("#00B4FF") // teal
+            color = Color.parseColor("#00B4FF")
             strokeWidth = 2f * resources.displayMetrics.density
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND
@@ -235,7 +299,7 @@ class ChatInputOverlay(
     class SendButton(context: Context) : View(context) {
         private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#C81A1A2E") }
         private val iconPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { 
-            color = Color.parseColor("#A855F7") // purple
+            color = Color.parseColor("#A855F7")
             strokeWidth = 2f * resources.displayMetrics.density
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND
@@ -249,7 +313,6 @@ class ChatInputOverlay(
             
             val p = Path()
             val d = resources.displayMetrics.density
-            // Draw upward arrow
             p.moveTo(cx, cy + 6f*d)
             p.lineTo(cx, cy - 6f*d)
             p.moveTo(cx - 4f*d, cy - 2f*d)
@@ -261,7 +324,7 @@ class ChatInputOverlay(
 
     class CloseButton(context: Context) : View(context) {
         private val iconPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { 
-            color = Color.parseColor("#99FFFFFF") // 60% white
+            color = Color.parseColor("#99FFFFFF")
             strokeWidth = 2f * resources.displayMetrics.density
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND

@@ -152,6 +152,9 @@ class CompanionOverlayService : Service() {
         var dragFrameIndex = 0
         var dragDistanceAccumulator = 0f
 
+        var tapCount = 0
+        var tapRunnable: Runnable? = null
+
         val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
             override fun onLongPress(e: MotionEvent) {
                 if (isDragging) return
@@ -165,47 +168,36 @@ class CompanionOverlayService : Service() {
                 }
 
                 idleEngine.interact()
-
-                val reactionBox = com.devenlucaz.doscom.ui.ReactionBox(
-                    context = this@CompanionOverlayService,
-                    windowManager = windowManager,
-                    dosComX = layoutParams.x,
-                    dosComY = layoutParams.y,
-                    onChatClicked = {
-                        idleEngine.targetState.mouthExpression = 1 // LISTEN
-                        CoroutineScope(Dispatchers.Main).launch {
-                            try {
-                                lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                            delay(300)
-                            layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
-                            windowManager.updateViewLayout(overlayView, layoutParams)
-                            showChatInput()
-                        }
-                    },
-                    onReactedPositive = {
-                        idleEngine.targetState.blushVisible = true
-                        idleEngine.targetState.bodyOffsetY = -20f
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            idleEngine.targetState.blushVisible = false
-                            idleEngine.targetState.bodyOffsetY = 0f
-                        }, 2000)
-                    },
-                    onReactedNegative = {
-                        idleEngine.targetState.antennaGlow = 0.2f
-                        idleEngine.targetState.mouthExpression = 2 // worried
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            idleEngine.targetState.antennaGlow = 1.0f
-                            idleEngine.targetState.mouthExpression = 0
-                        }, 30000)
+                idleEngine.targetState.mouthExpression = 1 // LISTEN
+                CoroutineScope(Dispatchers.Main).launch {
+                    try {
+                        lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
-                )
-                reactionBox.show()
+                    delay(300)
+                    layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
+                    windowManager.updateViewLayout(overlayView, layoutParams)
+                    showChatInput()
+                }
             }
             
             override fun onSingleTapUp(e: MotionEvent): Boolean {
+                tapCount++
+                if (tapRunnable != null) {
+                    handler.removeCallbacks(tapRunnable!!)
+                }
+                
+                if (tapCount == 3) {
+                    tapCount = 0
+                    val intent = android.content.Intent(this@CompanionOverlayService, com.devenlucaz.doscom.settings.SettingsActivity::class.java).apply {
+                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    }
+                    startActivity(intent)
+                    return true
+                }
+                
+                tapRunnable = Runnable {
                 if (com.devenlucaz.doscom.systems.BirthdaySystem.isDosCombBirthday(this@CompanionOverlayService)) {
                     idleEngine.targetState.eyesWide = true
                     idleEngine.targetState.blushVisible = true
@@ -243,6 +235,10 @@ class CompanionOverlayService : Service() {
                         }, 1000)
                     }
                 }
+                
+                tapCount = 0
+                }
+                handler.postDelayed(tapRunnable!!, 300)
                 return true
             }
         })
@@ -586,6 +582,22 @@ class CompanionOverlayService : Service() {
                 idleEngine.targetState.mouthExpression = 0
                 idleEngine.targetState.leftArmAngle = 0f
                 idleEngine.targetState.bodyOffsetY = 0f
+            },
+            onReactedPositive = {
+                idleEngine.targetState.blushVisible = true
+                idleEngine.targetState.bodyOffsetY = -20f
+                handler.postDelayed({
+                    idleEngine.targetState.blushVisible = false
+                    idleEngine.targetState.bodyOffsetY = 0f
+                }, 2000)
+            },
+            onReactedNegative = {
+                idleEngine.targetState.antennaGlow = 0.2f
+                idleEngine.targetState.mouthExpression = 2 
+                handler.postDelayed({
+                    idleEngine.targetState.antennaGlow = 1.0f
+                    idleEngine.targetState.mouthExpression = 0
+                }, 3000) // changed from 30000ms to 3000ms for responsiveness
             }
         )
 
