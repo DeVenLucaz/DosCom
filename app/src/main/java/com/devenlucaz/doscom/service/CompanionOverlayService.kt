@@ -132,7 +132,7 @@ class CompanionOverlayService : Service() {
             paddedSizePx,
             paddedSizePx,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
@@ -621,7 +621,8 @@ class CompanionOverlayService : Service() {
                         }
                     }
                     
-                    finalX = kotlin.math.max(-paddingPx, kotlin.math.min(finalX, screenWidth - charSize + paddingPx))
+                    val visualOffsetPx = (58 * resources.displayMetrics.density).toInt()
+                    finalX = kotlin.math.max(-visualOffsetPx, kotlin.math.min(finalX, screenWidth - charSize + visualOffsetPx))
                     finalY = kotlin.math.max(-paddingPx, kotlin.math.min(finalY, screenHeight - charSize + paddingPx))
 
                     showConfirmRing(targetCenterX, targetCenterY) {
