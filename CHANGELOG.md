@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-alpha.1] - 2026-06-07
+### Added (V2 Phase 1 Complete)
+- Created the Mode System infrastructure (`CompanionMode` enum: ALIVE, AWAKE, AWARE).
+- Implemented `ModeManager` to handle mode transitions and state persistence using `SharedPreferences`.
+- Created the Settings shell (`SettingsActivity`) with a Glassmorphism-inspired dark layout featuring distinct sections for Mode, Appearance, Behavior, Personality, API, and About.
+- Wired basic interactivity for mode selection cards and preference controls in the Settings screen.
+- Updated `AndroidManifest.xml` to include `SettingsActivity`.
 ## [1.0.0] - 2026-06-06
 ### Added (Phase 1 Complete)
 - Created the foundational empty Android project skeleton.

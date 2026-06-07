@@ -34,6 +34,10 @@
             android:name=".onboarding.OnboardingActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".settings.SettingsActivity"
+            android:exported="false" />
+
         <service
             android:name=".service.CompanionOverlayService"
             android:foregroundServiceType="mediaProjection"
