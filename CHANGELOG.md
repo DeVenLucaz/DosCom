@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-alpha.2] - 2026-06-07
+### Added (V2 Phase 2a Complete)
+- Created `PropType` enum to support various interactive toys and hats (Party Hat, Boombox, Detective Hat, etc.).
+- Completely rewrote `CompanionRenderer` to draw the V2 Chibi robot dynamically using raw Android Canvas paths and shapes (no image assets).
+- Implemented the full V2 expression system with support for pupil tracking, eye states (closed, half-closed, wide), mouth expressions (neutral, happy, worried, open), blushing, and tongue out.
+- Preserved V1 animation stubs (`setState`, `nextFrame`) to prevent compilation issues until the animation engine is fully replaced in Phase 5.
+
 ## [2.0.0-alpha.1] - 2026-06-07
 ### Added (V2 Phase 1 Complete)
 - Created the Mode System infrastructure (`CompanionMode` enum: ALIVE, AWAKE, AWARE).

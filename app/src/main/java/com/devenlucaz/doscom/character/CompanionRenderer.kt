@@ -6,121 +6,266 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.view.View
-import android.os.Handler
-import android.os.Looper
+import android.util.AttributeSet
 
-class CompanionRenderer(context: Context) : View(context) {
+class CompanionRenderer @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
 
+    // --- V1 COMPATIBILITY STUBS (to prevent compilation errors until removed in later phases) ---
     var currentState: CharacterState = CharacterState.IDLE_BOB
         private set
-    
     var currentFrame: Int = 0
         private set
-
-    private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.LTGRAY }
-    private val eyePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE }
-    private val pupilPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.BLACK }
-    private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { 
-        color = Color.DKGRAY 
-        strokeWidth = 6f
-        style = Paint.Style.STROKE
-    }
-
-    private val handler = Handler(Looper.getMainLooper())
-    private val animationRunnable = object : Runnable {
-        override fun run() {
-            nextFrame()
-            invalidate()
-            handler.postDelayed(this, 150L)
-        }
-    }
-
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        handler.post(animationRunnable)
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        handler.removeCallbacks(animationRunnable)
-    }
-
     fun setState(state: CharacterState) {
         currentState = state
         currentFrame = 0
     }
-
     fun nextFrame() {
-        currentFrame++
-        if (currentFrame > 3) {
-            currentFrame = 0
-        }
+        currentFrame = (currentFrame + 1) % 4
+    }
+    // ----------------------------------------------------------------------------------------
+
+    var antennaColor: Int = Color.WHITE
+    var eyesClosed: Boolean = false
+    var eyesHalf: Boolean = false
+    var eyesWide: Boolean = false
+    var pupilOffsetX: Float = 0f
+    var pupilOffsetY: Float = 0f
+    var mouthExpression: Int = 0  // 0=neutral 1=happy 2=worried
+    var mouthOpen: Boolean = false
+    var blushVisible: Boolean = false
+    var tongueOut: Boolean = false
+    var activeProp: PropType = PropType.NONE
+
+    private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#C8C8C8")
+        setShadowLayer(8f, 0f, 4f, Color.argb(51, 0, 0, 0)) // 20% black soft shadow
+    }
+    
+    private val shadowlessBodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#C8C8C8")
+    }
+
+    private val eyeWhitePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+    }
+
+    private val pupilPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#1A1A1A")
+    }
+
+    private val blushPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#FFB3B3")
+    }
+
+    private val tonguePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#FF6B6B")
+    }
+
+    private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#1A1A1A")
+        style = Paint.Style.STROKE
+        strokeWidth = 3f
+        strokeCap = Paint.Cap.ROUND
+    }
+
+    private val propPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+    }
+
+    // Disable hardware acceleration on view level if shadow layer has issues, 
+    // but usually small blur radius on simple rects works fine.
+    init {
+        setLayerType(LAYER_TYPE_SOFTWARE, null)
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-
+        
         val w = width.toFloat()
         val h = height.toFloat()
-
-        var bodyOffsetY = 0f
-        if (currentState == CharacterState.IDLE_BOB) {
-            bodyOffsetY = (Math.sin(System.currentTimeMillis() / 200.0) * (h * 0.05f)).toFloat()
-        }
-
-        canvas.save()
-        canvas.translate(0f, bodyOffsetY)
-
-        // Antenna line
-        canvas.drawLine(w * 0.5f, h * 0.1f, w * 0.5f, h * 0.3f, linePaint)
-        // Antenna ball
-        if (currentState == CharacterState.LISTEN) {
-            val blinkColor = if (System.currentTimeMillis() % 400 < 200) Color.RED else Color.LTGRAY
-            val antennaPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = blinkColor }
-            canvas.drawCircle(w * 0.5f, h * 0.1f, w * 0.05f, antennaPaint)
-        } else {
-            canvas.drawCircle(w * 0.5f, h * 0.1f, w * 0.05f, bodyPaint)
-        }
-
-        // Body
-        val bodyRect = RectF(w * 0.2f, h * 0.3f, w * 0.8f, h * 0.8f)
-        canvas.drawRoundRect(bodyRect, w * 0.1f, w * 0.1f, bodyPaint)
-
-        val eyeCy = h * 0.5f
-
-        if (currentState == CharacterState.IDLE_BLINK && currentFrame == 3) {
-            canvas.drawLine(w * 0.25f, eyeCy, w * 0.45f, eyeCy, linePaint)
-            canvas.drawLine(w * 0.55f, eyeCy, w * 0.75f, eyeCy, linePaint)
-        } else {
-            var leftPupilX = w * 0.35f
-            var rightPupilX = w * 0.65f
-
-            when (currentState) {
-                CharacterState.IDLE_LOOK_LEFT -> {
-                    leftPupilX -= w * 0.03f
-                    rightPupilX -= w * 0.03f
-                }
-                CharacterState.IDLE_LOOK_RIGHT -> {
-                    leftPupilX += w * 0.03f
-                    rightPupilX += w * 0.03f
-                }
-                else -> {}
-            }
-
-            // Left Eye
-            canvas.drawCircle(w * 0.35f, eyeCy, w * 0.1f, eyePaint)
-            canvas.drawCircle(leftPupilX, eyeCy, w * 0.05f, pupilPaint)
-
-            // Right Eye
-            canvas.drawCircle(w * 0.65f, eyeCy, w * 0.1f, eyePaint)
-            canvas.drawCircle(rightPupilX, eyeCy, w * 0.05f, pupilPaint)
-        }
-
-        canvas.restore()
-
+        val cx = w / 2f
+        val cy = h / 2f
+        
+        // --- Proportions Base ---
+        val headH = 0.38f * h
+        val bodyH = 0.32f * h
+        val groupH = headH + 2f + bodyH
+        val startY = cy - groupH / 2f
+        
+        // Head dimensions: width=0.55W, height=0.38H
+        val headW = 0.55f * w
+        val headY = startY + headH / 2f
+        
+        // Body dimensions: width=0.45W, height=0.32H
+        val bodyW = 0.45f * w
+        val bodyY = startY + headH + 2f + bodyH / 2f
+        
+        // Antenna
+        linePaint.color = Color.parseColor("#1A1A1A")
+        linePaint.strokeWidth = 3f
+        val antennaLen = h * 0.08f
+        canvas.drawLine(cx, headY - headH / 2f, cx, headY - headH / 2f - antennaLen, linePaint)
+        
+        propPaint.color = antennaColor
+        canvas.drawCircle(cx, headY - headH / 2f - antennaLen, w * 0.03f, propPaint)
+        
         // Legs
-        val legWidth = w * 0.15f
-        canvas.drawRect(w * 0.3f, h * 0.8f, w * 0.3f + legWidth, h * 0.95f, bodyPaint)
-        canvas.drawRect(w * 0.55f, h * 0.8f, w * 0.55f + legWidth, h * 0.95f, bodyPaint)
+        val legW = 0.12f * w
+        val legH = 0.22f * h
+        val legLeftX = cx - 0.10f * w
+        val legRightX = cx + 0.10f * w
+        val legY = bodyY + bodyH / 2f
+        
+        canvas.drawRoundRect(legLeftX - legW/2f, legY, legLeftX + legW/2f, legY + legH, h * 0.05f, h * 0.05f, shadowlessBodyPaint)
+        canvas.drawRoundRect(legRightX - legW/2f, legY, legRightX + legW/2f, legY + legH, h * 0.05f, h * 0.05f, shadowlessBodyPaint)
+        
+        // Arms
+        val armW = 0.10f * w
+        val armH = 0.26f * h
+        val armLeftX = cx - bodyW / 2f - armW / 2f
+        val armRightX = cx + bodyW / 2f + armW / 2f
+        val armY = bodyY - bodyH / 4f
+        
+        canvas.drawRoundRect(armLeftX - armW/2f, armY, armLeftX + armW/2f, armY + armH, h * 0.04f, h * 0.04f, shadowlessBodyPaint)
+        canvas.drawRoundRect(armRightX - armW/2f, armY, armRightX + armW/2f, armY + armH, h * 0.04f, h * 0.04f, shadowlessBodyPaint)
+        
+        // Hands
+        val handRadius = 0.07f * w
+        val handLeftY = armY + armH
+        val handRightY = armY + armH
+        canvas.drawCircle(armLeftX, handLeftY, handRadius, shadowlessBodyPaint)
+        canvas.drawCircle(armRightX, handRightY, handRadius, shadowlessBodyPaint)
+        
+        // Body
+        canvas.drawRoundRect(cx - bodyW/2f, bodyY - bodyH/2f, cx + bodyW/2f, bodyY + bodyH/2f, h * 0.08f, h * 0.08f, bodyPaint)
+        
+        // Head
+        canvas.drawRoundRect(cx - headW/2f, headY - headH/2f, cx + headW/2f, headY + headH/2f, h * 0.15f, h * 0.15f, bodyPaint)
+        
+        // Eyes
+        val eyeRadius = 0.08f * w
+        val eyeLeftX = cx - 0.12f * w
+        val eyeRightX = cx + 0.12f * w
+        val eyeY = headY - 0.02f * h
+        
+        if (eyesClosed) {
+            linePaint.color = Color.parseColor("#1A1A1A")
+            // Draw sleeping lines
+            canvas.drawLine(eyeLeftX - eyeRadius, eyeY, eyeLeftX + eyeRadius, eyeY, linePaint)
+            canvas.drawLine(eyeRightX - eyeRadius, eyeY, eyeRightX + eyeRadius, eyeY, linePaint)
+        } else {
+            // Background white
+            canvas.drawCircle(eyeLeftX, eyeY, eyeRadius, eyeWhitePaint)
+            canvas.drawCircle(eyeRightX, eyeY, eyeRadius, eyeWhitePaint)
+            
+            // Half closed overlay
+            if (eyesHalf) {
+                propPaint.color = Color.parseColor("#C8C8C8")
+                canvas.drawRect(eyeLeftX - eyeRadius, eyeY - eyeRadius, eyeLeftX + eyeRadius, eyeY, propPaint)
+                canvas.drawRect(eyeRightX - eyeRadius, eyeY - eyeRadius, eyeRightX + eyeRadius, eyeY, propPaint)
+                canvas.drawLine(eyeLeftX - eyeRadius, eyeY, eyeLeftX + eyeRadius, eyeY, linePaint)
+                canvas.drawLine(eyeRightX - eyeRadius, eyeY, eyeRightX + eyeRadius, eyeY, linePaint)
+            }
+            
+            // Pupils
+            val pupilRadius = if (eyesWide) 0.06f * w else 0.04f * w
+            canvas.drawCircle(eyeLeftX + pupilOffsetX, eyeY + pupilOffsetY, pupilRadius, pupilPaint)
+            canvas.drawCircle(eyeRightX + pupilOffsetX, eyeY + pupilOffsetY, pupilRadius, pupilPaint)
+        }
+        
+        // Blush
+        if (blushVisible) {
+            val blushW = 0.08f * w
+            val blushH = 0.04f * h
+            val blushY = eyeY + 0.08f * h
+            val blushLeftX = cx - 0.20f * w
+            val blushRightX = cx + 0.20f * w
+            canvas.drawOval(RectF(blushLeftX - blushW/2f, blushY - blushH/2f, blushLeftX + blushW/2f, blushY + blushH/2f), blushPaint)
+            canvas.drawOval(RectF(blushRightX - blushW/2f, blushY - blushH/2f, blushRightX + blushW/2f, blushY + blushH/2f), blushPaint)
+        }
+        
+        // Mouth
+        val mouthY = headY + 0.10f * h
+        linePaint.color = Color.parseColor("#1A1A1A")
+        linePaint.strokeWidth = 3f
+        
+        if (mouthOpen) {
+            propPaint.color = Color.parseColor("#1A1A1A")
+            canvas.drawOval(RectF(cx - 0.04f * w, mouthY, cx + 0.04f * w, mouthY + 0.06f * h), propPaint)
+            if (tongueOut) {
+                canvas.drawRoundRect(cx - 0.02f * w, mouthY + 0.04f * h, cx + 0.02f * w, mouthY + 0.08f * h, 4f, 4f, tonguePaint)
+            }
+        } else {
+            val mouthW = 0.06f * w
+            when (mouthExpression) {
+                0 -> { // Neutral
+                    canvas.drawLine(cx - mouthW/2f, mouthY, cx + mouthW/2f, mouthY, linePaint)
+                }
+                1 -> { // Happy
+                    canvas.drawArc(RectF(cx - mouthW/2f, mouthY - 0.02f * h, cx + mouthW/2f, mouthY + 0.02f * h), 0f, 180f, false, linePaint)
+                }
+                2 -> { // Worried
+                    canvas.drawArc(RectF(cx - mouthW/2f, mouthY - 0.02f * h, cx + mouthW/2f, mouthY + 0.02f * h), 180f, 180f, false, linePaint)
+                }
+            }
+            if (tongueOut) {
+                canvas.drawRoundRect(cx - 0.02f * w, mouthY, cx + 0.02f * w, mouthY + 0.04f * h, 4f, 4f, tonguePaint)
+            }
+        }
+        
+        // Props
+        if (activeProp != PropType.NONE) {
+            drawProp(canvas, cx, headY, headW, headH, armLeftX, armY, w, h)
+        }
+    }
+    
+    private fun drawProp(canvas: Canvas, cx: Float, headY: Float, headW: Float, headH: Float, armX: Float, armY: Float, w: Float, h: Float) {
+        when (activeProp) {
+            PropType.PARTY_HAT -> {
+                propPaint.color = Color.parseColor("#FF5252")
+                val path = android.graphics.Path()
+                path.moveTo(cx, headY - headH/2f - 0.2f * h)
+                path.lineTo(cx - 0.15f * w, headY - headH/2f)
+                path.lineTo(cx + 0.15f * w, headY - headH/2f)
+                path.close()
+                canvas.drawPath(path, propPaint)
+                
+                propPaint.color = Color.parseColor("#FFEB3B")
+                canvas.drawCircle(cx, headY - headH/2f - 0.2f * h, 0.04f * w, propPaint)
+            }
+            PropType.PILOT_HAT -> {
+                propPaint.color = Color.parseColor("#795548")
+                canvas.drawRoundRect(cx - 0.25f * w, headY - headH/2f - 0.1f * h, cx + 0.25f * w, headY - headH/2f + 0.05f * h, 8f, 8f, propPaint)
+            }
+            PropType.DETECTIVE_HAT -> {
+                propPaint.color = Color.parseColor("#8D6E63")
+                canvas.drawRoundRect(cx - 0.2f * w, headY - headH/2f - 0.15f * h, cx + 0.2f * w, headY - headH/2f, 12f, 12f, propPaint)
+                canvas.drawRect(cx - 0.3f * w, headY - headH/2f, cx + 0.3f * w, headY - headH/2f + 0.02f * h, propPaint)
+            }
+            PropType.OVERSIZED_GLASSES -> {
+                linePaint.color = Color.parseColor("#1A1A1A")
+                linePaint.strokeWidth = 6f
+                val glassRadius = 0.15f * w
+                canvas.drawCircle(cx - 0.15f * w, headY, glassRadius, linePaint)
+                canvas.drawCircle(cx + 0.15f * w, headY, glassRadius, linePaint)
+                canvas.drawLine(cx - 0.05f * w, headY, cx + 0.05f * w, headY, linePaint)
+                linePaint.strokeWidth = 3f
+            }
+            PropType.BOOMBOX -> {
+                propPaint.color = Color.parseColor("#424242")
+                val bbY = armY + 0.1f * h
+                canvas.drawRoundRect(cx - 0.2f * w, bbY, cx + 0.2f * w, bbY + 0.2f * h, 8f, 8f, propPaint)
+                propPaint.color = Color.parseColor("#9E9E9E")
+                canvas.drawCircle(cx - 0.1f * w, bbY + 0.1f * h, 0.06f * w, propPaint)
+                canvas.drawCircle(cx + 0.1f * w, bbY + 0.1f * h, 0.06f * w, propPaint)
+            }
+            else -> {
+                // other props placeholder
+            }
+        }
     }
 }
