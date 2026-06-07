@@ -18,6 +18,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.TextView
 import com.devenlucaz.doscom.personality.EmotionalMemory
 import com.devenlucaz.doscom.brain.BrainManager
 import com.devenlucaz.doscom.brain.BrainInput
