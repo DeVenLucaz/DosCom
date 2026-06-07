@@ -220,7 +220,8 @@ class SettingsActivity : AppCompatActivity() {
                 val m = spinnerMonth.selectedItemPosition
                 val d = spinnerDay.selectedItemPosition
                 prefs.edit().putInt("birth_month", m).putInt("birth_day", d).apply()
-                com.devenlucaz.doscom.systems.BirthdaySystem.saveUserBirthday(this@SettingsActivity, m, d + 1)
+                val bdayPrefs = getSharedPreferences("doscom_birthday_prefs", Context.MODE_PRIVATE)
+                bdayPrefs.edit().putInt("birthday_month", m).putInt("birthday_day", d + 1).apply()
             }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
@@ -232,11 +233,11 @@ class SettingsActivity : AppCompatActivity() {
         val etApiKey = findViewById<EditText>(R.id.etApiKey)
         val btnSaveApiKey = findViewById<Button>(R.id.btnSaveApiKey)
         
-        etApiKey.setText(com.devenlucaz.doscom.config.ConfigManager.getApiKey(this) ?: "")
+        etApiKey.setText(com.devenlucaz.doscom.utils.ConfigManager.loadApiKey(this) ?: "")
 
         btnSaveApiKey.setOnClickListener {
             val key = etApiKey.text.toString()
-            com.devenlucaz.doscom.config.ConfigManager.saveApiKey(this, key)
+            com.devenlucaz.doscom.utils.ConfigManager.saveApiKey(this, key)
             Toast.makeText(this, "API Key Saved!", Toast.LENGTH_SHORT).show()
         }
     }
