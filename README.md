@@ -1,59 +1,31 @@
-#  DosCom V2 - Your Friendly Screen Companion!
+# DosCom
 
-Welcome to **DosCom V2**! 🎉 DosCom is a cute, smart, and helpful AI companion that lives right on your Android screen. Imagine a little digital friend that floats around your phone, always ready to help you find things or launch apps!
-.
-## 🌟 What Does DosCom Do?
+**DosCom** is not an assistant pretending to be alive. It is a tiny living creature that occasionally helps.
 
-DosCom sits as a tiny, floating face on your screen. You can drag it around so it's never in the way! 
-When you need something, just tap DosCom and tell it what you want. For example:
-- "Open my camera!" 📸
-- "Where is WhatsApp?" 💬
-- "Help me find Chrome" 🌐
+Unlike traditional virtual assistants that wait rigidly for commands, DosCom is a "Screen Sprite"—a dark, velvety, ink-like entity that lives on the edges of your screen. It wanders around, yawns, gets bored, reacts to battery levels, and quietly observes.
 
-DosCom will look at your screen, find the app for you, and actually move over to point it out! 
+## The Concept
 
-## 📥 How to Install
+DosCom was born from the idea of a "living UI". It is built with a glassmorphism aesthetic, featuring soft, glowing cyan elements that contrast against its dark inkblot body. 
+- **Organic Movement:** DosCom stretches, squashes, climbs, and clings to the edges of the display, moving more like a droplet of animated ink than a machine.
+- **Independent Life:** DosCom does not need your permission to be bored. If you leave it alone, it might pull out a tiny boombox, take out a treasure map, or fall asleep in the corner.
+- **Context Aware:** It reacts when you plug in your charger, shivers when the battery is low, and puts on a detective hat if it senses certain apps are running.
+- **SNN Brain (Upcoming):** In Phase 8, DosCom will be equipped with a Spiking Neural Network (SNN) that learns from your reactions and adapts its personality (Curious, Playful, Withdrawn) based on how you treat it.
 
-The easiest way to get DosCom is using **Obtainium**, an app that lets you download apps directly from their creators without needing the Play Store.
+## Current Progress
 
-1. **Get Obtainium:** If you don't have it, download Obtainium from their [official page](https://github.com/ImranR98/Obtainium/releases).
-2. **Add DosCom:** Open Obtainium and click "Add App".
-3. **Paste the Link:** Paste this link into Obtainium: `https://github.com/DeVenLucaz/DosCom`
-4. **Install:** Tap "Add" and then "Install" to get the latest version of DosCom!
+- ✅ **Phase 1-2:** Mode infrastructure and organic Sprite/Inkblot character rendering.
+- ✅ **Phase 3:** Screen edge anchoring, drag-and-drop, and floating behavior.
+- ✅ **Phase 4:** Limb animation, crawling, and climbing.
+- ✅ **Phase 5:** Idle engines, yawning, sleeping, and random expressions.
+- ✅ **Phase 6:** Toybox system (boombox, glasses, etc.) and self-entertainment.
+- ✅ **Phase 7:** Context awareness (time, charging, battery, app context).
+- ⏳ **Phase 8:** SNN Brain (In Progress).
 
-*(Note: Every time DosCom gets a cool new update, Obtainium will help you easily update it!)*
+## Building
 
-## 🔐 Setting It Up (Permissions)
+```bash
+./gradlew assembleDebug
+```
 
-DosCom needs to be able to "see" your screen and draw itself over your other apps to work its magic. When you open DosCom for the first time, it will ask for two permissions:
-
-1. **🎨 Display over other apps:** This allows DosCom's floating face to appear on your screen.
-2. **👀 Accessibility Service:** This allows DosCom to look at what's on your screen to find the apps you ask for.
-
-**Troubleshooting for ColorOS (OPPO) users:**
-If you try to turn on Accessibility and your phone says *"Restricted setting"*, don't panic! 
-1. Open the DosCom app.
-2. Click the **"Option B: ColorOS Bypass"** button.
-3. Select the DosCom APK file you downloaded.
-4. Let it "update" itself.
-5. Boom! You can now turn on the Accessibility setting without the restriction! 🚀
-
-## 🎮 How to Use DosCom
-
-Using DosCom is super easy!
-
-1. **Wake it up:** Tap the floating DosCom icon.
-2. **Give a command:** A small window will pop up. Type what you're looking for (like "Instagram" or "Calculator").
-3. **Watch it go:** DosCom will think for a second, scan your screen, and zoom over to the app you asked for, saying "I found it!"
-
-If DosCom can't find it on your screen, it will let you know. Make sure the app you're looking for is actually visible on your screen!
-
-Enjoy your new AI screen buddy! 🎈
-
-## 🚀 Upcoming features in your DosCom buddy
-
-DosCom is getting smarter every day! Here is what we are working on adding next:
-
-- **Talk to DosCom (Voice Commands) 🎙️**: Tired of typing? Soon you'll be able to just press a microphone button and ask DosCom to find things using your voice!
-- **Google Gemini Brain 🧠**: DosCom will soon be able to connect directly to Google's powerful Gemini AI app. If you ask a general question, DosCom will instantly pull up Gemini to help you out!
-- **Smart "Human-like" Vision 👁️**: Right now, DosCom "reads" the names of apps on the screen. Soon, if it can't read them, it will actually take a picture of the screen and use AI to "look" for the icon just like a human would!
+DosCom requires Accessibility and Display Over Other Apps permissions to interact seamlessly with your environment.

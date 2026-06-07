@@ -373,7 +373,7 @@ class CompanionOverlayService : Service() {
                 val idleState = com.devenlucaz.doscom.character.AnimationState()
                 lerpAnimationState(overlayView.state, idleState, 200L)
                 serviceScope.launch(Dispatchers.Main) {
-                    delay(3000)
+                    delay(kotlin.random.Random.nextLong(3000L, 15000L))
                     snapToNearestEdge()
                 }
             }
