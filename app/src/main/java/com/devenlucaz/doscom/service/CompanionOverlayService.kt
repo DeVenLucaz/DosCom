@@ -53,8 +53,9 @@ class CompanionOverlayService : Service() {
     private lateinit var windowManager: WindowManager
     private lateinit var overlayView: CompanionRenderer
     private lateinit var layoutParams: WindowManager.LayoutParams
+    private var lastScreenshot: android.graphics.Bitmap? = null
     
-    var lastScreenshot: Bitmap? = null
+    private val handler = Handler(Looper.getMainLooper())
 
     private val animationQueue = AnimationQueue()
     private lateinit var idleEngine: IdleAnimationEngine
