@@ -48,6 +48,14 @@ class TimeReactionEngine(
         }
     }
 
+    private val unlockReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: android.content.Intent?) {
+            if (intent?.action == android.content.Intent.ACTION_USER_PRESENT) {
+                checkBirthdays()
+            }
+        }
+    }
+
     fun start() {
         val accel = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         sensorManager.registerListener(this, accel, SensorManager.SENSOR_DELAY_NORMAL)
@@ -58,6 +66,9 @@ class TimeReactionEngine(
         context.contentResolver.registerContentObserver(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI, true, screenshotObserver
         )
+
+        val unlockFilter = android.content.IntentFilter(android.content.Intent.ACTION_USER_PRESENT)
+        context.registerReceiver(unlockReceiver, unlockFilter)
         
         checkTime()
         checkRingerMode()
@@ -69,6 +80,7 @@ class TimeReactionEngine(
         sensorManager.unregisterListener(this)
         context.contentResolver.unregisterContentObserver(ringerObserver)
         context.contentResolver.unregisterContentObserver(screenshotObserver)
+        try { context.unregisterReceiver(unlockReceiver) } catch (e: Exception) {}
         if (keyboardView != null) {
             try { windowManager.removeView(keyboardView) } catch (e: Exception) {}
         }
@@ -103,6 +115,47 @@ class TimeReactionEngine(
             engine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.PILOT_HAT
             engine.targetState.leftArmAngle = -90f
             engine.targetState.rightArmAngle = 90f
+        }
+    }
+
+    private fun checkBirthdays() {
+        if (com.devenlucaz.doscom.systems.BirthdaySystem.isUserBirthday(context)) {
+            engine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.PARTY_HAT
+            
+            when (com.devenlucaz.doscom.systems.BirthdaySystem.getBirthdayDayPhase()) {
+                com.devenlucaz.doscom.systems.BirthdayPhase.MIDNIGHT_UNLOCK -> {
+                    if (context is com.devenlucaz.doscom.service.CompanionOverlayService) {
+                        context.showSpeechBubble("🎂", 0, 0)
+                    }
+                }
+                com.devenlucaz.doscom.systems.BirthdayPhase.MORNING -> {
+                    engine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.GIFT_BOX
+                    handler.postDelayed({
+                        if (engine.targetState.activeProp == com.devenlucaz.doscom.character.PropType.GIFT_BOX) {
+                            engine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.PARTY_HAT
+                        }
+                    }, 3000)
+                }
+                com.devenlucaz.doscom.systems.BirthdayPhase.AFTERNOON -> {
+                    engine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.TINY_CAKE
+                    handler.postDelayed({
+                        if (engine.targetState.activeProp == com.devenlucaz.doscom.character.PropType.TINY_CAKE) {
+                            engine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.PARTY_HAT
+                            engine.targetState.mouthExpression = 0
+                        }
+                    }, 5000)
+                }
+                com.devenlucaz.doscom.systems.BirthdayPhase.EVENING -> {
+                    engine.targetState.bodyRotation = 10f
+                    if (context is com.devenlucaz.doscom.service.CompanionOverlayService) {
+                        context.showSpeechBubble("♥", 0, 0)
+                    }
+                }
+            }
+        } else if (com.devenlucaz.doscom.systems.BirthdaySystem.isDosCombBirthday(context)) {
+            engine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.TINY_CAKE
+            engine.targetState.scaleX = 1.2f
+            handler.postDelayed({ engine.targetState.scaleX = 1.0f }, 3000)
         }
     }
 

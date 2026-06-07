@@ -206,6 +206,43 @@ class CompanionOverlayService : Service() {
             }
             
             override fun onSingleTapUp(e: MotionEvent): Boolean {
+                if (com.devenlucaz.doscom.systems.BirthdaySystem.isDosCombBirthday(this@CompanionOverlayService)) {
+                    idleEngine.targetState.eyesWide = true
+                    idleEngine.targetState.blushVisible = true
+                    idleEngine.targetState.bodyOffsetY = -30f
+                    idleEngine.targetState.leftArmAngle = -150f
+                    idleEngine.targetState.rightArmAngle = -150f
+                    
+                    com.devenlucaz.doscom.personality.EmotionalMemory.recordPositive(this@CompanionOverlayService, 0.3f)
+                    val inputs = com.devenlucaz.doscom.brain.BrainInput.buildInputs(this@CompanionOverlayService)
+                    com.devenlucaz.doscom.brain.BrainManager.brain.learn(inputs, IntArray(7), 1.0f)
+                    com.devenlucaz.doscom.brain.BrainManager.brain.save(this@CompanionOverlayService)
+                    
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        idleEngine.targetState.eyesWide = false
+                        idleEngine.targetState.blushVisible = false
+                        idleEngine.targetState.bodyOffsetY = 0f
+                        idleEngine.targetState.leftArmAngle = 0f
+                        idleEngine.targetState.rightArmAngle = 0f
+                    }, 2000)
+                } else if (com.devenlucaz.doscom.systems.BirthdaySystem.isUserBirthday(this@CompanionOverlayService)) {
+                    if (idleEngine.targetState.activeProp == com.devenlucaz.doscom.character.PropType.GIFT_BOX) {
+                        idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.NONE
+                        val toy = com.devenlucaz.doscom.systems.ToyBoxSystem.selectToy(this@CompanionOverlayService)
+                        com.devenlucaz.doscom.systems.ToyBoxSystem.startToyActivity(toy, idleEngine)
+                        idleEngine.targetState.bodyOffsetY = -20f
+                        Handler(Looper.getMainLooper()).postDelayed({ idleEngine.targetState.bodyOffsetY = 0f }, 2000)
+                    } else if (idleEngine.targetState.activeProp == com.devenlucaz.doscom.character.PropType.TINY_CAKE) {
+                        idleEngine.targetState.leftArmAngle = -90f
+                        idleEngine.targetState.mouthExpression = 2 
+                        Handler(Looper.getMainLooper()).postDelayed({ 
+                            idleEngine.targetState.leftArmAngle = 0f
+                            idleEngine.targetState.mouthExpression = 1 
+                            idleEngine.targetState.bodyOffsetY = -20f
+                            Handler(Looper.getMainLooper()).postDelayed({ idleEngine.targetState.bodyOffsetY = 0f }, 1000)
+                        }, 1000)
+                    }
+                }
                 return true
             }
         })

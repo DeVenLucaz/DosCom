@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-alpha.11] - 2026-06-07
+### Added (V2 Phase 10 Complete — Birthday System)
+- Created `BirthdaySystem` to store and retrieve the user's birthdate and DosCom's install date using persistent storage.
+- Integrated an unlock listener in `TimeReactionEngine` to trigger contextual animations upon device wake.
+- Built day-phase transitions for user birthdays (Midnight confetti, Morning Gift Box, Afternoon Tiny Cake, Evening Party Hat).
+- Added DosCom's birthday animations where DosCom eats its own cake and gets excited/blushes when tapped.
+- Rewarded the `DosCombrain` network with positive reinforcement on DosCom birthday interactions.
+
 ## [2.0.0-alpha.10] - 2026-06-07
 ### Added (V2 Phase 9 Complete — Emotional Memory & Reactions)
 - Created `EmotionalMemory` system to persist sentiment scores based on user reactions over time.
