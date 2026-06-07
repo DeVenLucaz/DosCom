@@ -522,20 +522,19 @@ class CompanionOverlayService : Service() {
         return start + (end - start) * fraction
     }
 
-    private fun startIdleBehaviors()
-
+    private fun startIdleBehaviors() {
         prefs = getSharedPreferences("doscom_prefs", Context.MODE_PRIVATE)
         prefs.registerOnSharedPreferenceChangeListener(prefsListener)
         // trigger initial load
         prefsListener.onSharedPreferenceChanged(prefs, "mascot_scale")
         prefsListener.onSharedPreferenceChanged(prefs, "anim_speed")
         prefsListener.onSharedPreferenceChanged(prefs, "sleep_timer")
- {
+
         idleEngine.start()
     }
 
-    private fun stopIdleBehaviors()
-        if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(prefsListener) {
+    private fun stopIdleBehaviors() {
+        if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
         idleEngine.stop()
     }
 
