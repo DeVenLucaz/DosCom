@@ -185,7 +185,7 @@ class CompanionOverlayService : Service() {
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     if (isDragging) {
-                        snapToNearestEdge()
+                        handleDragRelease()
                     }
                     isDragging = false
                     true
@@ -254,6 +254,84 @@ class CompanionOverlayService : Service() {
             }
         }
         animator.start()
+    }
+
+    private fun handleDragRelease() {
+        val screenWidth = ScreenMetrics.getScreenWidth(this)
+        val screenHeight = ScreenMetrics.getScreenHeight(this)
+        val viewW = overlayView.width
+        val viewH = overlayView.height
+        
+        val pose = com.devenlucaz.doscom.animation.PoseEngine.detectPose(
+            layoutParams.x, layoutParams.y,
+            screenWidth, screenHeight,
+            viewW, viewH
+        )
+        val targetState = com.devenlucaz.doscom.animation.PoseEngine.getTargetState(pose)
+        
+        if (pose == com.devenlucaz.doscom.animation.RobotPose.FLOATING) {
+            lerpAnimationState(overlayView.state, targetState, 400L) {
+                CompanionAnimator.walkToEdge(
+                    this@CompanionOverlayService,
+                    overlayView,
+                    layoutParams,
+                    windowManager
+                ) {
+                    val idleState = com.devenlucaz.doscom.character.AnimationState()
+                    lerpAnimationState(overlayView.state, idleState, 200L)
+                }
+            }
+        } else {
+            if (pose == com.devenlucaz.doscom.animation.RobotPose.HANG_LEFT || pose == com.devenlucaz.doscom.animation.RobotPose.HANG_RIGHT) {
+                snapToNearestEdge()
+            }
+            lerpAnimationState(overlayView.state, targetState, 400L)
+        }
+    }
+
+    private fun lerpAnimationState(
+        startState: com.devenlucaz.doscom.character.AnimationState,
+        endState: com.devenlucaz.doscom.character.AnimationState,
+        durationMs: Long,
+        onComplete: () -> Unit = {}
+    ) {
+        val animator = ValueAnimator.ofFloat(0f, 1f)
+        animator.duration = durationMs
+        animator.addUpdateListener { animation ->
+            val fraction = animation.animatedFraction
+            overlayView.state = com.devenlucaz.doscom.character.AnimationState(
+                leftArmAngle = lerp(startState.leftArmAngle, endState.leftArmAngle, fraction),
+                rightArmAngle = lerp(startState.rightArmAngle, endState.rightArmAngle, fraction),
+                leftLegAngle = lerp(startState.leftLegAngle, endState.leftLegAngle, fraction),
+                rightLegAngle = lerp(startState.rightLegAngle, endState.rightLegAngle, fraction),
+                bodyOffsetY = lerp(startState.bodyOffsetY, endState.bodyOffsetY, fraction),
+                bodyOffsetX = lerp(startState.bodyOffsetX, endState.bodyOffsetX, fraction),
+                bodyRotation = lerp(startState.bodyRotation, endState.bodyRotation, fraction),
+                scaleX = endState.scaleX,
+                eyesClosed = endState.eyesClosed,
+                eyesHalf = endState.eyesHalf,
+                eyesWide = endState.eyesWide,
+                pupilOffsetX = endState.pupilOffsetX,
+                pupilOffsetY = endState.pupilOffsetY,
+                mouthExpression = endState.mouthExpression,
+                mouthOpen = endState.mouthOpen,
+                blushVisible = endState.blushVisible,
+                tongueOut = endState.tongueOut,
+                antennaGlow = endState.antennaGlow,
+                scale = endState.scale,
+                activeProp = endState.activeProp
+            )
+        }
+        animator.addListener(object: android.animation.AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: android.animation.Animator) {
+                onComplete()
+            }
+        })
+        animator.start()
+    }
+    
+    private fun lerp(start: Float, end: Float, fraction: Float): Float {
+        return start + (end - start) * fraction
     }
 
     private fun startIdleBehaviors() {

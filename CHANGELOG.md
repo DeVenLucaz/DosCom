@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-alpha.4] - 2026-06-07
+### Added (V2 Phase 3 Complete)
+- Created `PoseEngine` to calculate screen bounds and dynamically assign position-aware poses (`HANG_LEFT`, `HANG_RIGHT`, `GRIP_TOP`, `SIT_BOTTOM`, `FLOATING`).
+- Implemented dragging release logic in `CompanionOverlayService` to trigger `PoseEngine`.
+- Added smooth AnimationState lerping using ValueAnimator to transition from the dragging pose to the resting edge pose over 400ms.
+- Handled `FLOATING` state logic by triggering a panicked spin (`bodyRotation = 360`) before walking to the nearest safe edge.
+
+
 ## [2.0.0-alpha.3] - 2026-06-07
 ### Added (V2 Phase 2b Complete)
 - Created `AnimationState` data class to encapsulate all independent transformations (limbs, body position/rotation, scale) and expressions in a single reactive state object.
