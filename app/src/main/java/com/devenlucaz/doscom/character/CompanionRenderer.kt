@@ -74,7 +74,13 @@ class CompanionRenderer(context: Context) : View(context) {
         // Antenna line
         canvas.drawLine(w * 0.5f, h * 0.1f, w * 0.5f, h * 0.3f, linePaint)
         // Antenna ball
-        canvas.drawCircle(w * 0.5f, h * 0.1f, w * 0.05f, bodyPaint)
+        if (currentState == CharacterState.LISTEN) {
+            val blinkColor = if (System.currentTimeMillis() % 400 < 200) Color.RED else Color.LTGRAY
+            val antennaPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = blinkColor }
+            canvas.drawCircle(w * 0.5f, h * 0.1f, w * 0.05f, antennaPaint)
+        } else {
+            canvas.drawCircle(w * 0.5f, h * 0.1f, w * 0.05f, bodyPaint)
+        }
 
         // Body
         val bodyRect = RectF(w * 0.2f, h * 0.3f, w * 0.8f, h * 0.8f)

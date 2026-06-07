@@ -127,7 +127,9 @@
 
 ### Added (Phase 7 Complete)
 - Implemented `VoiceInputService` wrapper utilizing Android's `SpeechRecognizer` API with `LANGUAGE_MODEL_FREE_FORM`.
+- Upgraded voice recognition accuracy by forcing the `EXTRA_LANGUAGE` to "en-IN", increasing `EXTRA_MAX_RESULTS` to 3, and enabling `EXTRA_PARTIAL_RESULTS`.
 - Updated `ChatInputOverlay` to include a new "Mic" button alongside the text input field.
 - Implemented logic to hide the soft keyboard, enter the `CharacterState.LISTEN` animation, and trigger the voice service when the Mic button is pressed.
-- Added an auto-submit feature that automatically sends the recognized voice query after an 800ms delay.
+- Added live partial result streaming so users can watch their speech transcribe in real-time, giving them the option to correct it manually instead of auto-submitting.
+- Added a pulsing red circular animation to the Mic button and a rapid blinking red animation to the companion's antenna during the active listening state.
 - Handled error states gracefully by falling back to the `IDLE_BOB` state and displaying a "Couldn't hear that, try typing?" speech bubble.

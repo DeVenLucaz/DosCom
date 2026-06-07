@@ -105,23 +105,49 @@ class ChatInputOverlay(
             ).apply {
                 marginStart = dp(8)
             }
+            var isListening = false
+            var pulseAnimator: ObjectAnimator? = null
+
             setOnClickListener {
+                if (isListening) return@setOnClickListener
+
+                isListening = true
+                
                 val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(inputField.windowToken, 0)
                 
                 onVoiceStart()
                 
+                inputField.hint = "Listening..."
+                inputField.setText("")
+                
+                (background as GradientDrawable).setColor(Color.RED)
+                pulseAnimator = ObjectAnimator.ofFloat(this, "alpha", 1f, 0.3f, 1f).apply {
+                    duration = 800
+                    repeatCount = ObjectAnimator.INFINITE
+                    start()
+                }
+                
                 voiceInputService.startListening(
-                    onResult = { text ->
+                    onPartial = { text ->
                         inputField.setText(text)
-                        postDelayed({
-                            val query = inputField.text.toString()
-                            if (query.isNotBlank()) {
-                                dismiss(true, query)
-                            }
-                        }, 800)
+                        inputField.setSelection(text.length)
+                    },
+                    onFinal = { text ->
+                        isListening = false
+                        pulseAnimator?.cancel()
+                        alpha = 1f
+                        (background as GradientDrawable).setColor(Color.parseColor("#FF00BCD4"))
+                        inputField.hint = "Ask DosCom..."
+                        inputField.setText(text)
+                        inputField.setSelection(text.length)
                     },
                     onError = {
+                        isListening = false
+                        pulseAnimator?.cancel()
+                        alpha = 1f
+                        (background as GradientDrawable).setColor(Color.parseColor("#FF00BCD4"))
+                        inputField.hint = "Ask DosCom..."
                         onVoiceError()
                     }
                 )
