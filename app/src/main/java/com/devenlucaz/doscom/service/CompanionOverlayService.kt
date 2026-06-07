@@ -372,6 +372,10 @@ class CompanionOverlayService : Service() {
             lerpAnimationState(overlayView.state, targetState, 400L) {
                 val idleState = com.devenlucaz.doscom.character.AnimationState()
                 lerpAnimationState(overlayView.state, idleState, 200L)
+                serviceScope.launch(Dispatchers.Main) {
+                    delay(3000)
+                    snapToNearestEdge()
+                }
             }
         } else {
             if (pose == com.devenlucaz.doscom.animation.RobotPose.HANG_LEFT || pose == com.devenlucaz.doscom.animation.RobotPose.HANG_RIGHT) {
