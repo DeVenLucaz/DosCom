@@ -153,8 +153,8 @@ class CompanionOverlayService : Service() {
         var dragFrameIndex = 0
         var dragDistanceAccumulator = 0f
 
-        var tapCount = 0
-        var tapRunnable: Runnable? = null
+        var manualTapCount = 0
+        var lastManualTapTime = 0L
 
         val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
             override fun onLongPress(e: MotionEvent) {
@@ -184,21 +184,6 @@ class CompanionOverlayService : Service() {
             }
             
             override fun onSingleTapUp(e: MotionEvent): Boolean {
-                tapCount++
-                if (tapRunnable != null) {
-                    handler.removeCallbacks(tapRunnable!!)
-                }
-                
-                if (tapCount == 3) {
-                    tapCount = 0
-                    val intent = android.content.Intent(this@CompanionOverlayService, com.devenlucaz.doscom.settings.SettingsActivity::class.java).apply {
-                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    }
-                    startActivity(intent)
-                    return true
-                }
-                
-                tapRunnable = Runnable {
                 if (com.devenlucaz.doscom.systems.BirthdaySystem.isDosCombBirthday(this@CompanionOverlayService)) {
                     idleEngine.targetState.eyesWide = true
                     idleEngine.targetState.blushVisible = true
@@ -211,7 +196,7 @@ class CompanionOverlayService : Service() {
                     com.devenlucaz.doscom.brain.BrainManager.brain.learn(inputs, IntArray(7), 1.0f)
                     com.devenlucaz.doscom.brain.BrainManager.brain.save(this@CompanionOverlayService)
                     
-                    Handler(Looper.getMainLooper()).postDelayed({
+                    handler.postDelayed({
                         idleEngine.targetState.eyesWide = false
                         idleEngine.targetState.blushVisible = false
                         idleEngine.targetState.bodyOffsetY = 0f
@@ -224,22 +209,18 @@ class CompanionOverlayService : Service() {
                         val toy = com.devenlucaz.doscom.systems.ToyBoxSystem.selectToy(this@CompanionOverlayService)
                         com.devenlucaz.doscom.systems.ToyBoxSystem.startToyActivity(toy, idleEngine)
                         idleEngine.targetState.bodyOffsetY = -20f
-                        Handler(Looper.getMainLooper()).postDelayed({ idleEngine.targetState.bodyOffsetY = 0f }, 2000)
+                        handler.postDelayed({ idleEngine.targetState.bodyOffsetY = 0f }, 2000)
                     } else if (idleEngine.targetState.activeProp == com.devenlucaz.doscom.character.PropType.TINY_CAKE) {
                         idleEngine.targetState.leftArmAngle = -90f
                         idleEngine.targetState.mouthExpression = 2 
-                        Handler(Looper.getMainLooper()).postDelayed({ 
+                        handler.postDelayed({ 
                             idleEngine.targetState.leftArmAngle = 0f
                             idleEngine.targetState.mouthExpression = 1 
                             idleEngine.targetState.bodyOffsetY = -20f
-                            Handler(Looper.getMainLooper()).postDelayed({ idleEngine.targetState.bodyOffsetY = 0f }, 1000)
+                            handler.postDelayed({ idleEngine.targetState.bodyOffsetY = 0f }, 1000)
                         }, 1000)
                     }
                 }
-                
-                tapCount = 0
-                }
-                handler.postDelayed(tapRunnable!!, 300)
                 return true
             }
         })
@@ -251,6 +232,21 @@ class CompanionOverlayService : Service() {
             
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    val now = System.currentTimeMillis()
+                    if (now - lastManualTapTime < 400) {
+                        manualTapCount++
+                        if (manualTapCount == 3) {
+                            manualTapCount = 0
+                            val intent = android.content.Intent(this@CompanionOverlayService, com.devenlucaz.doscom.settings.SettingsActivity::class.java).apply {
+                                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            }
+                            startActivity(intent)
+                        }
+                    } else {
+                        manualTapCount = 1
+                    }
+                    lastManualTapTime = now
+                    
                     initialX = layoutParams.x
                     initialY = layoutParams.y
                     initialTouchX = event.rawX

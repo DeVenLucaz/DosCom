@@ -216,26 +216,24 @@ class ChatInputOverlay(
     }
 
     private fun handleReaction(reaction: String) {
-        val inputs = BrainInput.buildInputs(context)
-        val targetOutputs = IntArray(7) 
+        dismiss(submitted = false, reactionCallback = {
+            val inputs = BrainInput.buildInputs(context)
+            val targetOutputs = IntArray(7) 
 
-        if (reaction == "😤") {
-            EmotionalMemory.recordNegative(context)
-            BrainManager.brain.learn(inputs, targetOutputs, reward = -0.5f)
-            onReactedNegative()
-        } else {
-            EmotionalMemory.recordPositive(context)
-            BrainManager.brain.learn(inputs, targetOutputs, reward = 1.0f)
-            onReactedPositive()
-        }
-        
-        BrainManager.brain.save(context)
-        
-        // Let the user keep typing after reaction, or dismiss. Let's just dismiss.
-        dismiss(false)
+            if (reaction == "😤") {
+                EmotionalMemory.recordNegative(context)
+                BrainManager.brain.learn(inputs, targetOutputs, reward = -0.5f)
+                onReactedNegative()
+            } else {
+                EmotionalMemory.recordPositive(context)
+                BrainManager.brain.learn(inputs, targetOutputs, reward = 1.0f)
+                onReactedPositive()
+            }
+            BrainManager.brain.save(context)
+        })
     }
 
-    private fun dismiss(submitted: Boolean, query: String = "") {
+    private fun dismiss(submitted: Boolean, query: String = "", reactionCallback: (() -> Unit)? = null) {
         val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(inputField.windowToken, 0)
 
@@ -254,6 +252,7 @@ class ChatInputOverlay(
             } else {
                 onClose()
             }
+            reactionCallback?.invoke()
         }, 150)
     }
 
