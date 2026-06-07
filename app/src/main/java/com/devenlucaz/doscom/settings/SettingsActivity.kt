@@ -6,6 +6,8 @@ import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -19,6 +21,15 @@ import com.devenlucaz.doscom.BuildConfig
 import com.devenlucaz.doscom.R
 import com.devenlucaz.doscom.mode.CompanionMode
 import com.devenlucaz.doscom.mode.ModeManager
+import com.devenlucaz.doscom.utils.ConfigManager
+import com.devenlucaz.doscom.brain.BrainManager
+import com.devenlucaz.doscom.systems.BirthdaySystem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,7 +46,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
 
         prefs = getSharedPreferences("doscom_prefs", Context.MODE_PRIVATE)
-        
+
         initModeSection()
         initAppearanceSection()
         initBehaviorSection()
@@ -68,21 +79,21 @@ class SettingsActivity : AppCompatActivity() {
             eyesHalf = true
         )
 
-        val currentMode = ModeManager.getMode(this)
-        updateModeUI(currentMode)
+        updateModeUI(ModeManager.getMode(this))
 
-        val clickAlive = android.view.View.OnClickListener {
-            ModeManager.setMode(this, CompanionMode.ALIVE)
+        val clickAlive = View.OnClickListener {
+            ModeManager.setMode(this@SettingsActivity, CompanionMode.ALIVE)
             updateModeUI(CompanionMode.ALIVE)
         }
-        val clickAwake = android.view.View.OnClickListener {
-            ModeManager.setMode(this, CompanionMode.AWAKE)
+        val clickAwake = View.OnClickListener {
+            ModeManager.setMode(this@SettingsActivity, CompanionMode.AWAKE)
             updateModeUI(CompanionMode.AWAKE)
         }
-        val clickAware = android.view.View.OnClickListener {
-            ModeManager.setMode(this, CompanionMode.AWARE)
+        val clickAware = View.OnClickListener {
+            ModeManager.setMode(this@SettingsActivity, CompanionMode.AWARE)
             updateModeUI(CompanionMode.AWARE)
         }
+        
         cardAlive.setOnClickListener(clickAlive)
         renderAlive.setOnClickListener(clickAlive)
         cardAwake.setOnClickListener(clickAwake)
@@ -160,13 +171,13 @@ class SettingsActivity : AppCompatActivity() {
         spinnerBugCatching.setSelection(prefs.getInt("bug_catching", 0))
         spinnerGhostMode.setSelection(prefs.getInt("ghost_mode", 0))
         
-        val listener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+        val listener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (parent == spinnerSleepTimer) prefs.edit().putInt("sleep_timer", position).apply()
                 if (parent == spinnerBugCatching) prefs.edit().putInt("bug_catching", position).apply()
                 if (parent == spinnerGhostMode) prefs.edit().putInt("ghost_mode", position).apply()
             }
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
         spinnerSleepTimer.onItemSelectedListener = listener
         spinnerBugCatching.onItemSelectedListener = listener
@@ -203,7 +214,7 @@ class SettingsActivity : AppCompatActivity() {
                 .setTitle("Reset Brain?")
                 .setMessage("This will erase all of DosCom's memories and learned behaviors. Are you sure?")
                 .setPositiveButton("Reset") { _, _ -> 
-                    com.devenlucaz.doscom.brain.BrainManager.brain.reset(this)
+                    BrainManager.brain.reset(this)
                     Toast.makeText(this, "Brain Reset!", Toast.LENGTH_SHORT).show() 
                 }
                 .setNegativeButton("Cancel", null)
@@ -215,15 +226,15 @@ class SettingsActivity : AppCompatActivity() {
         spinnerMonth.setSelection(savedMonth)
         spinnerDay.setSelection(savedDay)
         
-        val itemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+        val itemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val m = spinnerMonth.selectedItemPosition
                 val d = spinnerDay.selectedItemPosition
                 prefs.edit().putInt("birth_month", m).putInt("birth_day", d).apply()
                 val bdayPrefs = getSharedPreferences("doscom_birthday_prefs", Context.MODE_PRIVATE)
                 bdayPrefs.edit().putInt("birthday_month", m).putInt("birthday_day", d + 1).apply()
             }
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
         spinnerMonth.onItemSelectedListener = itemSelectedListener
         spinnerDay.onItemSelectedListener = itemSelectedListener
@@ -233,12 +244,39 @@ class SettingsActivity : AppCompatActivity() {
         val etApiKey = findViewById<EditText>(R.id.etApiKey)
         val btnSaveApiKey = findViewById<Button>(R.id.btnSaveApiKey)
         
-        etApiKey.setText(com.devenlucaz.doscom.utils.ConfigManager.loadApiKey(this) ?: "")
+        etApiKey.setText(ConfigManager.loadApiKey(this) ?: "")
 
         btnSaveApiKey.setOnClickListener {
             val key = etApiKey.text.toString()
-            com.devenlucaz.doscom.utils.ConfigManager.saveApiKey(this, key)
-            Toast.makeText(this, "API Key Saved!", Toast.LENGTH_SHORT).show()
+            ConfigManager.saveApiKey(this, key)
+            
+            Toast.makeText(this@SettingsActivity, "Validating API Key...", Toast.LENGTH_SHORT).show()
+            
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val url = URL("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$key")
+                    val conn = url.openConnection() as HttpURLConnection
+                    conn.requestMethod = "POST"
+                    conn.setRequestProperty("Content-Type", "application/json")
+                    conn.doOutput = true
+                    
+                    val body = """{"contents":[{"parts":[{"text":"hello"}]}]}"""
+                    conn.outputStream.write(body.toByteArray())
+                    
+                    val responseCode = conn.responseCode
+                    withContext(Dispatchers.Main) {
+                        if (responseCode == 200) {
+                            Toast.makeText(this@SettingsActivity, "Key works!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@SettingsActivity, "Invalid key", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@SettingsActivity, "Invalid key", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
     }
 

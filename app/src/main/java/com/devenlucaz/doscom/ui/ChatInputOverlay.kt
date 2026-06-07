@@ -80,15 +80,18 @@ class ChatInputOverlay(
 
         val reactions = listOf("♥", "😄", "👍", "😤")
         for (r in reactions) {
-            val btn = Button(context).apply {
+            val btn = TextView(context).apply {
                 text = r
-                textSize = 20f
+                textSize = 24f
+                gravity = Gravity.CENTER
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(
                     0,
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     1f
                 )
+                isClickable = true
+                isFocusable = true
                 setOnClickListener {
                     handleReaction(r)
                 }
