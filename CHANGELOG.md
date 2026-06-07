@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-alpha.8] - 2026-06-07
+### Added (V2 Phase 7 Complete)
+- Created `PhoneEventReceiver` to react to hardware broadcasts (power connected, low battery, headset plugged, screen state).
+- Created `AppContextWatcher` to monitor foreground app usage and categorize apps (Music, Camera, Maps, etc.), updating DosCom's held props and activity to match.
+- Created `TimeReactionEngine` integrating context-aware time responses, accelerometer physical shake/vehicle detection, keyboard peeking (via view heights), and screenshot photobombs.
+- Wired all event listeners into `CompanionOverlayService` lifecycle for seamless reactive background awareness.
+
+
 ## [2.0.0-alpha.7] - 2026-06-07
 ### Added (V2 Phase 6 Complete)
 - Created `ToyBoxSystem` allowing the robot to spontaneously select and interact with virtual props (Fishing Rod, Treasure Map, Book, Magnifying Glass, etc.) when bored.
