@@ -127,6 +127,7 @@ class CompanionOverlayService : Service() {
 
         val screenWidth = ScreenMetrics.getScreenWidth(this)
         val screenHeight = ScreenMetrics.getScreenHeight(this)
+        val visualOffsetPx = (58 * resources.displayMetrics.density).toInt()
         layoutParams = WindowManager.LayoutParams(
             paddedSizePx,
             paddedSizePx,
@@ -135,7 +136,7 @@ class CompanionOverlayService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = screenWidth - paddedSizePx + paddingPx
+            x = screenWidth - paddedSizePx + visualOffsetPx
             y = screenHeight / 2 - paddedSizePx / 2
         }
 
@@ -214,9 +215,9 @@ class CompanionOverlayService : Service() {
                         val screenWidth = ScreenMetrics.getScreenWidth(this)
                         val screenHeight = ScreenMetrics.getScreenHeight(this)
                         val statusBarHeight = ScreenMetrics.getStatusBarHeight(this)
-                        val paddingPx = (40 * resources.displayMetrics.density).toInt()
+                        val visualOffsetPx = (58 * resources.displayMetrics.density).toInt()
 
-                        layoutParams.x = max(-paddingPx, min(initialX + deltaX, screenWidth - view.width + paddingPx))
+                        layoutParams.x = max(-visualOffsetPx, min(initialX + deltaX, screenWidth - view.width + visualOffsetPx))
                         layoutParams.y = max(-paddingPx, min(initialY + deltaY, screenHeight - view.height - statusBarHeight + paddingPx))
 
                         windowManager.updateViewLayout(overlayView, layoutParams)
@@ -337,9 +338,9 @@ class CompanionOverlayService : Service() {
     private fun snapToNearestEdge() {
         val screenWidth = resources.displayMetrics.widthPixels
         val viewW = overlayView.width
-        val paddingPx = (40 * resources.displayMetrics.density).toInt()
+        val visualOffsetPx = (58 * resources.displayMetrics.density).toInt()
         val centerX = layoutParams.x + viewW / 2
-        val targetX = if (centerX < screenWidth / 2) -paddingPx else screenWidth - viewW + paddingPx
+        val targetX = if (centerX < screenWidth / 2) -visualOffsetPx else screenWidth - viewW + visualOffsetPx
 
         val animator = ValueAnimator.ofInt(layoutParams.x, targetX)
         animator.duration = 200
