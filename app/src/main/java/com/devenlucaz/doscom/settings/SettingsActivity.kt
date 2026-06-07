@@ -71,18 +71,24 @@ class SettingsActivity : AppCompatActivity() {
         val currentMode = ModeManager.getMode(this)
         updateModeUI(currentMode)
 
-        cardAlive.setOnClickListener {
+        val clickAlive = android.view.View.OnClickListener {
             ModeManager.setMode(this, CompanionMode.ALIVE)
             updateModeUI(CompanionMode.ALIVE)
         }
-        cardAwake.setOnClickListener {
+        val clickAwake = android.view.View.OnClickListener {
             ModeManager.setMode(this, CompanionMode.AWAKE)
             updateModeUI(CompanionMode.AWAKE)
         }
-        cardAware.setOnClickListener {
+        val clickAware = android.view.View.OnClickListener {
             ModeManager.setMode(this, CompanionMode.AWARE)
             updateModeUI(CompanionMode.AWARE)
         }
+        cardAlive.setOnClickListener(clickAlive)
+        renderAlive.setOnClickListener(clickAlive)
+        cardAwake.setOnClickListener(clickAwake)
+        renderAwake.setOnClickListener(clickAwake)
+        cardAware.setOnClickListener(clickAware)
+        renderAware.setOnClickListener(clickAware)
     }
 
     private fun updateModeUI(mode: CompanionMode) {
@@ -149,6 +155,22 @@ class SettingsActivity : AppCompatActivity() {
         val ghostAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, arrayOf("Interactive", "Semi-Ghost", "Full Ghost"))
         ghostAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerGhostMode.adapter = ghostAdapter
+        
+        spinnerSleepTimer.setSelection(prefs.getInt("sleep_timer", 0))
+        spinnerBugCatching.setSelection(prefs.getInt("bug_catching", 0))
+        spinnerGhostMode.setSelection(prefs.getInt("ghost_mode", 0))
+        
+        val listener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                if (parent == spinnerSleepTimer) prefs.edit().putInt("sleep_timer", position).apply()
+                if (parent == spinnerBugCatching) prefs.edit().putInt("bug_catching", position).apply()
+                if (parent == spinnerGhostMode) prefs.edit().putInt("ghost_mode", position).apply()
+            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+        }
+        spinnerSleepTimer.onItemSelectedListener = listener
+        spinnerBugCatching.onItemSelectedListener = listener
+        spinnerGhostMode.onItemSelectedListener = listener
     }
 
     private fun initPersonalitySection() {
@@ -180,17 +202,41 @@ class SettingsActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                 .setTitle("Reset Brain?")
                 .setMessage("This will erase all of DosCom's memories and learned behaviors. Are you sure?")
-                .setPositiveButton("Reset") { _, _ -> Toast.makeText(this, "Brain Reset!", Toast.LENGTH_SHORT).show() }
+                .setPositiveButton("Reset") { _, _ -> 
+                    com.devenlucaz.doscom.brain.BrainManager.brain.reset(this)
+                    Toast.makeText(this, "Brain Reset!", Toast.LENGTH_SHORT).show() 
+                }
                 .setNegativeButton("Cancel", null)
                 .show()
         }
+        
+        val savedMonth = prefs.getInt("birth_month", 0)
+        val savedDay = prefs.getInt("birth_day", 0)
+        spinnerMonth.setSelection(savedMonth)
+        spinnerDay.setSelection(savedDay)
+        
+        val itemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                val m = spinnerMonth.selectedItemPosition
+                val d = spinnerDay.selectedItemPosition
+                prefs.edit().putInt("birth_month", m).putInt("birth_day", d).apply()
+                com.devenlucaz.doscom.systems.BirthdaySystem.saveUserBirthday(this@SettingsActivity, m, d + 1)
+            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+        }
+        spinnerMonth.onItemSelectedListener = itemSelectedListener
+        spinnerDay.onItemSelectedListener = itemSelectedListener
     }
 
     private fun initApiSection() {
         val etApiKey = findViewById<EditText>(R.id.etApiKey)
         val btnSaveApiKey = findViewById<Button>(R.id.btnSaveApiKey)
+        
+        etApiKey.setText(com.devenlucaz.doscom.config.ConfigManager.getApiKey(this) ?: "")
 
         btnSaveApiKey.setOnClickListener {
+            val key = etApiKey.text.toString()
+            com.devenlucaz.doscom.config.ConfigManager.saveApiKey(this, key)
             Toast.makeText(this, "API Key Saved!", Toast.LENGTH_SHORT).show()
         }
     }
