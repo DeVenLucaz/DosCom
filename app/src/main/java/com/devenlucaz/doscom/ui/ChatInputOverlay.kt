@@ -19,10 +19,13 @@ class ChatInputOverlay(
     private val windowManager: WindowManager,
     private val screenshot: Bitmap?,
     private val onQuerySubmitted: (String, Bitmap?) -> Unit,
-    private val onClose: () -> Unit
+    private val onClose: () -> Unit,
+    private val onVoiceStart: () -> Unit,
+    private val onVoiceError: () -> Unit
 ) : FrameLayout(context) {
 
     private val inputField: EditText
+    private val voiceInputService = com.devenlucaz.doscom.service.VoiceInputService(context)
 
     init {
         val density = resources.displayMetrics.density
@@ -89,8 +92,47 @@ class ChatInputOverlay(
             }
         }
 
+        val micButton = Button(context).apply {
+            text = "Mic"
+            setTextColor(Color.WHITE)
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#FF00BCD4"))
+                cornerRadius = dp(8).toFloat()
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                dp(40)
+            ).apply {
+                marginStart = dp(8)
+            }
+            setOnClickListener {
+                val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(inputField.windowToken, 0)
+                
+                onVoiceStart()
+                
+                voiceInputService.startListening(
+                    onResult = { text ->
+                        inputField.setText(text)
+                        postDelayed({
+                            val query = inputField.text.toString()
+                            if (query.isNotBlank()) {
+                                dismiss(true, query)
+                            }
+                        }, 800)
+                    },
+                    onError = {
+                        onVoiceError()
+                    }
+                )
+            }
+        }
+
         container.addView(closeButton)
         container.addView(inputField)
+        if (voiceInputService.isAvailable()) {
+            container.addView(micButton)
+        }
         container.addView(sendButton)
 
         addView(container)

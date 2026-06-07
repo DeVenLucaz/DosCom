@@ -342,6 +342,13 @@ class CompanionOverlayService : Service() {
                 layoutParams.flags = layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                 windowManager.updateViewLayout(overlayView, layoutParams)
                 overlayView.setState(CharacterState.IDLE_BOB)
+            },
+            onVoiceStart = {
+                overlayView.setState(CharacterState.LISTEN)
+            },
+            onVoiceError = {
+                showSpeechBubble("Couldn't hear that, try typing?", layoutParams.x, layoutParams.y)
+                overlayView.setState(CharacterState.IDLE_BOB)
             }
         )
 

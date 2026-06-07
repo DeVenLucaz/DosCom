@@ -124,3 +124,10 @@
 - **App Package Name Fallback Mapping**: Built an internal `APP_PACKAGE_MAP` in `AccessibilityScanner` that maps common app search terms (e.g., "camera", "youtube", "whatsapp", "settings") directly to their canonical Android package IDs (including OEM-specific variants like `com.coloros.camera`). If the textual node scan fails to find an icon, the service now performs a secondary recursive scan filtering for these specific package IDs across `packageName`, `viewIdResourceName`, and `contentDescription`.
 - **New App Icon**: Replaced the default black circle Android icon with a custom-designed, friendly, glowing robotic AI companion face. The icon was generated and downscaled into all proper `mipmap` densities (`mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`) for a crisp appearance on any device. Fixed an issue where `AndroidManifest.xml` and `CompanionOverlayService` were still hardcoded to look for the old `drawable/ic_launcher` resources instead of the new `mipmap` variants, causing the OS to fallback to the default Android graphic.
 - **Revamped README**: Completely rewrote `README.md` to be extremely user-friendly and non-technical. Added clear, emoji-rich instructions on what DosCom does, how to install it via Obtainium, how to bypass ColorOS restrictions, and how to use the overlay UI.
+
+### Added (Phase 7 Complete)
+- Implemented `VoiceInputService` wrapper utilizing Android's `SpeechRecognizer` API with `LANGUAGE_MODEL_FREE_FORM`.
+- Updated `ChatInputOverlay` to include a new "Mic" button alongside the text input field.
+- Implemented logic to hide the soft keyboard, enter the `CharacterState.LISTEN` animation, and trigger the voice service when the Mic button is pressed.
+- Added an auto-submit feature that automatically sends the recognized voice query after an 800ms delay.
+- Handled error states gracefully by falling back to the `IDLE_BOB` state and displaying a "Couldn't hear that, try typing?" speech bubble.
