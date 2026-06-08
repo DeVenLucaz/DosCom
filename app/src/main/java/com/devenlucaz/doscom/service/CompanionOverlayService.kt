@@ -153,9 +153,9 @@ class CompanionOverlayService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        updateForegroundNotification()
         try {
             com.devenlucaz.doscom.brain.BrainManager.init(this)
-            updateForegroundNotification()
             setupOverlayView()
             LocalBroadcastManager.getInstance(this).registerReceiver(
                 notificationReceiver,
