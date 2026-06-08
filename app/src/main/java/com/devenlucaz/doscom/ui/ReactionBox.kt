@@ -49,6 +49,11 @@ class ReactionBox(
                 text = r
                 textSize = 24f
                 setBackgroundColor(Color.TRANSPARENT)
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
                 setOnClickListener {
                     handleReaction(r)
                 }
@@ -57,7 +62,7 @@ class ReactionBox(
         }
 
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -66,7 +71,7 @@ class ReactionBox(
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = dosComX
+            x = 0
             y = dosComY - 200
         }
 
@@ -90,16 +95,19 @@ class ReactionBox(
         val targetOutputs = IntArray(7) 
 
         if (reaction == "💬") {
+            android.widget.Toast.makeText(context, "chat", android.widget.Toast.LENGTH_SHORT).show()
             dismiss()
             onChatClicked()
             return
         }
 
         if (reaction == "😤") {
+            android.widget.Toast.makeText(context, "negative", android.widget.Toast.LENGTH_SHORT).show()
             EmotionalMemory.recordNegative(context)
             BrainManager.brain.learn(inputs, targetOutputs, reward = -0.5f)
             onReactedNegative()
         } else {
+            android.widget.Toast.makeText(context, "positive", android.widget.Toast.LENGTH_SHORT).show()
             EmotionalMemory.recordPositive(context)
             BrainManager.brain.learn(inputs, targetOutputs, reward = 1.0f)
             onReactedPositive()
