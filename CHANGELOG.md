@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-alpha.15] - 2026-06-08
+### Added (V2 Phase 14 Complete — Touch Modes and Resize)
+- Created `TouchModeManager` to wrap `SharedPreferences` for interaction modes (Interactive, Semi-Ghost, Full-Ghost).
+- Refactored `CompanionOverlayService` touch listener to properly handle custom double-tap (mode switch) and triple-tap (open settings) logic without relying on third-party gesture detectors.
+- Implemented Pinch-to-Resize on the robot overlay to dynamically adjust the scale, calculating the distance between two pointers, mapping it to the configured `mascot_scale` limits.
+- Set up `FLAG_NOT_TOUCHABLE` handling for ghost modes, and added a separate `semiGhostView` overlay target layer to wake the character upon sustained holding.
+
 ## [2.0.0-alpha.14] - 2026-06-08
 ### Added (V2 Phase 13 Complete — Aware Mode Extra Sense)
 - Updated `ScreenReader` to build full accessibility screen context dumps.
