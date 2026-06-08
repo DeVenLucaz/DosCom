@@ -63,6 +63,14 @@ class CompanionRenderer @JvmOverloads constructor(
         setShadowLayer(8f, 0f, 0f, Color.parseColor("#00E5FF"))
     }
 
+    private val lidPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#0A0E1A")
+    }
+
+    private val limbPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#0A0E1A")
+    }
+
     private var lastW = 0f
     private var lastH = 0f
 
@@ -201,7 +209,6 @@ class CompanionRenderer @JvmOverloads constructor(
             canvas.drawOval(RectF(eyeRightX - eyeW / 2f, eyeY - eyeH / 2f, eyeRightX + eyeW / 2f, eyeY + eyeH / 2f), eyePaint)
 
             if (state.eyesHalf) {
-                val lidPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#0A0E1A") }
                 canvas.drawRect(eyeLeftX - eyeW, eyeY - eyeH, eyeLeftX + eyeW, eyeY, lidPaint)
                 canvas.drawRect(eyeRightX - eyeW, eyeY - eyeH, eyeRightX + eyeW, eyeY, lidPaint)
                 canvas.drawLine(eyeLeftX - eyeW / 1.2f, eyeY, eyeLeftX + eyeW / 1.2f, eyeY, linePaint)
@@ -246,7 +253,7 @@ class CompanionRenderer @JvmOverloads constructor(
         path.lineTo(rootX + width / 2f, rootY)
         path.close()
 
-        canvas.drawPath(path, bodyPaint) // Use gradient body paint for limbs too
+        canvas.drawPath(path, limbPaint) // Use solid limb paint instead of body gradient
 
         // Glossy line for limbs
         canvas.drawLine(rootX - width * 0.25f, rootY + width * 0.5f, rootX - width * 0.25f, rootY + length - width * 0.6f, glossPaint)
