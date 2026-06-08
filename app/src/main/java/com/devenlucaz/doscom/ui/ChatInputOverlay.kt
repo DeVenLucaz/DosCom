@@ -81,7 +81,7 @@ class ChatInputOverlay(
 
         val reactions = listOf("♥", "😄", "👍", "😤")
         for (r in reactions) {
-            val btn = TextView(context).apply {
+            val btn = android.widget.Button(context).apply {
                 text = r
                 textSize = 24f
                 gravity = Gravity.CENTER
@@ -219,21 +219,21 @@ class ChatInputOverlay(
     }
 
     private fun handleReaction(reaction: String) {
-        dismiss(submitted = false, reactionCallback = {
-            val inputs = BrainInput.buildInputs(context)
-            val targetOutputs = IntArray(7) 
+        val inputs = BrainInput.buildInputs(context)
+        val targetOutputs = IntArray(7) 
 
-            if (reaction == "😤") {
-                EmotionalMemory.recordNegative(context)
-                BrainManager.brain.learn(inputs, targetOutputs, reward = -0.5f)
-                onReactedNegative()
-            } else {
-                EmotionalMemory.recordPositive(context)
-                BrainManager.brain.learn(inputs, targetOutputs, reward = 1.0f)
-                onReactedPositive()
-            }
-            BrainManager.brain.save(context)
-        })
+        if (reaction == "😤") {
+            EmotionalMemory.recordNegative(context)
+            BrainManager.brain.learn(inputs, targetOutputs, reward = -0.5f)
+            onReactedNegative()
+        } else {
+            EmotionalMemory.recordPositive(context)
+            BrainManager.brain.learn(inputs, targetOutputs, reward = 1.0f)
+            onReactedPositive()
+        }
+        BrainManager.brain.save(context)
+        
+        dismiss(submitted = false)
     }
 
     private fun dismiss(submitted: Boolean, query: String = "", reactionCallback: (() -> Unit)? = null) {

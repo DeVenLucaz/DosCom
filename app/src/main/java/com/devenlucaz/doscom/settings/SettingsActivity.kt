@@ -92,7 +92,7 @@ class SettingsActivity : AppCompatActivity() {
 
         seekMascotSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) prefs.edit().putInt("mascot_scale", progress).apply()
+                prefs.edit().putInt("mascot_scale", progress).apply()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
@@ -100,7 +100,7 @@ class SettingsActivity : AppCompatActivity() {
 
         seekAnimSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) prefs.edit().putInt("anim_speed", progress).apply()
+                prefs.edit().putInt("anim_speed", progress).apply()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
@@ -123,19 +123,26 @@ class SettingsActivity : AppCompatActivity() {
         ghostAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerGhostMode.adapter = ghostAdapter
 
-        val spinnerListener = object : AdapterView.OnItemSelectedListener {
+        spinnerSleepTimer.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                when (parent?.id) {
-                    R.id.spinnerSleepTimer -> prefs.edit().putInt("sleep_timer", position).apply()
-                    R.id.spinnerBugCatching -> prefs.edit().putInt("bug_catching", position).apply()
-                    R.id.spinnerGhostMode -> prefs.edit().putInt("ghost_mode", position).apply()
-                }
+                prefs.edit().putInt("sleep_timer", position).apply()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
-        spinnerSleepTimer.onItemSelectedListener = spinnerListener
-        spinnerBugCatching.onItemSelectedListener = spinnerListener
-        spinnerGhostMode.onItemSelectedListener = spinnerListener
+
+        spinnerBugCatching.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                prefs.edit().putInt("bug_catching", position).apply()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        spinnerGhostMode.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                prefs.edit().putInt("ghost_mode", position).apply()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
 
         spinnerSleepTimer.setSelection(prefs.getInt("sleep_timer", 0))
         spinnerBugCatching.setSelection(prefs.getInt("bug_catching", 0))
@@ -238,7 +245,7 @@ class SettingsActivity : AppCompatActivity() {
         val tvVersion = findViewById<TextView>(R.id.tvVersion)
         val btnResetAll = findViewById<Button>(R.id.btnResetAll)
 
-        tvVersion.text = "Version ${BuildConfig.VERSION_NAME}"
+        tvVersion.text = "Version 2.0.0"
 
         btnResetAll.setOnClickListener {
             AlertDialog.Builder(this)
