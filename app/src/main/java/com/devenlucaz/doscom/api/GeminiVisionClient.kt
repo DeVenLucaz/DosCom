@@ -197,7 +197,7 @@ easily excited, occasionally confused.
                         scaledBmp = Bitmap.createScaledBitmap(screenshot, (screenshot.width * scale).toInt(), (screenshot.height * scale).toInt(), true)
                     }
                     val outputStream = ByteArrayOutputStream()
-                    scaledBmp.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
+                    scaledBmp?.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
                     val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
                     val inlineData = JSONObject().apply {
                         put("mime_type", "image/jpeg")
