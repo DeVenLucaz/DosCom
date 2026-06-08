@@ -682,22 +682,6 @@ class CompanionOverlayService : Service() {
                 idleEngine.targetState.mouthExpression = 0
                 idleEngine.targetState.leftArmAngle = 0f
                 idleEngine.targetState.bodyOffsetY = 0f
-            },
-            onReactedPositive = {
-                idleEngine.targetState.blushVisible = true
-                idleEngine.targetState.bodyOffsetY = -20f
-                handler.postDelayed({
-                    idleEngine.targetState.blushVisible = false
-                    idleEngine.targetState.bodyOffsetY = 0f
-                }, 2000)
-            },
-            onReactedNegative = {
-                idleEngine.targetState.antennaGlow = 0.2f
-                idleEngine.targetState.mouthExpression = 2 
-                handler.postDelayed({
-                    idleEngine.targetState.antennaGlow = 1.0f
-                    idleEngine.targetState.mouthExpression = 0
-                }, 3000) // changed from 30000ms to 3000ms for responsiveness
             }
         )
 
