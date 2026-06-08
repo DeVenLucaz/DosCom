@@ -22,7 +22,7 @@ class CompanionRenderer @JvmOverloads constructor(
         color = Color.parseColor("#4000E5FF") // Faint cyan rim light
         style = Paint.Style.STROKE
         strokeWidth = 8f
-        maskFilter = BlurMaskFilter(4f, BlurMaskFilter.Blur.NORMAL)
+        // maskFilter = BlurMaskFilter(4f, BlurMaskFilter.Blur.NORMAL)
     }
 
     private val glossPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -30,7 +30,7 @@ class CompanionRenderer @JvmOverloads constructor(
         style = Paint.Style.STROKE
         strokeWidth = 12f
         strokeCap = Paint.Cap.ROUND
-        maskFilter = BlurMaskFilter(6f, BlurMaskFilter.Blur.NORMAL)
+        // maskFilter = BlurMaskFilter(6f, BlurMaskFilter.Blur.NORMAL)
     }
 
     private val eyePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -55,7 +55,7 @@ class CompanionRenderer @JvmOverloads constructor(
         style = Paint.Style.STROKE
         strokeWidth = 6f
         strokeCap = Paint.Cap.ROUND
-        maskFilter = BlurMaskFilter(8f, BlurMaskFilter.Blur.NORMAL)
+        // maskFilter = BlurMaskFilter(8f, BlurMaskFilter.Blur.NORMAL)
     }
 
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {

@@ -148,6 +148,9 @@ If no relevant element is visible, return found: false.
         appName: String,
         sessionMinutes: Int
     ): String? = withContext(Dispatchers.IO) {
+        if (apiKey.isBlank()) {
+            return@withContext "I need an API key to think! Set it up in the app."
+        }
         try {
             val systemInstruction = """
 You are DosCom, a tiny robot creature living on the user's
@@ -212,7 +215,12 @@ easily excited, occasionally confused.
                 val errorStream = connection.errorStream
                 val errorBody = errorStream?.bufferedReader()?.readText() ?: "No error body"
                 Log.e(TAG, "Speak API error $responseCode: $errorBody")
-                return@withContext null
+                try {
+                    val msg = JSONObject(errorBody).getJSONObject("error").getString("message")
+                    return@withContext "API Error $responseCode: $msg"
+                } catch(e: Exception) {
+                    return@withContext "API Error $responseCode"
+                }
             }
 
             val response = BufferedReader(InputStreamReader(connection.inputStream)).use { it.readText() }
@@ -230,7 +238,7 @@ easily excited, occasionally confused.
             partsArr.getJSONObject(0).getString("text").trim()
         } catch (e: Exception) {
             Log.e(TAG, "Speak API failed", e)
-            null
+            return@withContext "Network Error: ${e.message}"
         }
     }
 }
