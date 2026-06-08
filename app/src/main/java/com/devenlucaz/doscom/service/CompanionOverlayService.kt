@@ -698,9 +698,12 @@ class CompanionOverlayService : Service() {
                 layoutParams.flags = layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                 windowManager.updateViewLayout(overlayView, layoutParams)
                 idleEngine.interact()
-                idleEngine.targetState.mouthExpression = 0
-                idleEngine.targetState.leftArmAngle = 0f
-                idleEngine.targetState.bodyOffsetY = 0f
+                
+                handler.postDelayed({
+                    idleEngine.targetState.mouthExpression = 0
+                    idleEngine.targetState.leftArmAngle = 0f
+                    idleEngine.targetState.bodyOffsetY = 0f
+                }, 2000)
             },
             onVoiceStart = {
                 idleEngine.interact()
@@ -748,7 +751,7 @@ class CompanionOverlayService : Service() {
         }
 
         val qLower = query.lowercase()
-        val isLocateRequest = qLower.contains("find") || qLower.contains("where is") || qLower.contains("show me") || qLower.contains("locate")
+        val isLocateRequest = qLower.startsWith("find") || qLower.startsWith("where is") || qLower.startsWith("show me") || qLower.startsWith("locate")
 
         if (!isLocateRequest && (currentMode == com.devenlucaz.doscom.mode.CompanionMode.AWAKE || currentMode == com.devenlucaz.doscom.mode.CompanionMode.AWARE)) {
             com.devenlucaz.doscom.personality.EmotionalMemory.recordPositive(this, 0.05f)
