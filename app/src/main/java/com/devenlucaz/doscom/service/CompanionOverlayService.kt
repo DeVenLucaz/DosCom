@@ -153,6 +153,7 @@ class CompanionOverlayService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        prefs = getSharedPreferences("doscom_prefs", Context.MODE_PRIVATE)
         updateForegroundNotification()
         try {
             com.devenlucaz.doscom.brain.BrainManager.init(this)
