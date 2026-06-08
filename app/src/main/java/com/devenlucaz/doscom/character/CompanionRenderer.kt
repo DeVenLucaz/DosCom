@@ -75,8 +75,8 @@ class CompanionRenderer @JvmOverloads constructor(
     private var lastH = 0f
 
     init {
-        // Required for BlurMaskFilter and soft shadows to work properly on some Android versions
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
+        // LAYER_TYPE_SOFTWARE causes low-res blurring on scaled canvas views.
+        // Modern Android (API 28+) supports BlurMaskFilter and shadows in hardware.
     }
 
     override fun onDraw(canvas: Canvas) {
