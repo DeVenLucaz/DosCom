@@ -5,6 +5,8 @@ enum class ClimbState {
 }
 
 object ClimbEngine {
+    
+    var animSpeedMultiplier: Float = 1.0f
     var currentState = ClimbState.IDLE
 
     fun updateState(newState: ClimbState) {

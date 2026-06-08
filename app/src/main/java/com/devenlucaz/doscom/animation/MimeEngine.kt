@@ -16,6 +16,8 @@ enum class MimeType {
 
 object MimeEngine {
 
+    var animSpeedMultiplier: Float = 1.0f
+
     fun selectMime(
         fromX: Float, fromY: Float,
         toX: Float, toY: Float,

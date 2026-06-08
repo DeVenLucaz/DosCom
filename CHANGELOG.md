@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.0] - 2026-06-08
+### Added (V2 Phase 16 Complete — Final Polish)
+- Made `CompanionOverlayService` return `START_STICKY` for better process persistence.
+- Added quick action buttons to the foreground notification (Settings, Ghost Mode, Stop).
+- Unified animation speed globally, pushing the user's `anim_speed` preference down into `IdleAnimationEngine`, `MimeEngine`, and `ClimbEngine`.
+- Added ColorOS specific accessibility hints to `OnboardingActivity`.
+- Added automatic Crash Recovery. DosCom will gracefully apologize with an "oops 😅" and shrug animation if the app crashed previously.
+- Implemented and enabled ProGuard rules protecting the behavior engines.
+- Finalized version string to `2.0.0`.
+
 ## [2.0.0-alpha.16] - 2026-06-08
 ### Added (V2 Phase 15 Complete — Onboarding V2)
 - Overhauled `OnboardingActivity` to use a step-by-step sequential layout designed with programmatic UI and glassmorphism styling.

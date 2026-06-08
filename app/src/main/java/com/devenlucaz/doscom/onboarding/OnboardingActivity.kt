@@ -349,6 +349,14 @@ class OnboardingActivity : AppCompatActivity() {
             })
         }
 
+        if (Build.MANUFACTURER.equals("OPPO", true) || Build.MANUFACTURER.equals("OnePlus", true)) {
+            layout.addView(TextView(this).apply {
+                text = "ColorOS / OxygenOS Fix:\nGo to Special Access \u2192 Accessibility"
+                setTextColor(Color.parseColor("#FFCA28"))
+                setPadding(0, dp(16), 0, 0)
+            })
+        }
+
         val btn = Button(this).apply {
             text = "Open Settings"
             setTextColor(Color.WHITE)
