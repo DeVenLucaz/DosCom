@@ -29,7 +29,7 @@ object ConfigManager {
             val configFile = File(context.filesDir, CONFIG_FILE)
             if (!configFile.exists()) return null
             val json = JSONObject(configFile.readText())
-            val key = json.optString(KEY_API_KEY, null)
+            val key = json.optString(KEY_API_KEY, "")
             if (key.isNullOrBlank()) null else key
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load API key", e)
