@@ -898,7 +898,6 @@ class CompanionOverlayService : Service() {
                                 }
                             }
                         )
-                        yAnimator.start()
                     }
                 }
             }
