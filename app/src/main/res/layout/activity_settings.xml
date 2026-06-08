@@ -114,8 +114,8 @@
                     android:progressDrawable="@drawable/slider_track"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:max="4"
-                    android:progress="2"
+                    android:max="14"
+                    android:progress="7"
                     android:layout_marginBottom="12dp"/>
 
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Animation Speed" android:textColor="#FFFFFF"/>

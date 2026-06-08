@@ -87,7 +87,7 @@ class SettingsActivity : AppCompatActivity() {
         val seekMascotSize = findViewById<SeekBar>(R.id.seekMascotSize)
         val seekAnimSpeed = findViewById<SeekBar>(R.id.seekAnimSpeed)
 
-        seekMascotSize.progress = prefs.getInt("mascot_scale", 2)
+        seekMascotSize.progress = prefs.getInt("mascot_scale", 7)
         seekAnimSpeed.progress = prefs.getInt("anim_speed", 2)
 
         seekMascotSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
