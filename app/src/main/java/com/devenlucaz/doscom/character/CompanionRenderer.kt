@@ -14,6 +14,7 @@ class CompanionRenderer @JvmOverloads constructor(
     // Keeping your state objects
     var state = AnimationState()
     var zzzParticles = listOf<com.devenlucaz.doscom.animation.ZzzParticle>()
+    var antennaColor: Int = Color.WHITE
 
     // Paints
     private val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG) // We will apply a shader to this later
