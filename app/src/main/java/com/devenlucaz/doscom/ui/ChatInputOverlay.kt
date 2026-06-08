@@ -30,9 +30,7 @@ class ChatInputOverlay(
     private val onQuerySubmitted: (String, Bitmap?) -> Unit,
     private val onClose: () -> Unit,
     private val onVoiceStart: () -> Unit,
-    private val onVoiceError: () -> Unit,
-    private val onReactedPositive: () -> Unit = {},
-    private val onReactedNegative: () -> Unit = {}
+    private val onVoiceError: () -> Unit
 ) : FrameLayout(context) {
 
     private val inputField: EditText
@@ -222,16 +220,18 @@ class ChatInputOverlay(
         val inputs = BrainInput.buildInputs(context)
         val targetOutputs = IntArray(7) 
 
+        val intent = android.content.Intent("com.devenlucaz.doscom.REACTION")
         if (reaction == "😤") {
             EmotionalMemory.recordNegative(context)
             BrainManager.brain.learn(inputs, targetOutputs, reward = -0.5f)
-            onReactedNegative()
+            intent.putExtra("reactionType", "negative")
         } else {
             EmotionalMemory.recordPositive(context)
             BrainManager.brain.learn(inputs, targetOutputs, reward = 1.0f)
-            onReactedPositive()
+            intent.putExtra("reactionType", "positive")
         }
         BrainManager.brain.save(context)
+        androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
         
         dismiss(submitted = false)
     }

@@ -113,6 +113,29 @@ class CompanionOverlayService : Service() {
         }
     }
 
+    private val reactionReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val reactionType = intent?.getStringExtra("reactionType") ?: return
+            if (reactionType == "positive") {
+                idleEngine.targetState.blushVisible = true
+                idleEngine.targetState.bodyOffsetY = -20f
+                handler.postDelayed({
+                    idleEngine.targetState.blushVisible = false
+                    idleEngine.targetState.bodyOffsetY = 0f
+                }, 1000)
+            } else if (reactionType == "negative") {
+                idleEngine.targetState.antennaGlow = 0.2f
+                idleEngine.targetState.bodyOffsetY = 10f
+                idleEngine.targetState.mouthExpression = 2 
+                handler.postDelayed({
+                    idleEngine.targetState.antennaGlow = 1.0f
+                    idleEngine.targetState.bodyOffsetY = 0f
+                    idleEngine.targetState.mouthExpression = 0
+                }, 1000)
+            }
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_NOT_STICKY
     }
@@ -130,6 +153,10 @@ class CompanionOverlayService : Service() {
             LocalBroadcastManager.getInstance(this).registerReceiver(
                 appCategoryReceiver,
                 IntentFilter("APP_CONTEXT_CHANGED")
+            )
+            LocalBroadcastManager.getInstance(this).registerReceiver(
+                reactionReceiver,
+                IntentFilter("com.devenlucaz.doscom.REACTION")
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -417,6 +444,7 @@ class CompanionOverlayService : Service() {
         super.onDestroy()
         LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationReceiver)
         LocalBroadcastManager.getInstance(this).unregisterReceiver(appCategoryReceiver)
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(reactionReceiver)
         if (::phoneEventReceiver.isInitialized) phoneEventReceiver.unregister(this)
         if (::appContextWatcher.isInitialized) appContextWatcher.stop()
         if (::timeReactionEngine.isInitialized) timeReactionEngine.stop()
