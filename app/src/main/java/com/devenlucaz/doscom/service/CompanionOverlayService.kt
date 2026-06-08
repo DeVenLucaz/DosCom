@@ -142,6 +142,11 @@ class CompanionOverlayService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == "ACTION_DISABLE_GHOST_MODE") {
+            prefs.edit().putInt("ghost_mode", 0).apply()
+            updateGhostMode(0)
+            updateForegroundNotification()
+        }
         return START_NOT_STICKY
     }
 
@@ -149,7 +154,7 @@ class CompanionOverlayService : Service() {
         super.onCreate()
         try {
             com.devenlucaz.doscom.brain.BrainManager.init(this)
-            startForegroundServiceNotification()
+            updateForegroundNotification()
             setupOverlayView()
             LocalBroadcastManager.getInstance(this).registerReceiver(
                 notificationReceiver,
@@ -445,7 +450,7 @@ class CompanionOverlayService : Service() {
         timeReactionEngine.start()
     }
 
-    private fun startForegroundServiceNotification() {
+    private fun updateForegroundNotification() {
         val channelId = "doscom_overlay"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -460,13 +465,25 @@ class CompanionOverlayService : Service() {
             manager.createNotificationChannel(channel)
         }
 
-        val notification: Notification = NotificationCompat.Builder(this, channelId)
+        val builder = NotificationCompat.Builder(this, channelId)
             .setContentTitle("DosCom is running")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
-            .build()
 
+        val currentGhostMode = prefs.getInt("ghost_mode", 0)
+        if (currentGhostMode != 0) {
+            val disableIntent = Intent(this, CompanionOverlayService::class.java).apply {
+                action = "ACTION_DISABLE_GHOST_MODE"
+            }
+            val disablePendingIntent = PendingIntent.getService(
+                this, 0, disableIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(0, "Disable Ghost Mode", disablePendingIntent)
+        }
+
+        val notification = builder.build()
         startForeground(1, notification)
     }
 

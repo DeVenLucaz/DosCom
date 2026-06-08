@@ -15,6 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.devenlucaz.doscom.api.GeminiVisionClient
+import com.devenlucaz.doscom.character.CompanionRenderer
 import com.devenlucaz.doscom.onboarding.OnboardingActivity
 import com.devenlucaz.doscom.service.DosComAccessibilityService
 import com.devenlucaz.doscom.service.ServiceManager
@@ -72,7 +73,9 @@ class MainActivity : AppCompatActivity() {
         val density = resources.displayMetrics.density
         val dp = { value: Int -> (value * density).toInt() }
 
-        val scrollView = ScrollView(this)
+        val scrollView = ScrollView(this).apply {
+            setBackgroundColor(Color.parseColor("#080818"))
+        }
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(32), dp(48), dp(32), dp(32))
@@ -80,11 +83,11 @@ class MainActivity : AppCompatActivity() {
         }
         scrollView.addView(layout)
 
-        val iconView = TextView(this).apply {
-            text = "\uD83E\uDD16"
-            textSize = 64f
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, dp(16))
+        val iconView = CompanionRenderer(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(120), dp(120)).apply {
+                gravity = Gravity.CENTER
+                bottomMargin = dp(16)
+            }
         }
         layout.addView(iconView)
 
@@ -92,16 +95,23 @@ class MainActivity : AppCompatActivity() {
             text = "DosCom is running"
             textSize = 24f
             setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.parseColor("#212121"))
+            setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, dp(8))
         }
         layout.addView(titleView)
 
+        val mode = getSharedPreferences("doscom_prefs", Context.MODE_PRIVATE).getInt("ghost_mode", 0)
+        val modeStr = when(mode) {
+            0 -> "Interactive"
+            1 -> "Semi-Ghost"
+            2 -> "Full Ghost"
+            else -> "Interactive"
+        }
         val descView = TextView(this).apply {
-            text = "Your AI companion is floating on your screen.\nLong-press DosCom to ask a question."
+            text = "Your cosmic companion is active.\nCurrent Mode: $modeStr"
             textSize = 16f
-            setTextColor(Color.parseColor("#616161"))
+            setTextColor(Color.parseColor("#B0B0B0"))
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, dp(32))
         }
@@ -112,7 +122,8 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#F5F5F5"))
+                setColor(Color.parseColor("#1AFFFFFF"))
+                setStroke(dp(1), Color.parseColor("#33FFFFFF"))
                 cornerRadius = dp(12).toFloat()
             }
             layoutParams = LinearLayout.LayoutParams(
@@ -158,7 +169,7 @@ class MainActivity : AppCompatActivity() {
 
         val resetButton = Button(this).apply {
             text = "Re-run Setup"
-            setTextColor(Color.parseColor("#6200EE"))
+            setTextColor(Color.parseColor("#B388FF"))
             setBackgroundColor(Color.TRANSPARENT)
             textSize = 14f
             layoutParams = LinearLayout.LayoutParams(
@@ -195,7 +206,7 @@ class MainActivity : AppCompatActivity() {
         val labelView = TextView(this).apply {
             text = "$label: ${if (active) "Active" else "Inactive"}"
             textSize = 14f
-            setTextColor(Color.parseColor("#424242"))
+            setTextColor(Color.WHITE)
         }
         row.addView(labelView)
 
