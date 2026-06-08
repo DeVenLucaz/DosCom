@@ -768,7 +768,7 @@ class CompanionOverlayService : Service() {
 
     private fun updateRobotLayout() {
         try {
-            updateRobotLayout()
+            windowManager.updateViewLayout(overlayView, layoutParams)
             if (semiGhostView != null && semiGhostLayoutParams != null) {
                 val sizePx = (60 * resources.displayMetrics.density).toInt()
                 val centerX = layoutParams.x + overlayView.width / 2
