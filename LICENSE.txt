@@ -1,0 +1,25 @@
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (C) 2026 DeVenLucaz
+DosCom — https://github.com/DeVenLucaz/DosCom
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+The full license text is available at:
+https://www.gnu.org/licenses/gpl-3.0.txt
+
+SUMMARY OF KEY TERMS:
+- You may use, copy, modify, and distribute this software freely.
+- Any modified or derived version must also be released under GPL v3.
+- You must make the source code available when distributing.
+- You may NOT sell this software or use it in proprietary products.
+- You may NOT relicense under a more restrictive license.
