@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-alpha.16] - 2026-06-08
+### Added (V2 Phase 15 Complete — Onboarding V2)
+- Overhauled `OnboardingActivity` to use a step-by-step sequential layout designed with programmatic UI and glassmorphism styling.
+- Included mode selection built into onboarding. Permissions now adapt depending on the selected mode (Awake mode needs API Key, Aware mode needs Accessibility).
+- Replaced the control panel in `MainActivity` with direct passthrough to the `CompanionOverlayService`, relying entirely on `SettingsActivity` as the new control interface.
+- Configured dynamic mode polling to ensure permissions like OVERLAY and ACCESSIBILITY are validated before proceeding.
+
 ## [2.0.0-alpha.15] - 2026-06-08
 ### Added (V2 Phase 14 Complete — Touch Modes and Resize)
 - Created `TouchModeManager` to wrap `SharedPreferences` for interaction modes (Interactive, Semi-Ghost, Full-Ghost).
