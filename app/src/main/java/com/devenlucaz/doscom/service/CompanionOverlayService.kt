@@ -59,7 +59,12 @@ class CompanionOverlayService : Service() {
     
     private val handler = Handler(Looper.getMainLooper())
 
+
     private lateinit var prefs: SharedPreferences
+    private val conversationHistory = com.devenlucaz.doscom.personality.ConversationHistory()
+    private val serviceStartTime = System.currentTimeMillis()
+    private fun getSessionMinutes(): Int = ((System.currentTimeMillis() - serviceStartTime) / 60000).toInt()
+
     private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
         when (key) {
             "mascot_scale" -> {

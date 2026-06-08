@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-alpha.13] - 2026-06-08
+### Added (V2 Phase 12 Complete — Awake Mode Gemini Voice)
+- Created `ConversationHistory` to maintain a rolling window of the last 10 conversational exchanges for context.
+- Updated `GeminiVisionClient` with a new `speak()` function to inject personality, user mood, app context, and chat history into the LLM system instructions.
+- Patched `CompanionOverlayService` to intelligently intercept user queries during AWAKE mode, forwarding them to Gemini and rendering the returned conversational text inside the speech bubble.
+- Rewarded the DosCombrain system positively each time the user interacts via chat in AWAKE mode.
+
+
 ## [2.0.0-alpha.12] - 2026-06-07
 ### Added (V2 Phase 11 Complete — Glassmorphism UI)
 - Rewrote `ChatInputOverlay` with a custom translucent glass bar, custom SVG icon buttons, and sliding animations.
