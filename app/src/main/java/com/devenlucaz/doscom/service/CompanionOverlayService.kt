@@ -235,17 +235,42 @@ class CompanionOverlayService : Service() {
 
                 idleEngine.interact()
                 idleEngine.targetState.mouthExpression = 1 // LISTEN
-                CoroutineScope(Dispatchers.Main).launch {
-                    try {
-                        lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                val reactionBox = com.devenlucaz.doscom.ui.ReactionBox(
+                    context = this@CompanionOverlayService,
+                    windowManager = windowManager,
+                    dosComX = layoutParams.x,
+                    dosComY = layoutParams.y,
+                    onChatClicked = {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            try {
+                                lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                            delay(300)
+                            layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
+                            windowManager.updateViewLayout(overlayView, layoutParams)
+                            showChatInput()
+                        }
+                    },
+                    onReactedPositive = {
+                        idleEngine.targetState.blushVisible = true
+                        idleEngine.targetState.bodyOffsetY = -20f
+                        handler.postDelayed({
+                            idleEngine.targetState.blushVisible = false
+                            idleEngine.targetState.bodyOffsetY = 0f
+                        }, 2000)
+                    },
+                    onReactedNegative = {
+                        idleEngine.targetState.antennaGlow = 0.2f
+                        idleEngine.targetState.mouthExpression = 2
+                        handler.postDelayed({
+                            idleEngine.targetState.antennaGlow = 1.0f
+                            idleEngine.targetState.mouthExpression = 0
+                        }, 3000)
                     }
-                    delay(300)
-                    layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
-                    windowManager.updateViewLayout(overlayView, layoutParams)
-                    showChatInput()
-                }
+                )
+                reactionBox.show()
             }
             
             override fun onSingleTapUp(e: MotionEvent): Boolean {
@@ -839,21 +864,26 @@ class CompanionOverlayService : Service() {
                     finalY = kotlin.math.max(-paddingPx, kotlin.math.min(finalY, screenHeight - charSize + paddingPx))
 
                     showConfirmRing(targetCenterX, targetCenterY) {
-                        val animator = ValueAnimator.ofInt(layoutParams.x, finalX)
-                        val yAnimator = ValueAnimator.ofInt(layoutParams.y, finalY)
-                        animator.duration = 500
-                        yAnimator.duration = 500
+                        val currentMood = com.devenlucaz.doscom.personality.MoodEngine.currentMood
+                        val currentHour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
                         
-                        animator.addUpdateListener { anim ->
-                            layoutParams.x = anim.animatedValue as Int
-                        }
-                        yAnimator.addUpdateListener { anim ->
-                            layoutParams.y = anim.animatedValue as Int
-                            windowManager.updateViewLayout(overlayView, layoutParams)
-                        }
+                        val mimeType = com.devenlucaz.doscom.animation.MimeEngine.selectMime(
+                            layoutParams.x.toFloat(), layoutParams.y.toFloat(),
+                            finalX.toFloat(), finalY.toFloat(),
+                            currentMood, currentHour
+                        )
                         
-                        animator.addListener(object : android.animation.AnimatorListenerAdapter() {
-                            override fun onAnimationEnd(anim: android.animation.Animator) {
+                        val fromPos = android.graphics.PointF(layoutParams.x.toFloat(), layoutParams.y.toFloat())
+                        val toPos = android.graphics.PointF(finalX.toFloat(), finalY.toFloat())
+                        
+                        com.devenlucaz.doscom.animation.MimeEngine.executeMime(
+                            mimeType, fromPos, toPos, overlayView,
+                            onUpdate = { cx, cy ->
+                                layoutParams.x = cx.toInt()
+                                layoutParams.y = cy.toInt()
+                                windowManager.updateViewLayout(overlayView, layoutParams)
+                            },
+                            onComplete = {
                                 showSpeechBubble(target.explanation, finalX, finalY)
                                 if (isLeftArm) {
                                     idleEngine.targetState.leftArmAngle = pointingArmAngle
@@ -867,8 +897,7 @@ class CompanionOverlayService : Service() {
                                     idleEngine.targetState.rightArmAngle = 0f
                                 }
                             }
-                        })
-                        animator.start()
+                        )
                         yAnimator.start()
                     }
                 }

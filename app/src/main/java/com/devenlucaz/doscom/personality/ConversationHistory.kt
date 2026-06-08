@@ -10,6 +10,9 @@ class ConversationHistory {
         
         while (messages.size > maxMessages) {
             messages.removeAt(0)
+            if (messages.isNotEmpty()) {
+                messages.removeAt(0)
+            }
         }
     }
 
