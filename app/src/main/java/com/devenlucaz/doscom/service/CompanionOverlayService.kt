@@ -490,17 +490,21 @@ class CompanionOverlayService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationReceiver)
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(appCategoryReceiver)
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(reactionReceiver)
-        if (::phoneEventReceiver.isInitialized) phoneEventReceiver.unregister(this)
-        if (::appContextWatcher.isInitialized) appContextWatcher.stop()
-        if (::timeReactionEngine.isInitialized) timeReactionEngine.stop()
-        stopIdleBehaviors()
-        if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
-        serviceScope.cancel()
-        if (::overlayView.isInitialized) {
-            windowManager.removeView(overlayView)
+        try { LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationReceiver) } catch (e: Exception) { e.printStackTrace() }
+        try { LocalBroadcastManager.getInstance(this).unregisterReceiver(appCategoryReceiver) } catch (e: Exception) { e.printStackTrace() }
+        try { LocalBroadcastManager.getInstance(this).unregisterReceiver(reactionReceiver) } catch (e: Exception) { e.printStackTrace() }
+        try { if (::phoneEventReceiver.isInitialized) phoneEventReceiver.unregister(this) } catch (e: Exception) { e.printStackTrace() }
+        try { if (::appContextWatcher.isInitialized) appContextWatcher.stop() } catch (e: Exception) { e.printStackTrace() }
+        try { if (::timeReactionEngine.isInitialized) timeReactionEngine.stop() } catch (e: Exception) { e.printStackTrace() }
+        try { stopIdleBehaviors() } catch (e: Exception) { e.printStackTrace() }
+        try { if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(prefsListener) } catch (e: Exception) { e.printStackTrace() }
+        try { serviceScope.cancel() } catch (e: Exception) { e.printStackTrace() }
+        try {
+            if (::overlayView.isInitialized) {
+                windowManager.removeView(overlayView)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
