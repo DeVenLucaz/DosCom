@@ -40,7 +40,6 @@
 
         <service
             android:name=".service.CompanionOverlayService"
-            android:foregroundServiceType="mediaProjection"
             android:exported="false" />
 
         <service

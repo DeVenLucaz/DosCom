@@ -261,7 +261,8 @@ class CompanionOverlayService : Service() {
                 overlayView.invalidate()
             }
         )
-        val animSpeed = prefs.getFloat("anim_speed", 1.0f)
+        val speedInt = prefs.getInt("anim_speed", 2)
+        val animSpeed = 0.5f + (speedInt * 0.25f)
         idleEngine.animSpeedMultiplier = animSpeed
         com.devenlucaz.doscom.animation.MimeEngine.animSpeedMultiplier = animSpeed
         com.devenlucaz.doscom.animation.ClimbEngine.animSpeedMultiplier = animSpeed
