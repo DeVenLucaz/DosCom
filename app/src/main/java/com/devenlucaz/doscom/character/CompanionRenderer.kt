@@ -20,39 +20,46 @@ class CompanionRenderer @JvmOverloads constructor(
     var state = AnimationState()
     var zzzParticles = listOf<com.devenlucaz.doscom.animation.ZzzParticle>()
 
-    var antennaColor: Int = Color.parseColor("#00E5FF")
-
     private val inkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#080812") // Deep dark blue/black
-        setShadowLayer(20f, 0f, 0f, Color.parseColor("#4000E5FF")) // Cosmic glow
+        color = Color.parseColor("#080818") // Dark navy
     }
 
-    private val nebulaPaint = Paint(Paint.ANTI_ALIAS_FLAG) // We will set shader in onDraw
-
     private val glossPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#33FFFFFF")
+        color = Color.parseColor("#20FFFFFF")
         style = Paint.Style.STROKE
         strokeWidth = 6f
         strokeCap = Paint.Cap.ROUND
     }
 
     private val eyePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#00E5FF") // Neon cyan
-        setShadowLayer(15f, 0f, 0f, Color.parseColor("#00E5FF")) // High luminosity
+        color = Color.parseColor("#00E5FF") // Cyan
+        style = Paint.Style.FILL
+        setShadowLayer(20f, 0f, 0f, Color.parseColor("#00E5FF"))
     }
 
     private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#00E5FF")
         style = Paint.Style.STROKE
-        strokeWidth = 4f
+        strokeWidth = 6f
         strokeCap = Paint.Cap.ROUND
-        setShadowLayer(10f, 0f, 0f, Color.parseColor("#00E5FF"))
+        setShadowLayer(15f, 0f, 0f, Color.parseColor("#00E5FF"))
     }
 
-    private val tipGlowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private val galaxyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#00E5FF")
-        setShadowLayer(8f, 0f, 0f, Color.parseColor("#FFFFFF"))
+        alpha = (255 * 0.15f).toInt()
+        style = Paint.Style.STROKE
+        strokeWidth = 3f
+        strokeCap = Paint.Cap.ROUND
     }
+
+    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#00E5FF")
+        setShadowLayer(8f, 0f, 0f, Color.parseColor("#00E5FF"))
+    }
+
+    private var lastW = 0f
+    private var lastH = 0f
 
     init {
         setLayerType(LAYER_TYPE_SOFTWARE, null)
@@ -69,159 +76,154 @@ class CompanionRenderer @JvmOverloads constructor(
         
         val charW = 80f * density
         val charH = 80f * density
+
+        if (w != lastW || h != lastH) {
+            lastW = w
+            lastH = h
+            inkPaint.shader = RadialGradient(
+                cx - charW * 0.2f, cy - charH * 0.2f,
+                charW * 1.5f,
+                intArrayOf(Color.parseColor("#2A2A4A"), Color.parseColor("#080818")),
+                floatArrayOf(0f, 1f),
+                Shader.TileMode.CLAMP
+            )
+        }
         
         canvas.save()
         canvas.translate(state.bodyOffsetX, state.bodyOffsetY)
         canvas.scale(state.scaleX * state.scale, state.scale, cx, cy)
         canvas.rotate(state.bodyRotation, cx, cy)
 
-        val bodyRadiusX = charW * 0.35f
-        val bodyRadiusY = charH * 0.40f
+        val bodyRadiusX = charW * 0.45f
+        val bodyRadiusY = charH * 0.5f
 
         // Limbs
-        val armLen = charH * 0.35f
-        val shoulderLeftX = cx - bodyRadiusX * 0.6f
-        val shoulderRightX = cx + bodyRadiusX * 0.6f
-        val shoulderY = cy - bodyRadiusY * 0.2f
+        val armLen = charH * 0.45f
+        val shoulderLeftX = cx - bodyRadiusX * 0.7f
+        val shoulderRightX = cx + bodyRadiusX * 0.7f
+        val shoulderY = cy - charH * 0.1f
 
-        val legLen = charH * 0.3f
-        val hipLeftX = cx - bodyRadiusX * 0.4f
-        val hipRightX = cx + bodyRadiusX * 0.4f
-        val hipY = cy + bodyRadiusY * 0.5f
+        val legLen = charH * 0.4f
+        val hipLeftX = cx - bodyRadiusX * 0.35f
+        val hipRightX = cx + bodyRadiusX * 0.35f
+        val hipY = cy + bodyRadiusY * 0.7f
         
         // Draw Legs
-        drawExtrudedLimb(canvas, hipLeftX, hipY, state.leftLegAngle, legLen, charW * 0.15f, false)
-        drawExtrudedLimb(canvas, hipRightX, hipY, state.rightLegAngle, legLen, charW * 0.15f, false)
+        drawExtrudedStub(canvas, hipLeftX, hipY, state.leftLegAngle, legLen, charW * 0.22f)
+        drawExtrudedStub(canvas, hipRightX, hipY, state.rightLegAngle, legLen, charW * 0.22f)
         
-        // Draw Arms (with hands)
-        drawExtrudedLimb(canvas, shoulderLeftX, shoulderY, state.leftArmAngle, armLen, charW * 0.15f, true)
-        drawExtrudedLimb(canvas, shoulderRightX, shoulderY, state.rightArmAngle, armLen, charW * 0.15f, true)
+        // Draw Arms
+        drawExtrudedStub(canvas, shoulderLeftX, shoulderY, state.leftArmAngle, armLen, charW * 0.2f)
+        drawExtrudedStub(canvas, shoulderRightX, shoulderY, state.rightArmAngle, armLen, charW * 0.2f)
 
-        // Draw Main Body (Blob)
+        // Draw Teardrop Body
+        val headTopY = cy - charH * 0.75f
         val bodyPath = Path()
-        // Squishy egg shape
-        bodyPath.moveTo(cx, cy - bodyRadiusY)
+        bodyPath.moveTo(cx, headTopY)
         bodyPath.cubicTo(
-            cx + bodyRadiusX, cy - bodyRadiusY,
-            cx + bodyRadiusX * 1.2f, cy + bodyRadiusY * 0.8f,
+            cx - bodyRadiusX * 1.3f, cy - charH * 0.2f, 
+            cx - bodyRadiusX * 1.1f, cy + bodyRadiusY,
             cx, cy + bodyRadiusY
         )
         bodyPath.cubicTo(
-            cx - bodyRadiusX * 1.2f, cy + bodyRadiusY * 0.8f,
-            cx - bodyRadiusX, cy - bodyRadiusY,
-            cx, cy - bodyRadiusY
+            cx + bodyRadiusX * 1.1f, cy + bodyRadiusY,
+            cx + bodyRadiusX * 1.3f, cy - charH * 0.2f,
+            cx, headTopY
         )
         canvas.drawPath(bodyPath, inkPaint)
 
-        // Cosmic Nebula Core
-        val nebulaRadius = bodyRadiusX * 0.8f
-        nebulaPaint.shader = RadialGradient(
-            cx, cy, nebulaRadius,
-            intArrayOf(Color.parseColor("#408A2BE2"), Color.parseColor("#2000E5FF"), Color.TRANSPARENT),
-            floatArrayOf(0f, 0.5f, 1f),
-            Shader.TileMode.CLAMP
-        )
-        canvas.drawCircle(cx, cy, nebulaRadius, nebulaPaint)
-
-        // Glossy Outer Layer Highlight
+        // Glossy Sheen Highlight on body
         val glossPath = Path()
-        glossPath.moveTo(cx - bodyRadiusX * 0.5f, cy - bodyRadiusY * 0.7f)
-        glossPath.quadTo(cx, cy - bodyRadiusY * 0.9f, cx + bodyRadiusX * 0.5f, cy - bodyRadiusY * 0.7f)
+        glossPath.moveTo(cx - bodyRadiusX * 0.5f, cy - charH * 0.4f)
+        glossPath.quadTo(cx - bodyRadiusX * 0.8f, cy, cx - bodyRadiusX * 0.3f, cy + bodyRadiusY * 0.6f)
         canvas.drawPath(glossPath, glossPaint)
 
+        // Swirling Galaxy Pattern on Torso
+        canvas.save()
+        canvas.translate(cx, cy + charH * 0.15f)
+        for (i in 0 until 4) {
+            val swirlPath = Path()
+            var radius = 2f
+            var angle = 0f
+            swirlPath.moveTo(radius, 0f)
+            val steps = 25
+            val maxRadius = bodyRadiusX * 0.55f
+            for (j in 1..steps) {
+                angle += 0.4f
+                radius += (maxRadius - 2f) / steps
+                val sx = (Math.cos(angle.toDouble()) * radius).toFloat()
+                val sy = (Math.sin(angle.toDouble()) * radius).toFloat()
+                swirlPath.lineTo(sx, sy)
+            }
+            canvas.drawPath(swirlPath, galaxyPaint)
+            canvas.rotate(90f)
+        }
+        canvas.restore()
+
         // Face
-        val eyeRadius = charW * 0.09f
-        val eyeLeftX = cx - charW * 0.15f
-        val eyeRightX = cx + charW * 0.15f
-        val eyeY = cy - charH * 0.1f
+        val eyeW = charW * 0.16f
+        val eyeH = charH * 0.18f
+        val eyeLeftX = cx - charW * 0.22f
+        val eyeRightX = cx + charW * 0.22f
+        val eyeY = cy - charH * 0.15f
         
         if (state.eyesClosed) {
-            canvas.drawLine(eyeLeftX - eyeRadius, eyeY, eyeLeftX + eyeRadius, eyeY, linePaint)
-            canvas.drawLine(eyeRightX - eyeRadius, eyeY, eyeRightX + eyeRadius, eyeY, linePaint)
+            canvas.drawLine(eyeLeftX - eyeW/1.5f, eyeY, eyeLeftX + eyeW/1.5f, eyeY, linePaint)
+            canvas.drawLine(eyeRightX - eyeW/1.5f, eyeY, eyeRightX + eyeW/1.5f, eyeY, linePaint)
         } else {
-            canvas.drawCircle(eyeLeftX, eyeY, eyeRadius, eyePaint)
-            canvas.drawCircle(eyeRightX, eyeY, eyeRadius, eyePaint)
+            canvas.drawOval(RectF(eyeLeftX - eyeW/2f, eyeY - eyeH/2f, eyeLeftX + eyeW/2f, eyeY + eyeH/2f), eyePaint)
+            canvas.drawOval(RectF(eyeRightX - eyeW/2f, eyeY - eyeH/2f, eyeRightX + eyeW/2f, eyeY + eyeH/2f), eyePaint)
             
             if (state.eyesHalf) {
-                // Eyelids matching body color
-                val lidPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#080812") }
-                canvas.drawRect(eyeLeftX - eyeRadius*1.5f, eyeY - eyeRadius*1.5f, eyeLeftX + eyeRadius*1.5f, eyeY, lidPaint)
-                canvas.drawRect(eyeRightX - eyeRadius*1.5f, eyeY - eyeRadius*1.5f, eyeRightX + eyeRadius*1.5f, eyeY, lidPaint)
-                canvas.drawLine(eyeLeftX - eyeRadius, eyeY, eyeLeftX + eyeRadius, eyeY, linePaint)
-                canvas.drawLine(eyeRightX - eyeRadius, eyeY, eyeRightX + eyeRadius, eyeY, linePaint)
+                val lidPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#080818") }
+                canvas.drawRect(eyeLeftX - eyeW, eyeY - eyeH, eyeLeftX + eyeW, eyeY, lidPaint)
+                canvas.drawRect(eyeRightX - eyeW, eyeY - eyeH, eyeRightX + eyeW, eyeY, lidPaint)
+                canvas.drawLine(eyeLeftX - eyeW/1.5f, eyeY, eyeLeftX + eyeW/1.5f, eyeY, linePaint)
+                canvas.drawLine(eyeRightX - eyeW/1.5f, eyeY, eyeRightX + eyeW/1.5f, eyeY, linePaint)
             }
         }
         
         // Mouth
-        val mouthY = cy + charH * 0.05f
+        val mouthY = cy + charH * 0.08f
         val mouthW = charW * 0.08f
         
         if (state.mouthOpen) {
-            canvas.drawOval(RectF(cx - mouthW/2f, mouthY - mouthW/3f, cx + mouthW/2f, mouthY + mouthW/3f), linePaint)
+            canvas.drawOval(RectF(cx - mouthW, mouthY - mouthW/2f, cx + mouthW, mouthY + mouthW/2f), linePaint)
         } else {
             when (state.mouthExpression) {
-                0 -> canvas.drawLine(cx - mouthW/2f, mouthY, cx + mouthW/2f, mouthY, linePaint) // Simple flat line
-                1 -> canvas.drawArc(RectF(cx - mouthW/2f, mouthY - mouthW/4f, cx + mouthW/2f, mouthY + mouthW/4f), 0f, 180f, false, linePaint) // Smile
-                2 -> canvas.drawArc(RectF(cx - mouthW/2f, mouthY - mouthW/4f, cx + mouthW/2f, mouthY + mouthW/4f), 180f, 180f, false, linePaint) // Sad
+                0 -> canvas.drawLine(cx - mouthW, mouthY, cx + mouthW, mouthY, linePaint)
+                1 -> canvas.drawArc(RectF(cx - mouthW, mouthY - mouthW/1.5f, cx + mouthW, mouthY + mouthW/1.5f), 0f, 180f, false, linePaint)
+                2 -> canvas.drawArc(RectF(cx - mouthW, mouthY - mouthW/1.5f, cx + mouthW, mouthY + mouthW/1.5f), 180f, 180f, false, linePaint)
             }
         }
 
         // Zzz Particles
         if (zzzParticles.isNotEmpty()) {
-            val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                textSize = charH * 0.12f
-                color = Color.parseColor("#00E5FF")
-                setShadowLayer(8f, 0f, 0f, Color.parseColor("#00E5FF"))
-            }
+            textPaint.textSize = charH * 0.15f
             for (p in zzzParticles) {
                 textPaint.alpha = p.alpha
-                canvas.drawText("Z", cx + charW * 0.2f + p.x, cy - charH * 0.4f + p.y, textPaint)
+                canvas.drawText("Z", cx + charW * 0.3f + p.x, cy - charH * 0.5f + p.y, textPaint)
             }
         }
 
         canvas.restore()
     }
     
-    private fun drawExtrudedLimb(canvas: Canvas, rootX: Float, rootY: Float, angle: Float, length: Float, rootWidth: Float, hasHand: Boolean = false) {
+    private fun drawExtrudedStub(canvas: Canvas, rootX: Float, rootY: Float, angle: Float, length: Float, width: Float) {
         canvas.save()
         canvas.rotate(angle, rootX, rootY)
         
         val path = Path()
-        path.moveTo(rootX - rootWidth / 2f, rootY)
-        
-        val tipWidth = if (hasHand) rootWidth * 0.5f else rootWidth * 0.1f
-        
-        // Curve down to left side of tip
-        path.quadTo(
-            rootX - rootWidth / 4f, rootY + length * 0.5f,
-            rootX - tipWidth / 2f, rootY + length
-        )
-        
-        // Curve bottom
-        path.quadTo(
-            rootX, rootY + length + tipWidth,
-            rootX + tipWidth / 2f, rootY + length
-        )
-        
-        // Curve back up to the other side of the root
-        path.quadTo(
-            rootX + rootWidth / 4f, rootY + length * 0.5f,
-            rootX + rootWidth / 2f, rootY
-        )
+        path.moveTo(rootX - width / 2f, rootY)
+        path.lineTo(rootX - width / 2f, rootY + length - width / 2f)
+        path.arcTo(RectF(rootX - width / 2f, rootY + length - width, rootX + width / 2f, rootY + length), 180f, -180f, false)
+        path.lineTo(rootX + width / 2f, rootY)
         path.close()
         
         canvas.drawPath(path, inkPaint)
         
-        if (hasHand) {
-            // Draw a bulbous fluid hand at the tip
-            val handRadius = rootWidth * 0.6f
-            canvas.drawCircle(rootX, rootY + length, handRadius, inkPaint)
-            // Little glowing palm/finger highlight
-            canvas.drawCircle(rootX, rootY + length + handRadius * 0.2f, handRadius * 0.3f, tipGlowPaint)
-        } else {
-            // Glowing starry tip for legs
-            canvas.drawCircle(rootX, rootY + length, 3f, tipGlowPaint)
-        }
+        // Glossy line
+        canvas.drawLine(rootX - width * 0.15f, rootY + width * 0.5f, rootX - width * 0.15f, rootY + length - width * 0.6f, glossPaint)
         
         canvas.restore()
     }
