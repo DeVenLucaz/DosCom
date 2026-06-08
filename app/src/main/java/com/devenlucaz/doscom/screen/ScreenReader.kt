@@ -117,4 +117,29 @@ object ScreenReader {
 
         return null
     }
+
+    fun buildScreenContext(service: AccessibilityService?): String {
+        if (service == null) return ""
+        val rootNode = service.rootInActiveWindow ?: return ""
+        val texts = mutableListOf<String>()
+        val pkgName = rootNode.packageName?.toString() ?: "Unknown"
+
+        fun traverse(node: android.view.accessibility.AccessibilityNodeInfo?) {
+            if (node == null) return
+            val text = node.text?.toString() ?: node.contentDescription?.toString()
+            if (!text.isNullOrBlank()) {
+                texts.add(text)
+            }
+            for (i in 0 until node.childCount) {
+                traverse(node.getChild(i))
+            }
+        }
+        traverse(rootNode)
+        
+        var contextStr = "App: $pkgName, Visible: ${texts.joinToString(", ")}"
+        if (contextStr.length > 500) {
+            contextStr = contextStr.substring(0, 497) + "..."
+        }
+        return contextStr
+    }
 }

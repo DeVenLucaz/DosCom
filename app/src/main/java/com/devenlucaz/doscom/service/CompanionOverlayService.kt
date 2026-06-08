@@ -142,6 +142,32 @@ class CompanionOverlayService : Service() {
         }
     }
 
+    private val repeatReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            idleEngine.targetState.bodyRotation = 10f
+            idleEngine.targetState.scaleX = 1.1f
+            idleEngine.targetState.eyesWide = true
+            showSpeechBubble("psst... you good? 👀", layoutParams.x, layoutParams.y) {
+                serviceScope.launch(Dispatchers.Main) {
+                    try {
+                        lastScreenshot = ScreenshotHelper.captureScreen(this@CompanionOverlayService)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    delay(300)
+                    layoutParams.flags = layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
+                    windowManager.updateViewLayout(overlayView, layoutParams)
+                    showChatInput()
+                }
+            }
+            handler.postDelayed({
+                idleEngine.targetState.bodyRotation = 0f
+                idleEngine.targetState.scaleX = 1f
+                idleEngine.targetState.eyesWide = false
+            }, 3000)
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == "ACTION_DISABLE_GHOST_MODE") {
             prefs.edit().putInt("ghost_mode", 0).apply()
@@ -169,6 +195,10 @@ class CompanionOverlayService : Service() {
             LocalBroadcastManager.getInstance(this).registerReceiver(
                 reactionReceiver,
                 IntentFilter("com.devenlucaz.doscom.REACTION")
+            )
+            LocalBroadcastManager.getInstance(this).registerReceiver(
+                repeatReceiver,
+                IntentFilter("com.devenlucaz.doscom.REPEAT_TRIGGER")
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -494,6 +524,7 @@ class CompanionOverlayService : Service() {
         try { LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationReceiver) } catch (e: Exception) { e.printStackTrace() }
         try { LocalBroadcastManager.getInstance(this).unregisterReceiver(appCategoryReceiver) } catch (e: Exception) { e.printStackTrace() }
         try { LocalBroadcastManager.getInstance(this).unregisterReceiver(reactionReceiver) } catch (e: Exception) { e.printStackTrace() }
+        try { LocalBroadcastManager.getInstance(this).unregisterReceiver(repeatReceiver) } catch (e: Exception) { e.printStackTrace() }
         try { if (::phoneEventReceiver.isInitialized) phoneEventReceiver.unregister(this) } catch (e: Exception) { e.printStackTrace() }
         try { if (::appContextWatcher.isInitialized) appContextWatcher.stop() } catch (e: Exception) { e.printStackTrace() }
         try { if (::timeReactionEngine.isInitialized) timeReactionEngine.stop() } catch (e: Exception) { e.printStackTrace() }
@@ -650,9 +681,10 @@ class CompanionOverlayService : Service() {
 
 
 
-    fun showSpeechBubble(text: String, dosComX: Int, dosComY: Int) {
+    fun showSpeechBubble(text: String, dosComX: Int, dosComY: Int, onClick: (() -> Unit)? = null) {
         val speechBubble = com.devenlucaz.doscom.ui.SpeechBubble(this)
         speechBubble.setText(text)
+        speechBubble.onBubbleClick = onClick
 
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -781,15 +813,25 @@ class CompanionOverlayService : Service() {
             showSpeechBubble("Hmm...", layoutParams.x, layoutParams.y)
             idleEngine.targetState.mouthExpression = 0
             
+            var screenCtx = ""
+            var passScreenshot: Bitmap? = null
+            if (currentMode == com.devenlucaz.doscom.mode.CompanionMode.AWARE) {
+                screenCtx = ScreenReader.buildScreenContext(DosComAccessibilityService.instance)
+                if (qLower.contains("can you see") || qLower.contains("look at this") || qLower.contains("show you") || qLower.contains("see this")) {
+                    passScreenshot = screenshot
+                }
+            }
+
             serviceScope.launch {
                 val response = com.devenlucaz.doscom.api.GeminiVisionClient.speak(
                     trigger = query,
-                    screenContext = "",
+                    screenContext = screenCtx,
                     history = conversationHistory,
                     apiKey = com.devenlucaz.doscom.utils.ConfigManager.loadApiKey(this@CompanionOverlayService) ?: "",
                     mood = com.devenlucaz.doscom.personality.MoodEngine.currentMood,
                     appName = "Unknown",
-                    sessionMinutes = getSessionMinutes()
+                    sessionMinutes = getSessionMinutes(),
+                    screenshot = passScreenshot
                 )
                 
                 withContext(Dispatchers.Main) {
@@ -821,8 +863,14 @@ class CompanionOverlayService : Service() {
 
             withContext(Dispatchers.Main) {
                 if (target == null) {
-                    showSpeechBubble("Hmm, I couldn't find that.", layoutParams.x, layoutParams.y)
-                    idleEngine.targetState.mouthExpression = 2 // REACT_WORRY
+                    showSpeechBubble("👀 not there...", layoutParams.x, layoutParams.y)
+                    idleEngine.targetState.bodyRotation = 15f
+                    handler.postDelayed({
+                        idleEngine.targetState.bodyRotation = -15f
+                        handler.postDelayed({
+                            idleEngine.targetState.bodyRotation = 0f
+                        }, 150)
+                    }, 150)
                 } else {
                     val targetCenterX = target.x
                     val targetCenterY = target.y

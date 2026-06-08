@@ -146,13 +146,14 @@ If no relevant element is visible, return found: false.
         apiKey: String,
         mood: com.devenlucaz.doscom.personality.UserMood,
         appName: String,
-        sessionMinutes: Int
+        sessionMinutes: Int,
+        screenshot: Bitmap? = null
     ): String? = withContext(Dispatchers.IO) {
         if (apiKey.isBlank()) {
             return@withContext "I need an API key to think! Set it up in the app."
         }
         try {
-            val systemInstruction = """
+            var systemInstruction = """
 You are DosCom, a tiny robot creature living on the user's
 phone screen. You are like a toddler — curious, playful,
 easily excited, occasionally confused.
@@ -168,6 +169,10 @@ easily excited, occasionally confused.
 - You've been active $sessionMinutes minutes
             """.trimIndent()
 
+            if (screenContext.isNotEmpty()) {
+                systemInstruction += "\n- Currently visible on screen: $screenContext"
+            }
+
             val contents = JSONArray()
             
             for (msg in history.toApiMessages()) {
@@ -181,10 +186,27 @@ easily excited, occasionally confused.
                 contents.put(contentObj)
             }
 
-            val promptPart = JSONObject().apply { put("text", trigger) }
             val promptContent = JSONObject().apply {
                 put("role", "user")
-                put("parts", JSONArray().put(promptPart))
+                val partsArr = JSONArray()
+                if (screenshot != null) {
+                    var scaledBmp = screenshot
+                    val maxDim = kotlin.math.max(screenshot.width, screenshot.height)
+                    if (maxDim > 1080) {
+                        val scale = 1080f / maxDim
+                        scaledBmp = Bitmap.createScaledBitmap(screenshot, (screenshot.width * scale).toInt(), (screenshot.height * scale).toInt(), true)
+                    }
+                    val outputStream = ByteArrayOutputStream()
+                    scaledBmp.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
+                    val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+                    val inlineData = JSONObject().apply {
+                        put("mime_type", "image/jpeg")
+                        put("data", base64Image)
+                    }
+                    partsArr.put(JSONObject().apply { put("inline_data", inlineData) })
+                }
+                partsArr.put(JSONObject().apply { put("text", trigger) })
+                put("parts", partsArr)
             }
             contents.put(promptContent)
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.0-alpha.14] - 2026-06-08
+### Added (V2 Phase 13 Complete — Aware Mode Extra Sense)
+- Updated `ScreenReader` to build full accessibility screen context dumps.
+- Modified `GeminiVisionClient` to inject the real-time screen context into the system prompt and process base64-encoded screenshots for visual awareness.
+- Updated `CompanionOverlayService` to handle "can you see" queries, extracting screenshots and sending them to the Vision API.
+- Implemented `RepeatDetector` to passively monitor accessibility events.
+- Wired `DosComAccessibilityService` to trigger a curious reaction ("psst... you good? 👀") on repetitive UI interactions, opening chat upon user tap.
+- Updated `walkTo` logic to display a confused shake animation when requested elements cannot be found on the screen.
+
 ## [2.0.0-alpha.13] - 2026-06-08
 ### Added (V2 Phase 12 Complete — Awake Mode Gemini Voice)
 - Created `ConversationHistory` to maintain a rolling window of the last 10 conversational exchanges for context.

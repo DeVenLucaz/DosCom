@@ -23,7 +23,23 @@ class DosComAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // Empty for now, to be implemented in Phase 4.2
+        if (event == null) return
+        val currentMode = com.devenlucaz.doscom.mode.ModeManager.getMode(this)
+        
+        val prefs = getSharedPreferences("doscom_prefs", android.content.Context.MODE_PRIVATE)
+        val passiveObservation = prefs.getBoolean("passive_observation", true)
+        
+        if (currentMode == com.devenlucaz.doscom.mode.CompanionMode.AWARE && passiveObservation) {
+            val pkg = event.packageName?.toString() ?: ""
+            val node = event.source
+            val viewId = node?.viewIdResourceName
+            if (pkg.isNotEmpty() && !viewId.isNullOrEmpty()) {
+                com.devenlucaz.doscom.observation.RepeatDetector.onEvent(pkg, viewId) {
+                    val intent = android.content.Intent("com.devenlucaz.doscom.REPEAT_TRIGGER")
+                    androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+                }
+            }
+        }
     }
 
     override fun onInterrupt() {

@@ -21,6 +21,7 @@ class SpeechBubble @JvmOverloads constructor(
 
     private val textView: TextView
     private var isAboveRobot = true
+    var onBubbleClick: (() -> Unit)? = null
 
     private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#CC0D0D1A") // 80% opacity
@@ -144,6 +145,7 @@ class SpeechBubble @JvmOverloads constructor(
         }, 4000)
         
         setOnClickListener {
+            onBubbleClick?.invoke()
             animate().cancel()
             try {
                 val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
