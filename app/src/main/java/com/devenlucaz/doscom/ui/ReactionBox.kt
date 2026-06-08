@@ -51,7 +51,7 @@ class ReactionBox(
                 setBackgroundColor(Color.TRANSPARENT)
                 minWidth = 0
                 minHeight = 0
-                setPadding(0, 0, 0, 0)
+                setPadding(0, 32, 0, 32)
                 layoutParams = LinearLayout.LayoutParams(
                     0,
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -94,30 +94,35 @@ class ReactionBox(
     }
 
     private fun handleReaction(reaction: String) {
-        val inputs = BrainInput.buildInputs(context)
-        val targetOutputs = IntArray(7) 
+        try {
+            android.widget.Toast.makeText(context, "Clicked: $reaction", android.widget.Toast.LENGTH_SHORT).show()
+            
+            val inputs = BrainInput.buildInputs(context)
+            val targetOutputs = IntArray(7) 
 
-        if (reaction == "💬") {
-            android.widget.Toast.makeText(context, "chat", android.widget.Toast.LENGTH_SHORT).show()
+            if (reaction == "💬") {
+                dismiss()
+                onChatClicked()
+                return
+            }
+
+            if (reaction == "😤") {
+                EmotionalMemory.recordNegative(context)
+                BrainManager.brain.learn(inputs, targetOutputs, reward = -0.5f)
+                onReactedNegative()
+            } else {
+                EmotionalMemory.recordPositive(context)
+                BrainManager.brain.learn(inputs, targetOutputs, reward = 1.0f)
+                onReactedPositive()
+            }
+            
+            BrainManager.brain.save(context)
             dismiss()
-            onChatClicked()
-            return
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(context, "Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            e.printStackTrace()
+            dismiss()
         }
-
-        if (reaction == "😤") {
-            android.widget.Toast.makeText(context, "negative", android.widget.Toast.LENGTH_SHORT).show()
-            EmotionalMemory.recordNegative(context)
-            BrainManager.brain.learn(inputs, targetOutputs, reward = -0.5f)
-            onReactedNegative()
-        } else {
-            android.widget.Toast.makeText(context, "positive", android.widget.Toast.LENGTH_SHORT).show()
-            EmotionalMemory.recordPositive(context)
-            BrainManager.brain.learn(inputs, targetOutputs, reward = 1.0f)
-            onReactedPositive()
-        }
-        
-        BrainManager.brain.save(context)
-        dismiss()
     }
 
     private fun dismiss() {
