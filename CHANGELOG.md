@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.4.1] - 2026-06-09
+### Fixed
+- Updated `CompanionRenderer` to render blush (`state.blushVisible`), antenna glow (`state.antennaGlow`), and wide eyes (`state.eyesWide`) based on `AnimationState` properties.
+
 ## [2.4.0] - 2026-06-09
 ### Fixed
 - Fixed the `find` / `where is` command in AWARE mode by correcting the routing logic in `CompanionOverlayService.handleQuery()`, ensuring the accessibility element search actually executes.

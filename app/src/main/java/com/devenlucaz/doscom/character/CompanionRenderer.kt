@@ -72,6 +72,11 @@ class CompanionRenderer @JvmOverloads constructor(
         color = Color.parseColor("#0A0E1A")
     }
 
+    private val blushPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#60FF6B8A")
+        style = Paint.Style.FILL
+    }
+
     private var lastW = 0f
     private var lastH = 0f
 
@@ -124,6 +129,19 @@ class CompanionRenderer @JvmOverloads constructor(
 
         val bodyRadiusX = charW * 0.45f
         val bodyRadiusY = charH * 0.5f
+        val headTopY = cy - charH * 0.85f // Made slightly taller for better teardrop
+
+        if (state.antennaGlow > 0f) {
+            val alphaInt = (state.antennaGlow * 255f).toInt().coerceIn(0, 255)
+            val orbScale = if (state.antennaGlow > 1f) 1.2f else 1f
+            val antennaPaint = Paint(linePaint).apply {
+                color = antennaColor
+                alpha = alphaInt
+            }
+            val antennaTopY = headTopY - charH * 0.25f
+            canvas.drawLine(cx, headTopY, cx, antennaTopY, antennaPaint)
+            canvas.drawCircle(cx, antennaTopY, charW * 0.05f * orbScale, antennaPaint)
+        }
 
         // 2. Draw Limbs Behind Body
         val armLen = charH * 0.45f
@@ -142,7 +160,6 @@ class CompanionRenderer @JvmOverloads constructor(
         drawExtrudedStub(canvas, shoulderRightX, shoulderY, state.rightArmAngle, armLen, charW * 0.2f)
 
         // 3. Draw the Main Teardrop Body
-        val headTopY = cy - charH * 0.85f // Made slightly taller for better teardrop
         val bodyPath = Path()
         bodyPath.moveTo(cx, headTopY)
         bodyPath.cubicTo(
@@ -203,16 +220,25 @@ class CompanionRenderer @JvmOverloads constructor(
         val eyeRightX = cx + charW * 0.24f
         val eyeY = cy - charH * 0.15f
 
+        if (state.blushVisible) {
+            val blushW = eyeW * 0.8f
+            val blushH = eyeH * 0.4f
+            val blushY = eyeY + eyeH * 0.5f
+            canvas.drawOval(RectF(eyeLeftX - blushW / 2f, blushY - blushH / 2f, eyeLeftX + blushW / 2f, blushY + blushH / 2f), blushPaint)
+            canvas.drawOval(RectF(eyeRightX - blushW / 2f, blushY - blushH / 2f, eyeRightX + blushW / 2f, blushY + blushH / 2f), blushPaint)
+        }
+
         if (state.eyesClosed) {
             canvas.drawLine(eyeLeftX - eyeW / 1.2f, eyeY, eyeLeftX + eyeW / 1.2f, eyeY, linePaint)
             canvas.drawLine(eyeRightX - eyeW / 1.2f, eyeY, eyeRightX + eyeW / 1.2f, eyeY, linePaint)
         } else {
-            canvas.drawOval(RectF(eyeLeftX - eyeW / 2f, eyeY - eyeH / 2f, eyeLeftX + eyeW / 2f, eyeY + eyeH / 2f), eyePaint)
-            canvas.drawOval(RectF(eyeRightX - eyeW / 2f, eyeY - eyeH / 2f, eyeRightX + eyeW / 2f, eyeY + eyeH / 2f), eyePaint)
+            val drawEyeH = if (state.eyesWide) eyeH * 1.3f else eyeH
+            canvas.drawOval(RectF(eyeLeftX - eyeW / 2f, eyeY - drawEyeH / 2f, eyeLeftX + eyeW / 2f, eyeY + drawEyeH / 2f), eyePaint)
+            canvas.drawOval(RectF(eyeRightX - eyeW / 2f, eyeY - drawEyeH / 2f, eyeRightX + eyeW / 2f, eyeY + drawEyeH / 2f), eyePaint)
 
             if (state.eyesHalf) {
-                canvas.drawRect(eyeLeftX - eyeW, eyeY - eyeH, eyeLeftX + eyeW, eyeY, lidPaint)
-                canvas.drawRect(eyeRightX - eyeW, eyeY - eyeH, eyeRightX + eyeW, eyeY, lidPaint)
+                canvas.drawRect(eyeLeftX - eyeW, eyeY - drawEyeH, eyeLeftX + eyeW, eyeY, lidPaint)
+                canvas.drawRect(eyeRightX - eyeW, eyeY - drawEyeH, eyeRightX + eyeW, eyeY, lidPaint)
                 canvas.drawLine(eyeLeftX - eyeW / 1.2f, eyeY, eyeLeftX + eyeW / 1.2f, eyeY, linePaint)
                 canvas.drawLine(eyeRightX - eyeW / 1.2f, eyeY, eyeRightX + eyeW / 1.2f, eyeY, linePaint)
             }
