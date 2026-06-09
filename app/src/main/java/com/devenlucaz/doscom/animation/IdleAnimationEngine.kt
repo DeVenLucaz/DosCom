@@ -118,18 +118,28 @@ class IdleAnimationEngine(
     }
     
     private fun playRandomSubAnimation() {
-        android.util.Log.d("IdleAnimationEngine", "Playing random sub-animation")
-        val inputs = com.devenlucaz.doscom.brain.BrainInput.buildInputs(context)
-        val decisions = com.devenlucaz.doscom.brain.BrainManager.brain.think(inputs)
-        
-        if (Random.nextInt(100) < 30) {
-            val toy = com.devenlucaz.doscom.systems.ToyBoxSystem.selectToy(context)
-            com.devenlucaz.doscom.systems.ToyBoxSystem.startToyActivity(toy, this)
-        } else {
-            var animIdx = decisions[1] - 6
-            if (animIdx < 0 || animIdx > 5) animIdx = Random.nextInt(6)
-            val anims = listOf(::playStretch, ::playSneeze, ::playHiccup, ::playYawn, ::playCoin, ::playPhoneCheck)
-            anims[animIdx].invoke()
+        try {
+            android.util.Log.d("IdleAnimationEngine", "Playing random sub-animation")
+            val inputs = com.devenlucaz.doscom.brain.BrainInput.buildInputs(context)
+            val decisions = com.devenlucaz.doscom.brain.BrainManager.brain.think(inputs)
+            
+            if (Random.nextInt(100) < 30) {
+                try {
+                    val toy = com.devenlucaz.doscom.systems.ToyBoxSystem.selectToy(context)
+                    com.devenlucaz.doscom.systems.ToyBoxSystem.startToyActivity(toy, this)
+                } catch (e: Exception) {
+                    android.util.Log.e("IdleAnimationEngine", "Sub-animation failed", e)
+                    playStretch()
+                }
+            } else {
+                var animIdx = (decisions[1] - 6).coerceIn(0, 5)
+                if (animIdx < 0 || animIdx > 5) animIdx = Random.nextInt(6)
+                val anims = listOf(::playStretch, ::playSneeze, ::playHiccup, ::playYawn, ::playCoin, ::playPhoneCheck)
+                anims[animIdx].invoke()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("IdleAnimationEngine", "Sub-animation failed", e)
+            playStretch()
         }
     }
     

@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.4.3] - 2026-06-09
+### Fixed
+- Added robust error handling in `IdleAnimationEngine.playRandomSubAnimation()` using try/catch blocks with `playStretch()` fallbacks to prevent animation slots from being silently consumed during failures.
+- Added strict `coerceIn(0, 5)` bounds checking to animation index calculations to prevent SNN inference errors.
+
 ## [2.4.2] - 2026-06-09
 ### Fixed
 - Reduced shake detection threshold in `TimeReactionEngine` from 15f to 8f to accommodate aggressive motion smoothing on devices like ColorOS.
