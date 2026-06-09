@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.4.2] - 2026-06-09
+### Fixed
+- Reduced shake detection threshold in `TimeReactionEngine` from 15f to 8f to accommodate aggressive motion smoothing on devices like ColorOS.
+
 ## [2.4.1] - 2026-06-09
 ### Fixed
 - Updated `CompanionRenderer` to render blush (`state.blushVisible`), antenna glow (`state.antennaGlow`), and wide eyes (`state.eyesWide`) based on `AnimationState` properties.

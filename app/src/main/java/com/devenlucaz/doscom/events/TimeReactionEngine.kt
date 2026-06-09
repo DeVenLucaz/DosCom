@@ -202,7 +202,7 @@ class TimeReactionEngine(
             val z = event.values[2]
             val accel = Math.sqrt((x*x + y*y + z*z).toDouble()).toFloat() - SensorManager.GRAVITY_EARTH
             
-            if (accel > 15f) {
+            if (accel > 8f) {
                 val now = System.currentTimeMillis()
                 if (now - lastShakeTime > 5000) {
                     lastShakeTime = now
