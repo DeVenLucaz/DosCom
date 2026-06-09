@@ -20,6 +20,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.devenlucaz.doscom.api.GeminiVisionClient
 import com.devenlucaz.doscom.character.CompanionRenderer
@@ -35,6 +36,7 @@ class OnboardingActivity : AppCompatActivity() {
 
     private var currentStep = 1
     private val AUDIO_PERMISSION_REQUEST = 1002
+    private val NOTIF_PERMISSION_REQUEST = 1003
     private val handler = Handler(Looper.getMainLooper())
     private var pollRunnable: Runnable? = null
 
@@ -105,6 +107,7 @@ class OnboardingActivity : AppCompatActivity() {
             }
             7 -> buildStep7(layout, dp)
             8 -> buildStep8(layout, dp)
+            9 -> buildStep9(layout, dp)
         }
 
         setContentView(scrollView)
@@ -418,7 +421,7 @@ class OnboardingActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply { bottomMargin = dp(8) }
             setOnClickListener {
-                requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), AUDIO_PERMISSION_REQUEST)
+                ActivityCompat.requestPermissions(this@OnboardingActivity, arrayOf(Manifest.permission.RECORD_AUDIO), AUDIO_PERMISSION_REQUEST)
             }
         }
         layout.addView(btn)
@@ -481,6 +484,58 @@ class OnboardingActivity : AppCompatActivity() {
     }
 
     private fun buildStep8(layout: LinearLayout, dp: (Int) -> Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            
+            val title = TextView(this).apply {
+                text = "Notifications"
+                textSize = 28f
+                setTextColor(Color.WHITE)
+                setTypeface(null, Typeface.BOLD)
+                setPadding(0, 0, 0, dp(16))
+            }
+            val sub = TextView(this).apply {
+                text = "Ghost Mode needs notification permission to whisper to you from the background."
+                setTextColor(Color.LTGRAY)
+                setPadding(0, 0, 0, dp(32))
+            }
+            layout.addView(title)
+            layout.addView(sub)
+
+            val btn = Button(this).apply {
+                text = "Allow"
+                setTextColor(Color.WHITE)
+                background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#6200EE"))
+                    cornerRadius = dp(12).toFloat()
+                }
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(8) }
+                setOnClickListener {
+                    ActivityCompat.requestPermissions(
+                        this@OnboardingActivity,
+                        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                        NOTIF_PERMISSION_REQUEST
+                    )
+                }
+            }
+            layout.addView(btn)
+
+            val skip = Button(this).apply {
+                text = "Skip"
+                setTextColor(Color.LTGRAY)
+                setBackgroundColor(Color.TRANSPARENT)
+                setOnClickListener { nextStep() }
+            }
+            layout.addView(skip)
+        } else {
+            nextStep()
+        }
+    }
+
+    private fun buildStep9(layout: LinearLayout, dp: (Int) -> Int) {
         val renderer = CompanionRenderer(this).apply {
             layoutParams = LinearLayout.LayoutParams(dp(100), dp(100)).apply {
                 bottomMargin = dp(32)
@@ -526,7 +581,7 @@ class OnboardingActivity : AppCompatActivity() {
 
     private fun nextStep() {
         currentStep++
-        if (currentStep > 8) {
+        if (currentStep > 9) {
             finish()
         } else {
             showStep(currentStep)
@@ -535,7 +590,7 @@ class OnboardingActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == AUDIO_PERMISSION_REQUEST) {
+        if (requestCode == AUDIO_PERMISSION_REQUEST || requestCode == NOTIF_PERMISSION_REQUEST) {
             nextStep()
         }
     }

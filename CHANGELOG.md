@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.4.5] - 2026-06-09
+### Added
+- Added an Android 13+ (Tiramisu) `POST_NOTIFICATIONS` permission request step to the onboarding flow specifically to ensure Ghost Mode can maintain its background whisper notification.
+
 ## [2.4.4] - 2026-06-09
 ### Added
 - Implemented full climb animation sequence in `ClimbEngine.startClimb()` utilizing state transitions through `PREP`, `CLIMBING`, `MID_REST`, `PULLING_OVER`, `SLIDING_DOWN`, and `LANDING`.
