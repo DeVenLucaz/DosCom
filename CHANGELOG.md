@@ -3,6 +3,9 @@
 ## [2.4.5] - 2026-06-09
 ### Added
 - Added an Android 13+ (Tiramisu) `POST_NOTIFICATIONS` permission request step to the onboarding flow specifically to ensure Ghost Mode can maintain its background whisper notification.
+- Hooked up `ClimbEngine` so the full climb animation triggers smoothly when dragging the companion to the top edge of the screen (`GRIP_TOP`).
+### Fixed
+- Bumped internal `versionCode` to 4 to ensure OTA and third-party updaters (like Obtainium) successfully overwrite previous installations.
 
 ## [2.4.4] - 2026-06-09
 ### Added

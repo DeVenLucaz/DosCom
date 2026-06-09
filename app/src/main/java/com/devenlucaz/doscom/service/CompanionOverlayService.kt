@@ -762,6 +762,10 @@ class CompanionOverlayService : Service() {
                     snapToNearestEdge()
                 }
             }
+        } else if (pose == com.devenlucaz.doscom.animation.RobotPose.GRIP_TOP) {
+            lerpAnimationState(overlayView.state, targetState, 200L) {
+                com.devenlucaz.doscom.animation.ClimbEngine.startClimb(idleEngine, handler)
+            }
         } else {
             if (pose == com.devenlucaz.doscom.animation.RobotPose.HANG_LEFT || pose == com.devenlucaz.doscom.animation.RobotPose.HANG_RIGHT) {
                 snapToNearestEdge()
