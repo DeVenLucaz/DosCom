@@ -621,14 +621,16 @@ class CompanionOverlayService : Service() {
 
         // Ghost Mode Toggle Action
         val currentGhostMode = prefs.getInt("ghost_mode", 0)
-        val ghostToggleIntent = Intent(this, CompanionOverlayService::class.java).apply {
-            action = "ACTION_TOGGLE_GHOST_MODE"
+        if (currentGhostMode == 2) {
+            val disableGhostIntent = Intent(this, CompanionOverlayService::class.java).apply {
+                action = "ACTION_DISABLE_GHOST_MODE"
+            }
+            val disableGhostPendingIntent = PendingIntent.getService(
+                this, 1, disableGhostIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(0, "Disable Ghost Mode", disableGhostPendingIntent)
         }
-        val ghostTogglePendingIntent = PendingIntent.getService(
-            this, 1, ghostToggleIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        builder.addAction(0, if (currentGhostMode == 2) "Disable Ghost Mode" else "Enable Ghost Mode", ghostTogglePendingIntent)
 
         // Stop Action
         val stopIntent = Intent(this, CompanionOverlayService::class.java).apply {

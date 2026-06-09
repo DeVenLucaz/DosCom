@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.3.0] - 2026-06-09
+### Fixed
+- Fixed Full Ghost mode becoming inescapable by adding a "Disable Ghost Mode" action button directly to the foreground notification that appears immediately when the mode is active and correctly resets touch state to interactive.
+
 ## [2.2.0] - 2026-06-09
 ### Fixed
 - Replaced subtle shake reaction with a full judgmental hang pose animation (`TimeReactionEngine`, `CompanionOverlayService`).
