@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.4.4] - 2026-06-09
+### Added
+- Implemented full climb animation sequence in `ClimbEngine.startClimb()` utilizing state transitions through `PREP`, `CLIMBING`, `MID_REST`, `PULLING_OVER`, `SLIDING_DOWN`, and `LANDING`.
+
 ## [2.4.3] - 2026-06-09
 ### Fixed
 - Added robust error handling in `IdleAnimationEngine.playRandomSubAnimation()` using try/catch blocks with `playStretch()` fallbacks to prevent animation slots from being silently consumed during failures.
