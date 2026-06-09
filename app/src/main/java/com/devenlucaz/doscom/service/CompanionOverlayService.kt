@@ -629,7 +629,10 @@ class CompanionOverlayService : Service() {
                 this, 1, disableGhostIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            builder.addAction(0, "Disable Ghost Mode", disableGhostPendingIntent)
+            val disableGhostAction = androidx.core.app.NotificationCompat.Action.Builder(
+                0, "Disable Ghost Mode", disableGhostPendingIntent
+            ).build()
+            builder.addAction(disableGhostAction)
         }
 
         // Stop Action
@@ -1056,10 +1059,12 @@ class CompanionOverlayService : Service() {
             return
         }
 
-        val qLower = query.lowercase()
+        val qLower = query.lowercase().trim()
         val isLocateRequest = qLower.startsWith("find") || qLower.startsWith("where is") || qLower.startsWith("show me") || qLower.startsWith("locate")
 
-        if (!isLocateRequest && (currentMode == com.devenlucaz.doscom.mode.CompanionMode.AWAKE || currentMode == com.devenlucaz.doscom.mode.CompanionMode.AWARE)) {
+        if (isLocateRequest) {
+            // It's a locate request, skip chat and go straight to finding target
+        } else if (currentMode == com.devenlucaz.doscom.mode.CompanionMode.AWAKE || currentMode == com.devenlucaz.doscom.mode.CompanionMode.AWARE) {
             com.devenlucaz.doscom.personality.EmotionalMemory.recordPositive(this, 0.05f)
             showSpeechBubble("Hmm...", layoutParams.x, layoutParams.y)
             idleEngine.targetState.mouthExpression = 0

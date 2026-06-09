@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.4.0] - 2026-06-09
+### Fixed
+- Fixed the `find` / `where is` command in AWARE mode by correcting the routing logic in `CompanionOverlayService.handleQuery()`, ensuring the accessibility element search actually executes.
+- Fixed the "Disable Ghost Mode" button not appearing in the foreground notification by correctly building the action with `NotificationCompat.Action.Builder` instead of the legacy deprecated builder method.
+- Rewrote `MainActivity` to act as a proper minimal control panel instead of silently exiting, allowing users to always check status, open Settings, or stop DosCom regardless of the current ghost mode state.
+
 ## [2.3.0] - 2026-06-09
 ### Fixed
 - Fixed Full Ghost mode becoming inescapable by adding a "Disable Ghost Mode" action button directly to the foreground notification that appears immediately when the mode is active and correctly resets touch state to interactive.
