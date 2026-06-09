@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.2.0] - 2026-06-09
+### Fixed
+- Replaced subtle shake reaction with a full judgmental hang pose animation (`TimeReactionEngine`, `CompanionOverlayService`).
+- Reduced idle sub-animation schedule delay to 8-15 seconds for better visibility (`IdleAnimationEngine`).
+
 ## [2.1.0] - 2026-06-09
 ### Fixed
 - Fixed mascot size slider distorting character body shape when resized by applying scale uniformly to both axes in `CompanionRenderer.kt`.

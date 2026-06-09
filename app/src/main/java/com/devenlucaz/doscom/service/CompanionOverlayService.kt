@@ -690,6 +690,51 @@ class CompanionOverlayService : Service() {
         animator.start()
     }
 
+    fun triggerShakeReaction() {
+        val screenWidth = com.devenlucaz.doscom.utils.ScreenMetrics.getScreenWidth(this)
+        val viewW = overlayView.width
+        val visualOffsetPx = (58 * resources.displayMetrics.density).toInt()
+        val centerX = layoutParams.x + viewW / 2
+        val isLeftEdge = centerX < screenWidth / 2
+        val targetX = if (isLeftEdge) -visualOffsetPx else screenWidth - viewW + visualOffsetPx
+
+        val animator = android.animation.ValueAnimator.ofInt(layoutParams.x, targetX)
+        animator.duration = 200
+        animator.addUpdateListener { animation ->
+            layoutParams.x = animation.animatedValue as Int
+            try { updateRobotLayout() } catch (e: Exception) {}
+        }
+        animator.start()
+
+        idleEngine.targetState.eyesWide = true
+        if (isLeftEdge) {
+            idleEngine.targetState.leftArmAngle = -90f
+            idleEngine.targetState.rightArmAngle = 0f
+            idleEngine.targetState.bodyRotation = 5f
+            idleEngine.targetState.scaleX = 1f
+        } else {
+            idleEngine.targetState.leftArmAngle = 0f
+            idleEngine.targetState.rightArmAngle = 90f
+            idleEngine.targetState.bodyRotation = -5f
+            idleEngine.targetState.scaleX = -1f
+        }
+
+        handler.postDelayed({
+            idleEngine.targetState.eyesWide = false
+            idleEngine.targetState.eyesHalf = true
+            idleEngine.targetState.pupilOffsetX = if (isLeftEdge) 15f else -15f
+
+            handler.postDelayed({
+                idleEngine.targetState.eyesHalf = false
+                idleEngine.targetState.pupilOffsetX = 0f
+                idleEngine.targetState.leftArmAngle = 0f
+                idleEngine.targetState.rightArmAngle = 0f
+                idleEngine.targetState.bodyRotation = 0f
+                idleEngine.targetState.scaleX = 1f
+            }, 2000)
+        }, 2000)
+    }
+
     private fun handleDragRelease() {
         val screenWidth = ScreenMetrics.getScreenWidth(this)
         val screenHeight = ScreenMetrics.getScreenHeight(this)

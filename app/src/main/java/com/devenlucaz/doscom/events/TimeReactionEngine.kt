@@ -204,12 +204,11 @@ class TimeReactionEngine(
             
             if (accel > 15f) {
                 val now = System.currentTimeMillis()
-                if (now - lastShakeTime > 1000) {
+                if (now - lastShakeTime > 5000) {
                     lastShakeTime = now
-                    engine.targetState.eyesWide = true
-                    engine.targetState.bodyRotation = 20f
-                    handler.postDelayed({ engine.targetState.bodyRotation = -20f }, 150)
-                    handler.postDelayed({ engine.targetState.bodyRotation = 0f; engine.targetState.eyesWide = false }, 300)
+                    if (context is com.devenlucaz.doscom.service.CompanionOverlayService) {
+                        context.triggerShakeReaction()
+                    }
                 }
             }
         }

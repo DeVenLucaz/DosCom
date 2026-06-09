@@ -109,7 +109,7 @@ class IdleAnimationEngine(
         if (queue.currentPriority() <= AnimationQueue.PRIORITY_LOW && !isSleeping) {
             playRandomSubAnimation()
         }
-        scheduleNextSubAnimation(Random.nextLong(20000, 45000))
+        scheduleNextSubAnimation(Random.nextLong(8000, 15000))
     }
     
     private fun scheduleNextSubAnimation(delayMs: Long) {
@@ -118,6 +118,7 @@ class IdleAnimationEngine(
     }
     
     private fun playRandomSubAnimation() {
+        android.util.Log.d("IdleAnimationEngine", "Playing random sub-animation")
         val inputs = com.devenlucaz.doscom.brain.BrainInput.buildInputs(context)
         val decisions = com.devenlucaz.doscom.brain.BrainManager.brain.think(inputs)
         
