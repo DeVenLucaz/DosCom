@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.1.0] - 2026-06-09
+### Fixed
+- Fixed mascot size slider distorting character body shape when resized by applying scale uniformly to both axes in `CompanionRenderer.kt`.
+- Fixed reaction button animations; positive reactions now visibly jump and show blush for 1500ms, negative reactions dim the antenna and show a sad mouth for 1500ms.
+
 ## [2.0.0] - 2026-06-08
 ### Added (V2 Phase 16 Complete — Final Polish)
 - Made `CompanionOverlayService` return `START_STICKY` for better process persistence.

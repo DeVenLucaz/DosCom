@@ -131,20 +131,19 @@ class CompanionOverlayService : Service() {
             val reactionType = intent?.getStringExtra("reactionType") ?: return
             if (reactionType == "positive") {
                 idleEngine.targetState.blushVisible = true
-                idleEngine.targetState.bodyOffsetY = -20f
+                idleEngine.targetState.bodyOffsetY = -25f
                 handler.postDelayed({
                     idleEngine.targetState.blushVisible = false
                     idleEngine.targetState.bodyOffsetY = 0f
-                }, 1000)
+                }, 1500)
             } else if (reactionType == "negative") {
                 idleEngine.targetState.antennaGlow = 0.2f
-                idleEngine.targetState.bodyOffsetY = 10f
                 idleEngine.targetState.mouthExpression = 2 
                 handler.postDelayed({
                     idleEngine.targetState.antennaGlow = 1.0f
                     idleEngine.targetState.bodyOffsetY = 0f
                     idleEngine.targetState.mouthExpression = 0
-                }, 1000)
+                }, 1500)
             }
         }
     }
@@ -330,11 +329,11 @@ class CompanionOverlayService : Service() {
                     },
                     onReactedPositive = {
                         idleEngine.targetState.blushVisible = true
-                        idleEngine.targetState.bodyOffsetY = -20f
+                        idleEngine.targetState.bodyOffsetY = -25f
                         handler.postDelayed({
                             idleEngine.targetState.blushVisible = false
                             idleEngine.targetState.bodyOffsetY = 0f
-                        }, 2000)
+                        }, 1500)
                     },
                     onReactedNegative = {
                         idleEngine.targetState.antennaGlow = 0.2f
@@ -342,7 +341,7 @@ class CompanionOverlayService : Service() {
                         handler.postDelayed({
                             idleEngine.targetState.antennaGlow = 1.0f
                             idleEngine.targetState.mouthExpression = 0
-                        }, 3000)
+                        }, 1500)
                     }
                 )
                 reactionBox.show()

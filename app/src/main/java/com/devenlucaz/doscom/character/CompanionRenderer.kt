@@ -118,7 +118,8 @@ class CompanionRenderer @JvmOverloads constructor(
 
         canvas.save()
         canvas.translate(state.bodyOffsetX, state.bodyOffsetY)
-        canvas.scale(state.scaleX * state.scale, state.scale, cx, cy)
+        val flipX = if (state.scaleX < 0) -1f else 1f
+        canvas.scale(flipX * state.scale, state.scale, cx, cy)
         canvas.rotate(state.bodyRotation, cx, cy)
 
         val bodyRadiusX = charW * 0.45f
