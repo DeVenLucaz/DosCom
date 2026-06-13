@@ -34,7 +34,7 @@ class CompanionRenderer @JvmOverloads constructor(
     var antennaColor: Int = Color.WHITE
 
     val sceneView: SceneView = SceneView(context, attrs)
-    var modelNode: ModelNode = ModelNode()
+    var modelNode: ModelNode = ModelNode(engine = sceneView.engine)
 
     init {
         lifecycleRegistry.currentState = Lifecycle.State.CREATED
@@ -44,14 +44,13 @@ class CompanionRenderer @JvmOverloads constructor(
         
         addView(sceneView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         
-        modelNode.loadModelAsync(
-            context = context,
-            lifecycle = lifecycle,
-            glbFileLocation = "Alien.glb",
-            autoAnimate = true
-        ) { modelInstance ->
-            sceneView.addChildNode(modelNode)
-            applyColors()
+        CoroutineScope(Dispatchers.Main).launch {
+            val modelInstance = sceneView.modelLoader.loadModelInstance("Alien.glb")
+            modelInstance?.let {
+                modelNode.modelInstance = it
+                sceneView.addChildNode(modelNode)
+                applyColors()
+            }
         }
     }
 
