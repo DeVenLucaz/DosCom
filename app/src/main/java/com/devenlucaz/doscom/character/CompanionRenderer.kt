@@ -34,8 +34,8 @@ class CompanionRenderer @JvmOverloads constructor(
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
         webView.setBackgroundColor(Color.TRANSPARENT)
-        // Ensure transparency works on hardware
-        webView.setLayerType(LAYER_TYPE_HARDWARE, null)
+        // Ensure transparency works on older Android versions by using software layer
+        webView.setLayerType(LAYER_TYPE_SOFTWARE, null)
         
         webView.settings.apply {
             javaScriptEnabled = true
