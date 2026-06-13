@@ -52,19 +52,45 @@ class CompanionRenderer @JvmOverloads constructor(
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onConsoleMessage(message: android.webkit.ConsoleMessage?): Boolean {
-                android.util.Log.d("WebViewCompanion", "${message?.message()} -- From line ${message?.lineNumber()} of ${message?.sourceId()}")
+                android.util.Log.e("WebViewCompanion", "${message?.message()} -- From line ${message?.lineNumber()} of ${message?.sourceId()}")
                 return true
             }
         }
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(
+                view: WebView,
+                request: android.webkit.WebResourceRequest
+            ): android.webkit.WebResourceResponse? {
+                val urlStr = request.url.toString()
+                if (urlStr.startsWith("https://appassets.local/")) {
+                    val filename = urlStr.removePrefix("https://appassets.local/")
+                    val mime = when {
+                        filename.endsWith(".html") -> "text/html"
+                        filename.endsWith(".js") -> "application/javascript"
+                        filename.endsWith(".glb") -> "model/gltf-binary"
+                        else -> "application/octet-stream"
+                    }
+                    return try {
+                        val stream = context.assets.open(filename)
+                        android.webkit.WebResourceResponse(mime, "UTF-8", stream).apply {
+                            responseHeaders = mapOf("Access-Control-Allow-Origin" to "*")
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("WebViewCompanion", "Failed to load asset: $filename", e)
+                        null
+                    }
+                }
+                return super.shouldInterceptRequest(view, request)
+            }
+
             override fun onPageFinished(view: WebView?, url: String?) {
                 applyColors()
                 update3DModelState()
             }
         }
 
-        // Load the local HTML file containing <model-viewer>
-        webView.loadUrl("file:///android_asset/companion.html")
+        // Load via the virtual HTTPS domain to fully bypass Chromium file:// ES Module restrictions!
+        webView.loadUrl("https://appassets.local/companion.html")
     }
 
     private fun applyColors() {
