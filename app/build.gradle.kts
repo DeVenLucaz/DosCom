@@ -51,7 +51,4 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
-    
-    // SceneView for 3D glb rendering
-    implementation("io.github.sceneview:sceneview:1.2.1")
 }
