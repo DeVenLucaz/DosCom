@@ -34,17 +34,28 @@ class CompanionRenderer @JvmOverloads constructor(
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
         webView.setBackgroundColor(Color.TRANSPARENT)
-        // Ensure transparency works on older Android versions by using software layer
-        webView.setLayerType(LAYER_TYPE_SOFTWARE, null)
+        // WebGL requires HARDWARE acceleration to render 3D models.
+        // SOFTWARE layer disables WebGL entirely, leaving the WebView blank.
+        webView.setLayerType(LAYER_TYPE_HARDWARE, null)
         
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
             allowFileAccess = true
             allowContentAccess = true
+            // CRITICAL FOR OFFLINE WEBGL: Allow fetching .js modules and .glb files from file:///
+            @Suppress("DEPRECATION")
+            allowFileAccessFromFileURLs = true
+            @Suppress("DEPRECATION")
+            allowUniversalAccessFromFileURLs = true
         }
 
-        webView.webChromeClient = WebChromeClient()
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onConsoleMessage(message: android.webkit.ConsoleMessage?): Boolean {
+                android.util.Log.d("WebViewCompanion", "${message?.message()} -- From line ${message?.lineNumber()} of ${message?.sourceId()}")
+                return true
+            }
+        }
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 applyColors()
@@ -67,11 +78,12 @@ class CompanionRenderer @JvmOverloads constructor(
     private fun update3DModelState() {
         val targetScale = state.scale * 1.5f 
         val flipX = if (state.scaleX < 0) -1f else 1f
-        val finalScale = targetScale * flipX
+        val scaleX = targetScale * flipX
+        val scaleY = targetScale
         
         val rotation = state.bodyRotation
         
         // Execute JS to update transforms in <model-viewer>
-        webView.evaluateJavascript("window.updateTransforms($finalScale, $rotation);", null)
+        webView.evaluateJavascript("window.updateTransforms($scaleX, $scaleY, $rotation);", null)
     }
 }

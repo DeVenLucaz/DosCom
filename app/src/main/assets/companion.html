@@ -72,10 +72,10 @@
             viewer.addEventListener('load', () => setColors(bodyHex, eyeHex));
         };
 
-        window.updateTransforms = function(scale, rotationDeg) {
+        window.updateTransforms = function(scaleX, scaleY, rotationDeg) {
             // Adjust scale using CSS for fast updates
             // And rotate the model using CSS transform or camera orbit
-            viewer.style.transform = `scale(${scale})`;
+            viewer.style.transform = `scale(${scaleX}, ${scaleY})`;
             viewer.cameraOrbit = `${rotationDeg}deg 90deg auto`;
         };
     </script>
