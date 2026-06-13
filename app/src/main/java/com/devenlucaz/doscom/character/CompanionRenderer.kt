@@ -34,7 +34,7 @@ class CompanionRenderer @JvmOverloads constructor(
     var antennaColor: Int = Color.WHITE
 
     val sceneView: SceneView = SceneView(context, attrs)
-    var modelNode: ModelNode = ModelNode(engine = sceneView.engine)
+    var modelNode: ModelNode? = null
 
     init {
         lifecycleRegistry.currentState = Lifecycle.State.CREATED
@@ -47,8 +47,9 @@ class CompanionRenderer @JvmOverloads constructor(
         CoroutineScope(Dispatchers.Main).launch {
             val modelInstance = sceneView.modelLoader.loadModelInstance("Alien.glb")
             modelInstance?.let {
-                modelNode.modelInstance = it
-                sceneView.addChildNode(modelNode)
+                val node = ModelNode(modelInstance = it, autoAnimate = true)
+                modelNode = node
+                sceneView.addChildNode(node)
                 applyColors()
             }
         }
@@ -66,7 +67,7 @@ class CompanionRenderer @JvmOverloads constructor(
     }
 
     private fun applyColors() {
-        val modelInstance = modelNode.modelInstance ?: return
+        val modelInstance = modelNode?.modelInstance ?: return
         
         CoroutineScope(Dispatchers.Main).launch {
             try {
@@ -93,11 +94,11 @@ class CompanionRenderer @JvmOverloads constructor(
         val flipX = if (state.scaleX < 0) -1f else 1f
         
         // We only scale X and Y in 2D, but for 3D we apply uniform or flipped scale
-        modelNode.scale = Position(x = targetScale * flipX, y = targetScale, z = targetScale)
+        modelNode?.scale = Position(x = targetScale * flipX, y = targetScale, z = targetScale)
         
         // Body rotation (mapping 2D rotation to 3D Y or Z axis)
         // 2D rotation typically rotates around Z, but for a 3D character facing forward,
         // it might make sense to slightly tilt or rotate based on the action
-        modelNode.rotation = Rotation(x = 0f, y = state.bodyRotation, z = 0f)
+        modelNode?.rotation = Rotation(x = 0f, y = state.bodyRotation, z = 0f)
     }
 }
