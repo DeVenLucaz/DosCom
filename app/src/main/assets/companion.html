@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <script type="module" src="model-viewer.min.js"></script>
+    <script src="model-viewer.min.js" type="module"></script>
     <style>
         body, html {
             margin: 0;
@@ -17,8 +17,9 @@
             height: 100%;
             background-color: transparent !important;
             --poster-color: transparent;
-            /* Disable user interaction but keep the model visible */
             pointer-events: none;
+            /* Default transform */
+            transform-origin: center center;
         }
     </style>
 </head>
@@ -34,7 +35,7 @@
         shadow-intensity="1"
         environment-image="neutral"
         autoplay
-        camera-orbit="0deg 90deg auto">
+        camera-orbit="180deg 90deg auto">
     </model-viewer>
 
     <script>
@@ -64,19 +65,14 @@
             }
         }
 
-        // Exposed to Android WebView
         window.applyColors = function(bodyHex, eyeHex) {
-            // Apply immediately if loaded
             setColors(bodyHex, eyeHex);
-            // And apply when loaded
             viewer.addEventListener('load', () => setColors(bodyHex, eyeHex));
         };
 
         window.updateTransforms = function(scaleX, scaleY, rotationDeg) {
-            // Adjust scale using CSS for fast updates
-            // And rotate the model using CSS transform or camera orbit
-            viewer.style.transform = `scale(${scaleX}, ${scaleY})`;
-            viewer.cameraOrbit = `${rotationDeg}deg 90deg auto`;
+            // Apply 2D stretch/squash and wobble (Z-axis rotation) using buttery-smooth CSS compositor
+            viewer.style.transform = `scale(${scaleX}, ${scaleY}) rotateZ(${rotationDeg}deg)`;
         };
     </script>
 </body>

@@ -2,8 +2,11 @@ package com.devenlucaz.doscom.character
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -22,20 +25,45 @@ class CompanionRenderer @JvmOverloads constructor(
         }
 
     var zzzParticles = listOf<com.devenlucaz.doscom.animation.ZzzParticle>()
+        set(value) {
+            field = value
+            invalidate()
+        }
+        
     var antennaColor: Int = Color.WHITE
+
+    private val zzzTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#4000E5FF")
+        textSize = 40f
+        textAlign = Paint.Align.CENTER
+    }
 
     val webView: WebView = WebView(context)
 
     init {
+        setWillNotDraw(false)
         setupWebView()
         addView(webView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+    }
+
+    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+        // Fix 1: Instantly intercept ALL touches. The WebView gets ZERO touches.
+        // This flawlessly restores Drag, Double-Tap, and Triple-Tap to the OverlayService!
+        return true
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        super.dispatchDraw(canvas)
+        // Fix 3: Restore the cute Zzz sleep particles on a transparent canvas over the 3D model!
+        zzzParticles.forEach { p ->
+            zzzTextPaint.alpha = p.alpha
+            canvas.drawText("Z", p.x, p.y, zzzTextPaint)
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
         webView.setBackgroundColor(Color.TRANSPARENT)
-        // WebGL requires HARDWARE acceleration to render 3D models.
-        // SOFTWARE layer disables WebGL entirely, leaving the WebView blank.
         webView.setLayerType(LAYER_TYPE_HARDWARE, null)
         
         webView.settings.apply {
@@ -43,19 +71,14 @@ class CompanionRenderer @JvmOverloads constructor(
             domStorageEnabled = true
             allowFileAccess = true
             allowContentAccess = true
-            // CRITICAL FOR OFFLINE WEBGL: Allow fetching .js modules and .glb files from file:///
             @Suppress("DEPRECATION")
             allowFileAccessFromFileURLs = true
             @Suppress("DEPRECATION")
             allowUniversalAccessFromFileURLs = true
         }
 
-        webView.webChromeClient = object : WebChromeClient() {
-            override fun onConsoleMessage(message: android.webkit.ConsoleMessage?): Boolean {
-                android.util.Log.e("WebViewCompanion", "${message?.message()} -- From line ${message?.lineNumber()} of ${message?.sourceId()}")
-                return true
-            }
-        }
+        webView.webChromeClient = object : WebChromeClient() {}
+        
         webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(
                 view: WebView,
@@ -76,7 +99,6 @@ class CompanionRenderer @JvmOverloads constructor(
                             responseHeaders = mapOf("Access-Control-Allow-Origin" to "*")
                         }
                     } catch (e: Exception) {
-                        android.util.Log.e("WebViewCompanion", "Failed to load asset: $filename", e)
                         null
                     }
                 }
@@ -89,15 +111,12 @@ class CompanionRenderer @JvmOverloads constructor(
             }
         }
 
-        // Load via the virtual HTTPS domain to fully bypass Chromium file:// ES Module restrictions!
         webView.loadUrl("https://appassets.local/companion.html")
     }
 
     private fun applyColors() {
         val bodyColor = "#0A0E1A"
         val eyeColor = "#00FFFF"
-        
-        // Execute JS to update materials in <model-viewer>
         webView.evaluateJavascript("window.applyColors('$bodyColor', '$eyeColor');", null)
     }
 
@@ -106,10 +125,8 @@ class CompanionRenderer @JvmOverloads constructor(
         val flipX = if (state.scaleX < 0) -1f else 1f
         val scaleX = targetScale * flipX
         val scaleY = targetScale
-        
         val rotation = state.bodyRotation
         
-        // Execute JS to update transforms in <model-viewer>
         webView.evaluateJavascript("window.updateTransforms($scaleX, $scaleY, $rotation);", null)
     }
 }
