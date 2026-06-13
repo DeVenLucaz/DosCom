@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.devenlucaz.doscom"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.devenlucaz.doscom"
         minSdk = 26
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 4
         versionName = "2.4.5"
     }

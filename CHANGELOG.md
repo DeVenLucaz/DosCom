@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.0] - 2026-06-13
+### Added
+- Transitioned the mascot from 2D canvas drawing to a 3D model (`Alien.glb`) using `io.github.sceneview:sceneview:1.2.1`.
+- Added dynamic coloring to match the 3D model's `Body` and `Eye` materials to the original 2D character hex colors (`#0A0E1A` and `#00FFFF`).
+
+### Changed
+- Bumped `compileSdk` and `targetSdk` to `34` to support newer dependencies (like `androidx.core-ktx 1.12.0` and `emoji2 1.4.0`).
+- Refactored `CompanionRenderer.kt` to extend `FrameLayout` and embed the 3D `SceneView` while maintaining legacy 2D property bindings.
 ## [2.4.5] - 2026-06-09
 ### Added
 - Added an Android 13+ (Tiramisu) `POST_NOTIFICATIONS` permission request step to the onboarding flow specifically to ensure Ghost Mode can maintain its background whisper notification.
