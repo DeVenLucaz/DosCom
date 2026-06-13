@@ -6,8 +6,15 @@
 - Added dynamic coloring to match the 3D model's `Body` and `Eye` materials to the original 2D character hex colors (`#0A0E1A` and `#00FFFF`).
 
 ### Changed
-- Bumped `compileSdk` and `targetSdk` to `34` to support newer dependencies (like `androidx.core-ktx 1.12.0` and `emoji2 1.4.0`).
-- Refactored `CompanionRenderer.kt` to extend `FrameLayout` and embed the 3D `SceneView` while maintaining legacy 2D property bindings.
+- **Architectural Overhaul**: Replaced the native `SceneView` (Filament) implementation with a completely hardware-agnostic `WebView` + `<model-viewer>` pipeline to fix fatal `libgltfio-jni.so` crashes on older/budget Android devices.
+- Bumped `compileSdk` and `targetSdk` to `34`.
+- Refactored `CompanionRenderer.kt` into a custom `FrameLayout` that hosts the transparent `WebView` and proxies all 2D `MimeEngine` math (`scaleX`, `scaleY`, `rotateZ`) to the 3D WebGL context via CSS Compositor at 60 FPS, perfectly mimicking skeletal animations on the unrigged static `.glb` file.
+
+### Fixed
+- **Touch Interactions**: Fixed the `WebView` silently swallowing touch inputs by overriding `onInterceptTouchEvent`, restoring the full drag, double-tap, and triple-tap interaction logic in `CompanionOverlayService`.
+- **CORS/WebGL Security Block**: Engineered a custom Virtual HTTPS Server (`shouldInterceptRequest`) inside the WebView to perfectly bypass Chromium's strict `file:///` restrictions, allowing local ES Modules and `.glb` files to load natively without security blocks.
+- **Lighting and Camera**: Forced `camera-orbit` 180 degrees to correct the backwards-facing export of the 3D model, and applied `environment-image="neutral"` for proper lighting.
+- **2D Overlay Restoration**: Restored `ZzzParticle` sleep effects by overriding `dispatchDraw`, painting a transparent 2D Canvas directly over the 3D WebView model.
 ## [2.4.5] - 2026-06-09
 ### Added
 - Added an Android 13+ (Tiramisu) `POST_NOTIFICATIONS` permission request step to the onboarding flow specifically to ensure Ghost Mode can maintain its background whisper notification.
