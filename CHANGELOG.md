@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.4] - 2026-06-14
+### Changed
+- **Mascot Scale Adjusted**: Recalculated the `mascot_scale` curve to make the robot significantly smaller overall. Position 7 (the default) now corresponds visually to the old position 1. 
+- **Sleep Timer Fixed**: Re-wired the settings sleep timer to properly communicate with the 3D model and `RoutineEngine`. When the sleep timer triggers, his brain now pauses activity, and he physically plays the `Lie_Down` animation until he is tapped or dragged.
+
+### Removed
+- **Bug Catching Obsolete UI**: Removed the "Bug Catching" spinner from the Settings menu as this feature was tied to the deprecated 2D sprite engine and had no effect on the 3D model.
+
 ## [3.0.3] - 2026-06-14
 ### Added
 - **Contextual Mode Architecture**: Separated application reactions into three distinct awareness levels (`ALIVE`, `AWAKE`, `AWARE`) managed by `ModeManager`.

@@ -77,7 +77,7 @@ class CompanionOverlayService : Service() {
         when (key) {
             "mascot_scale" -> {
                 val scale = sharedPreferences.getInt("mascot_scale", 7)
-                val scaleFloat = 0.5f + (scale * (1.5f / 14f)) // map 0-14 to 0.5-2.0
+                val scaleFloat = 0.25f + (scale * (0.7f / 14f)) // map 0-14 to 0.25-0.95
                 idleEngine.targetState.scale = scaleFloat
                 idleEngine.targetState.scaleX = scaleFloat
             }
@@ -421,6 +421,11 @@ class CompanionOverlayService : Service() {
                     // Normal tap interaction
                     val wasBusy = com.devenlucaz.doscom.animation.RoutineEngine.interruptCurrentActivity(this@CompanionOverlayService, wanderEngine, idleEngine)
                     
+                    if (idleEngine.isSleeping) {
+                        idleEngine.wakeUp()
+                        return true
+                    }
+                    
                     if (wasBusy) {
                         // He was interrupted, act startled
                         idleEngine.targetState.animationName = "Dodge_Backward"
@@ -466,7 +471,7 @@ class CompanionOverlayService : Service() {
                 MotionEvent.ACTION_POINTER_UP -> {
                     if (event.pointerCount <= 2 && isPinching) {
                         isPinching = false
-                        val scaleInt = ((idleEngine.targetState.scale - 0.5f) / (1.5f / 14f)).toInt()
+                        val scaleInt = ((idleEngine.targetState.scale - 0.25f) / (0.7f / 14f)).toInt()
                         prefs.edit().putInt("mascot_scale", kotlin.math.max(0, kotlin.math.min(scaleInt, 14))).apply()
                     }
                     true
@@ -530,7 +535,7 @@ class CompanionOverlayService : Service() {
                         val currentDist = kotlin.math.sqrt(((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0)).toDouble()).toFloat()
                         if (initialPinchDist > 10f) {
                             var newScale = initialScaleForPinch * (currentDist / initialPinchDist)
-                            newScale = kotlin.math.max(0.5f, kotlin.math.min(newScale, 2.0f))
+                            newScale = kotlin.math.max(0.25f, kotlin.math.min(newScale, 0.95f))
                             idleEngine.targetState.scale = newScale
                             idleEngine.targetState.scaleX = newScale
                         }
@@ -544,6 +549,11 @@ class CompanionOverlayService : Service() {
                     if (kotlin.math.abs(deltaX) > 10 || kotlin.math.abs(deltaY) > 10) {
                         if (!isDragging) {
                             isDragging = true
+                            
+                            if (idleEngine.isSleeping) {
+                                idleEngine.wakeUp()
+                            }
+                            
                             // They just started picking him up. Interrupt whatever he's doing.
                             com.devenlucaz.doscom.animation.RoutineEngine.interruptCurrentActivity(this@CompanionOverlayService, wanderEngine, idleEngine)
                             

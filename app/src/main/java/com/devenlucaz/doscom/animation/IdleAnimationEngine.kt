@@ -231,28 +231,24 @@ class IdleAnimationEngine(
 
     private fun fallAsleep() {
         isSleeping = true
-        queue.enqueue("PRE_SLEEP", AnimationQueue.PRIORITY_MEDIUM, 3000)
-        targetState.mouthOpen = true
-        targetState.eyesHalf = true
+        targetState.animationName = "Lie_Down"
+        targetState.animationPlayOnce = true
         handler.postDelayed({
-            targetState.mouthOpen = false
-            targetState.eyesClosed = true
-            targetState.bodyRotation = 10f 
-            targetState.bodyOffsetY = 15f
-        }, 3000)
+            targetState.animationName = "Lie_Idle"
+            targetState.animationPlayOnce = false
+        }, 2500)
     }
     
-    private fun wakeUp() {
+    fun wakeUp() {
+        if (!isSleeping) return
         isSleeping = false
-        targetState.eyesClosed = false
-        targetState.eyesWide = true
-        targetState.bodyRotation = 0f
-        targetState.leftLegAngle = 0f
-        targetState.rightLegAngle = 0f
-        targetState.bodyOffsetY = 0f
-        targetState.eyesHalf = false
-        queue.enqueue("WAKE", AnimationQueue.PRIORITY_HIGH, 1500)
-        playStretch()
+        lastInteractionTime = System.currentTimeMillis()
+        targetState.animationName = "Lie_StandUp"
+        targetState.animationPlayOnce = true
+        handler.postDelayed({
+            targetState.animationName = "Idle_A"
+            targetState.animationPlayOnce = false
+        }, 2500)
     }
     
     val particles = mutableListOf<ZzzParticle>()

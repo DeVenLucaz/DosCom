@@ -108,16 +108,13 @@ class SettingsActivity : AppCompatActivity() {
 
         // Behavior Section
         val spinnerSleepTimer = findViewById<Spinner>(R.id.spinnerSleepTimer)
-        val spinnerBugCatching = findViewById<Spinner>(R.id.spinnerBugCatching)
         val spinnerGhostMode = findViewById<Spinner>(R.id.spinnerGhostMode)
 
         val sleepAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, arrayOf("1min", "5min", "10min", "Never"))
         sleepAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerSleepTimer.adapter = sleepAdapter
 
-        val bugAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, arrayOf("Off", "Rare", "Sometimes", "Always"))
-        bugAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerBugCatching.adapter = bugAdapter
+
 
         val ghostAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, arrayOf("Interactive", "Semi-Ghost", "Full Ghost"))
         ghostAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -130,12 +127,7 @@ class SettingsActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        spinnerBugCatching.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                prefs.edit().putInt("bug_catching", position).apply()
-            }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
+
 
         spinnerGhostMode.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -145,7 +137,6 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         spinnerSleepTimer.setSelection(prefs.getInt("sleep_timer", 0))
-        spinnerBugCatching.setSelection(prefs.getInt("bug_catching", 0))
         spinnerGhostMode.setSelection(prefs.getInt("ghost_mode", 0))
 
         // Personality Section

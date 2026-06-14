@@ -64,6 +64,11 @@ object RoutineEngine {
     }
 
     fun chooseNextActivity(context: Context, wanderEngine: WanderEngine, idleEngine: IdleAnimationEngine) {
+        if (idleEngine.isSleeping) {
+            handler.postDelayed({ chooseNextActivity(context, wanderEngine, idleEngine) }, 30000)
+            return
+        }
+        
         val inputs = BrainInput.buildInputs(context)
         val decisions = BrainManager.brain.think(inputs)
         val confidence = BrainManager.brain.lastConfidence

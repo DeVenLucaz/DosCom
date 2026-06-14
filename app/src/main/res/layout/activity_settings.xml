@@ -154,8 +154,6 @@
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sleep Timer" android:textColor="#FFFFFF"/>
                 <Spinner android:id="@+id/spinnerSleepTimer" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp"/>
 
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bug Catching" android:textColor="#FFFFFF"/>
-                <Spinner android:id="@+id/spinnerBugCatching" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp"/>
 
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ghost Mode" android:textColor="#FFFFFF"/>
                 <Spinner android:id="@+id/spinnerGhostMode" android:layout_width="match_parent" android:layout_height="wrap_content"/>
