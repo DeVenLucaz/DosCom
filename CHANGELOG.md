@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.7.1] - 2026-06-14
+### Fixed
+- Fixed compilation error in `WanderEngine.kt` caused by using `java.util.Random` APIs instead of `kotlin.random.Random`.
+
 ## [2.7.0] - 2026-06-14
 ### Added
 - **Autonomous Locomotion (WanderEngine)**: The character is no longer glued to one spot! It now features true Shimeji-style physical movement.

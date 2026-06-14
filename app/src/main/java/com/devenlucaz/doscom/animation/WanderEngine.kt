@@ -3,7 +3,7 @@ package com.devenlucaz.doscom.animation
 import android.os.Handler
 import android.os.Looper
 import android.view.Choreographer
-import java.util.Random
+import kotlin.random.Random
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sign
@@ -17,7 +17,6 @@ class WanderEngine(
     private val setFlip: (Boolean) -> Unit
 ) : Choreographer.FrameCallback {
 
-    private val random = Random()
     private val handler = Handler(Looper.getMainLooper())
     private var isWandering = false
     private var targetX = -1
@@ -38,7 +37,7 @@ class WanderEngine(
     private fun scheduleWander() {
         handler.postDelayed({
             pickDestination()
-        }, random.nextLong(10000) + 5000L)
+        }, Random.nextLong(5000L, 15000L))
     }
 
     private fun pickDestination() {
@@ -47,10 +46,10 @@ class WanderEngine(
         val curX = getX()
         val curY = getY()
         
-        targetX = random.nextInt(max(1, bounds.first - 200))
+        targetX = Random.nextInt(0, max(1, bounds.first - 200))
         targetY = bounds.second - 200 // Assumes bottom edge
         
-        speed = if (random.nextBoolean()) 2f else 5f // walk or run
+        speed = if (Random.nextBoolean()) 2f else 5f // walk or run
         val anim = if (speed > 3f) "Running_A" else "Walking_A"
         
         setAnimation(anim)
