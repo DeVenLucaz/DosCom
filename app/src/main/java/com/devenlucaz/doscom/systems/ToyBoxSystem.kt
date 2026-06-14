@@ -12,26 +12,15 @@ import com.devenlucaz.doscom.brain.BrainManager
 
 object ToyBoxSystem {
     fun selectToy(context: Context): PropType {
-        val inputs = BrainInput.buildInputs(context)
-        val decisions = BrainManager.brain.think(inputs)
-        val toyChoice = decisions[2] // 11 to 14
-        
-        return when (toyChoice) {
-            11 -> PropType.FISHING_ROD
-            12 -> PropType.TREASURE_MAP
-            13 -> PropType.MAGNIFYING_GLASS
-            14 -> PropType.BOOK
-            else -> {
-                val r = Random.nextInt(100)
-                when {
-                    r < 20 -> PropType.FISHING_ROD
-                    r < 35 -> PropType.TREASURE_MAP
-                    r < 55 -> PropType.MAGNIFYING_GLASS
-                    r < 65 -> PropType.CARDBOARD_SWORD
-                    r < 80 -> PropType.BINOCULARS
-                    else -> PropType.BOOK
-                }
-            }
+        // Pick a toy at random — brain influence is handled by RoutineEngine now
+        val r = Random.nextInt(100)
+        return when {
+            r < 20 -> PropType.FISHING_ROD
+            r < 35 -> PropType.TREASURE_MAP
+            r < 55 -> PropType.MAGNIFYING_GLASS
+            r < 65 -> PropType.CARDBOARD_SWORD
+            r < 80 -> PropType.BINOCULARS
+            else -> PropType.BOOK
         }
     }
 

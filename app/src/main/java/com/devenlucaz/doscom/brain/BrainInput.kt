@@ -7,6 +7,10 @@ import android.os.BatteryManager
 import java.util.Calendar
 
 object BrainInput {
+    // Live data pushed by other systems
+    var lastInteractionTimeMs: Long = System.currentTimeMillis()
+    var lastDragVelocity: Float = 0f
+
     fun buildInputs(context: Context): FloatArray {
         val inputs = FloatArray(16)
         
@@ -60,8 +64,9 @@ object BrainInput {
         // 11: Is Morning? (Boosts active/work probability)
         inputs[11] = if (hour in 6..11) 1.0f else 0.0f
         
-        // 12: Attention Starvation (increases as time passes)
-        inputs[12] = 0.5f // TODO: wire to actual interaction timer
+        // 12: Attention Starvation (0..1, grows over minutes since last interaction)
+        val minutesSinceInteraction = (System.currentTimeMillis() - lastInteractionTimeMs) / 60000f
+        inputs[12] = (minutesSinceInteraction / 10f).coerceIn(0f, 1f)
         
         // 13: High Energy (Inverse of battery & time)
         inputs[13] = if (inputs[0] > 0.4f && inputs[10] == 0.0f) 1.0f else 0.0f
@@ -69,8 +74,8 @@ object BrainInput {
         // 14: Screen Orientation (0 = portrait, 1 = landscape)
         inputs[14] = if (context.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) 1.0f else 0.0f
         
-        // 15: Last Drag Velocity
-        inputs[15] = 0.5f // Default
+        // 15: Last Drag Velocity (0..1, normalized from pixels/sec)
+        inputs[15] = (lastDragVelocity / 2000f).coerceIn(0f, 1f)
 
         return inputs
     }

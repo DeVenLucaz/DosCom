@@ -180,20 +180,44 @@ class DosCombrain {
         }
     }
 
+    private fun saveWeights(json: JSONObject, key: String, weights: Array<FloatArray>) {
+        val arr = JSONArray()
+        for (row in weights) {
+            val r = JSONArray()
+            for (v in row) r.put(v.toDouble())
+            arr.put(r)
+        }
+        json.put(key, arr)
+    }
+
+    private fun loadWeights(json: JSONObject, key: String, target: Array<FloatArray>) {
+        if (!json.has(key)) return
+        val arr = json.getJSONArray(key)
+        for (i in 0 until minOf(arr.length(), target.size)) {
+            val r = arr.getJSONArray(i)
+            for (j in 0 until minOf(r.length(), target[i].size)) {
+                target[i][j] = r.getDouble(j).toFloat()
+            }
+        }
+    }
+
     fun save(context: Context) {
         try {
             val json = JSONObject()
-            // We just save the decision layer weights for brevity, as full core state would be massive
-            // In a full implementation we'd save all weights. For this multi-layer structure,
-            // we'll focus on saving the final output layer since it maps to the animations.
-            val decArray = JSONArray()
-            for (i in 0 until consciousSize) {
-                val row = JSONArray()
-                for (j in 0 until outputSize) { row.put(decisionLayer[i][j].toDouble()) }
-                decArray.put(row)
-            }
-            json.put("decisionLayer", decArray)
-            json.put("version", 2) // Ensure old version resets
+            json.put("version", 3)
+
+            // Save all 4 cores
+            saveWeights(json, "sub_wIn", subCore.weightsIn)
+            saveWeights(json, "sub_rec", subCore.recurrent)
+            saveWeights(json, "left_wIn", leftCore.weightsIn)
+            saveWeights(json, "left_rec", leftCore.recurrent)
+            saveWeights(json, "right_wIn", rightCore.weightsIn)
+            saveWeights(json, "right_rec", rightCore.recurrent)
+            saveWeights(json, "con_wIn", consciousCore.weightsIn)
+            saveWeights(json, "con_rec", consciousCore.recurrent)
+
+            // Save decision layer
+            saveWeights(json, "decisionLayer", decisionLayer)
 
             val file = File(context.filesDir, "brain.json")
             file.writeText(json.toString())
@@ -207,13 +231,18 @@ class DosCombrain {
         if (!file.exists()) return false
         return try {
             val json = JSONObject(file.readText())
-            if (!json.has("version") || json.getInt("version") != 2) return false
-            
-            val decArray = json.getJSONArray("decisionLayer")
-            for (i in 0 until consciousSize) {
-                val row = decArray.getJSONArray(i)
-                for (j in 0 until outputSize) { decisionLayer[i][j] = row.getDouble(j).toFloat() }
-            }
+            if (!json.has("version") || json.getInt("version") != 3) return false
+
+            loadWeights(json, "sub_wIn", subCore.weightsIn)
+            loadWeights(json, "sub_rec", subCore.recurrent)
+            loadWeights(json, "left_wIn", leftCore.weightsIn)
+            loadWeights(json, "left_rec", leftCore.recurrent)
+            loadWeights(json, "right_wIn", rightCore.weightsIn)
+            loadWeights(json, "right_rec", rightCore.recurrent)
+            loadWeights(json, "con_wIn", consciousCore.weightsIn)
+            loadWeights(json, "con_rec", consciousCore.recurrent)
+
+            loadWeights(json, "decisionLayer", decisionLayer)
             true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -226,6 +255,15 @@ class DosCombrain {
         if (file.exists()) {
             file.delete()
         }
+        // Re-randomize all cores
+        for (i in subCore.weightsIn.indices) for (j in subCore.weightsIn[i].indices) subCore.weightsIn[i][j] = gaussian() * 4f
+        for (i in subCore.recurrent.indices) for (j in subCore.recurrent[i].indices) subCore.recurrent[i][j] = gaussian() * 0.5f
+        for (i in leftCore.weightsIn.indices) for (j in leftCore.weightsIn[i].indices) leftCore.weightsIn[i][j] = gaussian() * 4f
+        for (i in leftCore.recurrent.indices) for (j in leftCore.recurrent[i].indices) leftCore.recurrent[i][j] = gaussian() * 0.5f
+        for (i in rightCore.weightsIn.indices) for (j in rightCore.weightsIn[i].indices) rightCore.weightsIn[i][j] = gaussian() * 4f
+        for (i in rightCore.recurrent.indices) for (j in rightCore.recurrent[i].indices) rightCore.recurrent[i][j] = gaussian() * 0.5f
+        for (i in consciousCore.weightsIn.indices) for (j in consciousCore.weightsIn[i].indices) consciousCore.weightsIn[i][j] = gaussian() * 4f
+        for (i in consciousCore.recurrent.indices) for (j in consciousCore.recurrent[i].indices) consciousCore.recurrent[i][j] = gaussian() * 0.5f
         for (i in 0 until consciousSize) {
             for (j in 0 until outputSize) { decisionLayer[i][j] = gaussian() * 0.1f }
         }

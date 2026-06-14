@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.0.0] - 2026-06-14
+### Added
+- **Multi-Hemisphere Spiking Neural Network**: Replaced the single-core 8→48 brain with a biologically-inspired 4-core architecture:
+  - **Subconscious Core** (16→24 neurons): Fast reflexive processing.
+  - **Left Hemisphere** (16→48 neurons): Logical, routine-oriented decisions.
+  - **Right Hemisphere** (16→48 neurons): Creative, spontaneous decisions.
+  - **Conscious Core** (120→64 neurons): Integrates all hemispheres into a final decision.
+- **RoutineEngine**: New activity scheduler that replaces the old random sub-animation system. After each walk, the brain picks from 15 distinct 3D animations across 3 clusters (Chill, Work, Magic).
+- **Expanded Sensory Inputs**: Brain now processes 16 inputs including charging state, night/morning detection, screen orientation, attention starvation timer, and drag velocity.
+- **Chained Animation Sequences**: Sit and Lie activities now play full sequences (e.g., `Sit_Floor_Down` → `Sit_Floor_Idle` → `Sit_Floor_StandUp`).
+
+### Fixed
+- **Brain persistence**: All 4 neural cores (sub, left, right, conscious) plus the decision layer are now fully saved and loaded across app restarts. Previously only the decision layer was persisted, causing all internal wiring to reset.
+- **Hybrid confidence gating**: The brain's confidence score now actually influences category selection. Fresh installs get pure randomness; trained brains get brain-driven choices.
+- **Blind reward loop**: Removed the unconditional `reward = 1.0` on every activity. Positive reward is now delayed (8s) and cancelled if the user interrupts, which also sends negative reward. This enables the brain to genuinely learn user preferences.
+- **ToyBoxSystem decoupled**: Removed fragile dependency on old brain output indices that could crash or produce wrong results with the new 3-output decision array.
+- **Dead input neurons**: Replaced hardcoded `0.5f` TODO stubs for attention starvation (input 12) and drag velocity (input 15) with live data sources.
+- **Idle fallback safety net**: Re-enabled a 60-second safety timer in `IdleAnimationEngine` to prevent the character from getting permanently stuck if the RoutineEngine callback chain breaks.
+
 ## [2.7.3] - 2026-06-14
 ### Fixed
 - Fixed an issue where the character wouldn't physically turn left or right while walking due to an overlooked state transfer mapping.

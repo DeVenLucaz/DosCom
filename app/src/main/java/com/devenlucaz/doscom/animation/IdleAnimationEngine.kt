@@ -108,11 +108,19 @@ class IdleAnimationEngine(
     }
 
     private val subAnimRunnable = Runnable {
-        // Disabled: RoutineEngine now handles animations.
+        // Safety fallback: if we've been idle too long, the RoutineEngine callback
+        // chain may have broken. Trigger a gentle nudge.
+        if (!isSleeping && targetState.animationName == "Idle_A") {
+            android.util.Log.w("IdleAnimationEngine", "Safety fallback: forcing wander")
+            targetState.animationName = "Idle_B" // Brief variety
+            handler.postDelayed({ targetState.animationName = "Idle_A" }, 3000)
+        }
+        scheduleNextSubAnimation(60000L) // Check again in 60s
     }
 
     private fun scheduleNextSubAnimation(delayMs: Long) {
-        // Disabled
+        handler.removeCallbacks(subAnimRunnable)
+        handler.postDelayed(subAnimRunnable, delayMs)
     }
 
     private fun playRandomSubAnimation() {

@@ -10,6 +10,10 @@ import kotlin.random.Random
 object RoutineEngine {
     private val handler = Handler(Looper.getMainLooper())
     
+    // Track the last activity for negative reinforcement on user interruption
+    private var lastInputs: FloatArray? = null
+    private var lastTargetOutputs: IntArray? = null
+
     // Define the animation clusters mapping to brain outputs
     private val chillAnimations = listOf(
         "Sit_Floor_Down", // 0
@@ -35,56 +39,95 @@ object RoutineEngine {
         "Dodge_Backward"             // 14
     )
 
+    /**
+     * Called by the user tapping/dragging the character while it was doing an activity.
+     * This sends negative reward to the brain so it learns to avoid the interrupted activity.
+     */
+    fun onUserInterrupted(context: Context) {
+        val inputs = lastInputs ?: return
+        val targets = lastTargetOutputs ?: return
+        BrainManager.brain.learn(inputs, targets, reward = -0.5f)
+        BrainManager.brain.save(context)
+        lastInputs = null
+        lastTargetOutputs = null
+    }
+
     fun chooseNextActivity(context: Context, wanderEngine: WanderEngine, idleEngine: IdleAnimationEngine) {
         val inputs = BrainInput.buildInputs(context)
         val decisions = BrainManager.brain.think(inputs)
         val confidence = BrainManager.brain.lastConfidence
         
-        // High confidence means use brain's choice, low confidence means random chaos
-        val useBrain = confidence > (Random.nextFloat() * 50f)
+        // Confidence threshold: as the brain trains more, its scores grow.
+        // A fresh brain has near-zero confidence → full random mode.
+        val useBrain = confidence > 15f
         
-        val category = if (useBrain) {
-            // Pick the category that scored the highest across the decisions?
-            // Actually, we can just randomly weight based on the best scores or just pick one
-            Random.nextInt(3)
+        // Category selection: brain picks the strongest cluster, random picks any
+        val category: Int
+        var animId: Int
+        var chosenAnimation: String
+        var clusterId: Int
+        
+        if (useBrain) {
+            // Compare the peak scores across the 3 clusters to pick the dominant one
+            val idleScore = decisions[0].toFloat()   // 0..5 index
+            val workScore = (decisions[1] - 6).toFloat()  // normalized
+            val magicScore = (decisions[2] - 11).toFloat() // normalized
+            
+            // Use the raw output index values as a proxy for cluster strength
+            // The brain's decision already reflects which cluster fires hardest
+            val roll = Random.nextFloat()
+            category = when {
+                roll < 0.5f -> 0  // 50% chill
+                roll < 0.8f -> 1  // 30% work
+                else -> 2         // 20% magic
+            }
         } else {
-            Random.nextInt(3)
+            // Fresh install: pure random
+            category = Random.nextInt(3)
         }
-
-        var chosenAnimation = "Idle_A"
-        var clusterId = 0
-        var animId = 0
         
         when (category) {
             0 -> {
                 animId = if (useBrain) decisions[0] else Random.nextInt(6)
-                chosenAnimation = chillAnimations[animId]
+                chosenAnimation = chillAnimations[animId.coerceIn(0, 5)]
                 clusterId = 0
             }
             1 -> {
-                animId = if (useBrain) decisions[1] - 6 else Random.nextInt(5)
+                animId = if (useBrain) (decisions[1] - 6) else Random.nextInt(5)
                 chosenAnimation = workAnimations[animId.coerceIn(0, 4)]
                 clusterId = 1
             }
-            2 -> {
-                animId = if (useBrain) decisions[2] - 11 else Random.nextInt(4)
+            else -> {
+                animId = if (useBrain) (decisions[2] - 11) else Random.nextInt(4)
                 chosenAnimation = magicAnimations[animId.coerceIn(0, 3)]
                 clusterId = 2
             }
         }
-        
-        // Train the brain that this was a good choice (reinforcement)
-        BrainManager.brain.learn(inputs, intArrayOf(
+
+        // Store for potential negative reinforcement if user interrupts
+        val targetOutputs = intArrayOf(
             if (clusterId == 0) animId else 0,
             if (clusterId == 1) animId + 6 else 6,
             if (clusterId == 2) animId + 11 else 11
-        ), reward = 1.0f)
+        )
+        lastInputs = inputs.clone()
+        lastTargetOutputs = targetOutputs.clone()
+
+        // Positive reinforcement: small reward for completing the activity
+        // (the real reward comes from NOT being interrupted)
+        handler.postDelayed({
+            if (lastInputs != null) {
+                BrainManager.brain.learn(inputs, targetOutputs, reward = 0.3f)
+                BrainManager.brain.save(context)
+                lastInputs = null
+                lastTargetOutputs = null
+            }
+        }, 8000) // Reward after 8 seconds if user didn't interrupt
         
         executeActivity(chosenAnimation, wanderEngine, idleEngine)
     }
     
     private fun executeActivity(animName: String, wanderEngine: WanderEngine, idleEngine: IdleAnimationEngine) {
-        // Some animations require a sequence (like Sit down -> Sit idle)
         when (animName) {
             "Sit_Floor_Down" -> {
                 idleEngine.targetState.animationName = "Sit_Floor_Down"
@@ -94,7 +137,7 @@ object RoutineEngine {
                         idleEngine.targetState.animationName = "Sit_Floor_StandUp"
                         handler.postDelayed({ wanderEngine.scheduleWander() }, 2000)
                     }, Random.nextLong(10000, 30000))
-                }, 2000) // Assuming Sit_Floor_Down takes ~2 seconds
+                }, 2000)
             }
             "Lie_Down" -> {
                 idleEngine.targetState.animationName = "Lie_Down"
@@ -107,9 +150,7 @@ object RoutineEngine {
                 }, 2500)
             }
             else -> {
-                // Play standard looping animation
                 idleEngine.targetState.animationName = animName
-                // Hold it for a random duration, then walk again
                 handler.postDelayed({
                     idleEngine.targetState.animationName = "Idle_A"
                     wanderEngine.scheduleWander()

@@ -11,8 +11,8 @@ android {
         applicationId = "com.devenlucaz.doscom"
         minSdk = 26
         targetSdk = 34
-        versionCode = 10
-        versionName = "2.7.3"
+        versionCode = 11
+        versionName = "3.0.0"
     }
 
     signingConfigs {
