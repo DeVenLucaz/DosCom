@@ -14,7 +14,8 @@ class WanderEngine(
     private val setPos: (Int, Int) -> Unit,
     private val getBounds: () -> Pair<Int, Int>, // screenWidth, floorY
     private val setAnimation: (String) -> Unit,
-    private val setRotationY: (Float) -> Unit
+    private val setRotationY: (Float) -> Unit,
+    var onWanderFinished: (() -> Unit)? = null
 ) : Choreographer.FrameCallback {
 
     private val handler = Handler(Looper.getMainLooper())
@@ -34,7 +35,7 @@ class WanderEngine(
         isWandering = false
     }
 
-    private fun scheduleWander() {
+    fun scheduleWander() {
         handler.postDelayed({
             pickDestination()
         }, Random.nextLong(5000L, 15000L))
@@ -69,7 +70,7 @@ class WanderEngine(
                 isWandering = false
                 setAnimation("Idle_A")
                 setRotationY(0f) // Face forward again
-                scheduleWander()
+                onWanderFinished?.invoke() ?: scheduleWander()
             } else {
                 val newX = curX + (sign(dx.toFloat()) * speed).toInt()
                 val newY = curY + (sign(dy.toFloat()) * speed).toInt()

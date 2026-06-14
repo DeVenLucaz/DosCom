@@ -8,7 +8,9 @@ object BrainManager {
     
     fun init(context: Context) {
         if (!isInitialized) {
-            brain.load(context)
+            if (!brain.load(context)) {
+                brain.reset(context)
+            }
             isInitialized = true
         }
     }

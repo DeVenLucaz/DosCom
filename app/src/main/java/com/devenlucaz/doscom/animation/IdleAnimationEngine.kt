@@ -108,57 +108,15 @@ class IdleAnimationEngine(
     }
 
     private val subAnimRunnable = Runnable {
-        if (queue.currentPriority() <= AnimationQueue.PRIORITY_LOW && !isSleeping) {
-            playRandomSubAnimation()
-        }
-        scheduleNextSubAnimation(Random.nextLong(8000, 15000))
+        // Disabled: RoutineEngine now handles animations.
     }
-    
-    private fun scheduleNextSubAnimation(delayMs: Long) {
-        handler.removeCallbacks(subAnimRunnable)
-        handler.postDelayed(subAnimRunnable, delayMs)
-    }
-    
-    private fun playRandomSubAnimation() {
-        try {
-            android.util.Log.d("IdleAnimationEngine", "Playing random sub-animation")
-            val inputs = com.devenlucaz.doscom.brain.BrainInput.buildInputs(context)
-            val decisions = com.devenlucaz.doscom.brain.BrainManager.brain.think(inputs)
-            val confidence = com.devenlucaz.doscom.brain.BrainManager.brain.lastConfidence
-            val isConfident = confidence > (Random.nextFloat() * 50f)
 
-            if (!isConfident) {
-                // Random Fallback Mode
-                if (Random.nextInt(100) < 30) {
-                    try {
-                        val toy = com.devenlucaz.doscom.systems.ToyBoxSystem.selectToy(context)
-                        com.devenlucaz.doscom.systems.ToyBoxSystem.startToyActivity(toy, this)
-                    } catch (e: Exception) {
-                        playStretch()
-                    }
-                } else {
-                    val anims = listOf(::playStretch, ::playSneeze, ::playHiccup, ::playYawn, ::playCoin, ::playPhoneCheck)
-                    anims[Random.nextInt(6)].invoke()
-                }
-            } else {
-                // Brain Confident Mode
-                if (decisions[2] > 11) { // Toy choice is confident
-                    try {
-                        val toy = com.devenlucaz.doscom.systems.ToyBoxSystem.selectToy(context)
-                        com.devenlucaz.doscom.systems.ToyBoxSystem.startToyActivity(toy, this)
-                    } catch (e: Exception) {
-                        playStretch()
-                    }
-                } else {
-                    var animIdx = (decisions[1] - 6).coerceIn(0, 5)
-                    val anims = listOf(::playStretch, ::playSneeze, ::playHiccup, ::playYawn, ::playCoin, ::playPhoneCheck)
-                    anims[animIdx].invoke()
-                }
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("IdleAnimationEngine", "Sub-animation failed", e)
-            playStretch()
-        }
+    private fun scheduleNextSubAnimation(delayMs: Long) {
+        // Disabled
+    }
+
+    private fun playRandomSubAnimation() {
+        // Disabled
     }
     
     fun playStretch() {

@@ -291,7 +291,11 @@ class CompanionOverlayService : Service() {
             setRotationY = { rot ->
                 idleEngine.targetState.bodyRotationY = rot
             }
-        )
+        ).apply {
+            onWanderFinished = {
+                com.devenlucaz.doscom.animation.RoutineEngine.chooseNextActivity(this@CompanionOverlayService, this, idleEngine)
+            }
+        }
 
         val visualOffsetPx = (58 * resources.displayMetrics.density).toInt()
         layoutParams = WindowManager.LayoutParams(
