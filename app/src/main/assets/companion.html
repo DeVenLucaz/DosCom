@@ -74,8 +74,8 @@
         window.updateTransforms = function(scaleX, scaleY, rotationDeg, rotationYDeg) {
             // Apply 2D stretch/squash and wobble (Z-axis rotation)
             viewer.style.transform = `scale(${scaleX}, ${scaleY}) rotateZ(${rotationDeg}deg)`;
-            // Apply 3D Y-axis rotation (yaw) natively to the model. Syntax is "roll pitch yaw"
-            viewer.orientation = `0deg 0deg ${rotationYDeg}deg`;
+            // Orbit the camera to view the model from different sides (180 is front)
+            viewer.cameraOrbit = `${180 - rotationYDeg}deg 90deg auto`;
         };
 
         let animMap = {};
