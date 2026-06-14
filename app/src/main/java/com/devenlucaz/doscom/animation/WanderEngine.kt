@@ -12,9 +12,9 @@ class WanderEngine(
     private val getX: () -> Int,
     private val getY: () -> Int,
     private val setPos: (Int, Int) -> Unit,
-    private val getBounds: () -> Pair<Int, Int>, // screenWidth, screenHeight
+    private val getBounds: () -> Pair<Int, Int>, // screenWidth, floorY
     private val setAnimation: (String) -> Unit,
-    private val setFlip: (Boolean) -> Unit
+    private val setRotationY: (Float) -> Unit
 ) : Choreographer.FrameCallback {
 
     private val handler = Handler(Looper.getMainLooper())
@@ -47,7 +47,7 @@ class WanderEngine(
         val curY = getY()
         
         targetX = Random.nextInt(0, max(1, bounds.first - 200))
-        targetY = bounds.second - 200 // Assumes bottom edge
+        targetY = bounds.second // Exact floor level passed from OverlayService
         
         speed = if (Random.nextBoolean()) 2f else 5f // walk or run
         val anim = if (speed > 3f) "Running_A" else "Walking_A"
@@ -68,12 +68,13 @@ class WanderEngine(
                 // Reached destination
                 isWandering = false
                 setAnimation("Idle_A")
+                setRotationY(0f) // Face forward again
                 scheduleWander()
             } else {
                 val newX = curX + (sign(dx.toFloat()) * speed).toInt()
                 val newY = curY + (sign(dy.toFloat()) * speed).toInt()
                 setPos(newX, newY)
-                setFlip(dx < 0)
+                setRotationY(if (dx < 0) 270f else 90f) // Face left or right
             }
         }
         Choreographer.getInstance().postFrameCallback(this)

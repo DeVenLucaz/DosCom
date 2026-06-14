@@ -10,8 +10,9 @@ data class AnimationState(
     // Body
     var bodyOffsetY: Float = 0f,
     var bodyOffsetX: Float = 0f,
-    var bodyRotation: Float = 0f,
-    var scaleX: Float = 1f,  // -1 = facing left
+    var bodyRotation: Float = 0f, // Z-axis roll
+    var bodyRotationY: Float = 0f, // Y-axis yaw
+    var scaleX: Float = 1f,
     
     // Expression
     var eyesClosed: Boolean = false,

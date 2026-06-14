@@ -123,12 +123,12 @@ class CompanionRenderer @JvmOverloads constructor(
 
     private fun update3DModelState() {
         val targetScale = state.scale * 1.5f 
-        val flipX = if (state.scaleX < 0) -1f else 1f
-        val scaleX = targetScale * flipX
+        val scaleX = Math.abs(targetScale * state.scaleX)
         val scaleY = targetScale
-        val rotation = state.bodyRotation
+        val rotationZ = state.bodyRotation
+        val rotationY = state.bodyRotationY
         val animationName = state.animationName
         
-        webView.evaluateJavascript("window.updateTransforms($scaleX, $scaleY, $rotation); window.updateAnimation('$animationName');", null)
+        webView.evaluateJavascript("window.updateTransforms($scaleX, $scaleY, $rotationZ, $rotationY); window.updateAnimation('$animationName');", null)
     }
 }

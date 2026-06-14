@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.7.2] - 2026-06-14
+### Fixed
+- Fixed an issue where the `WanderEngine` would calculate the floor coordinate incorrectly, sending the character entirely off the bottom of the screen.
+- Fixed a 3D rendering bug where the character would show its back while moving (inside-out normals) by replacing CSS `scaleX(-1)` mirroring with proper 3D `orientation` Y-axis (yaw) rotation (`bodyRotationY`).
+
 ## [2.7.1] - 2026-06-14
 ### Fixed
 - Fixed compilation error in `WanderEngine.kt` caused by using `java.util.Random` APIs instead of `kotlin.random.Random`.

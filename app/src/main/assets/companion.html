@@ -71,9 +71,11 @@
             viewer.addEventListener('load', () => setColors(bodyHex, eyeHex));
         };
 
-        window.updateTransforms = function(scaleX, scaleY, rotationDeg) {
-            // Apply 2D stretch/squash and wobble (Z-axis rotation) using buttery-smooth CSS compositor
+        window.updateTransforms = function(scaleX, scaleY, rotationDeg, rotationYDeg) {
+            // Apply 2D stretch/squash and wobble (Z-axis rotation)
             viewer.style.transform = `scale(${scaleX}, ${scaleY}) rotateZ(${rotationDeg}deg)`;
+            // Apply 3D Y-axis rotation (yaw) natively to the model. Syntax is "roll pitch yaw"
+            viewer.orientation = `0deg 0deg ${rotationYDeg}deg`;
         };
 
         let animMap = {};

@@ -279,12 +279,17 @@ class CompanionOverlayService : Service() {
                 layoutParams.y = newY
                 updateRobotLayout()
             },
-            getBounds = { Pair(screenWidth, screenHeight) },
+            getBounds = { 
+                val statusBarHeight = com.devenlucaz.doscom.utils.ScreenMetrics.getStatusBarHeight(this)
+                val paddingPx = (40 * resources.displayMetrics.density).toInt()
+                val floorY = screenHeight - overlayView.height - statusBarHeight + paddingPx
+                Pair(screenWidth, floorY)
+            },
             setAnimation = { animName ->
                 idleEngine.targetState.animationName = animName
             },
-            setFlip = { flip ->
-                idleEngine.targetState.scaleX = if (flip) -1f else 1f
+            setRotationY = { rot ->
+                idleEngine.targetState.bodyRotationY = rot
             }
         )
 
@@ -740,7 +745,7 @@ class CompanionOverlayService : Service() {
             idleEngine.targetState.leftArmAngle = 0f
             idleEngine.targetState.rightArmAngle = 90f
             idleEngine.targetState.bodyRotation = -5f
-            idleEngine.targetState.scaleX = -1f
+            idleEngine.targetState.scaleX = 1f
         }
 
         handler.postDelayed({
