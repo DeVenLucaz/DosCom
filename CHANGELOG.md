@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.7.3] - 2026-06-14
+### Fixed
+- Fixed an issue where the character wouldn't physically turn left or right while walking due to an overlooked state transfer mapping.
+
 ## [2.7.2] - 2026-06-14
 ### Fixed
 - Fixed an issue where the `WanderEngine` would calculate the floor coordinate incorrectly, sending the character entirely off the bottom of the screen.

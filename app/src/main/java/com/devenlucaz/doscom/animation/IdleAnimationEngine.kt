@@ -89,6 +89,7 @@ class IdleAnimationEngine(
         current.bodyOffsetY += (target.bodyOffsetY - current.bodyOffsetY) * rate
         current.bodyOffsetX += (target.bodyOffsetX - current.bodyOffsetX) * rate
         current.bodyRotation += (target.bodyRotation - current.bodyRotation) * rate
+        current.bodyRotationY = target.bodyRotationY
         
         current.scaleX = target.scaleX
         current.eyesClosed = target.eyesClosed
