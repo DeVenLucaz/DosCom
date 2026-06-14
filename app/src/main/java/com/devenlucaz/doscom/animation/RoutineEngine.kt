@@ -40,16 +40,27 @@ object RoutineEngine {
     )
 
     /**
-     * Called when the user taps/drags the character during an activity.
-     * Sends negative reward so the brain learns to avoid the interrupted activity.
+     * Called when the user taps/drags the character.
+     * If an activity was active, this aborts it, sends negative reward, and returns true.
+     * Returns false if the character was just idling/wandering.
      */
-    fun onUserInterrupted(context: Context) {
-        val inputs = lastInputs ?: return
-        val targets = lastTargetOutputs ?: return
+    fun interruptCurrentActivity(context: Context, wanderEngine: WanderEngine, idleEngine: IdleAnimationEngine): Boolean {
+        val inputs = lastInputs ?: return false
+        val targets = lastTargetOutputs ?: return false
+        
+        // 1. Punish the brain for this activity
         BrainManager.brain.learn(inputs, targets, reward = -0.5f)
         BrainManager.brain.save(context)
         lastInputs = null
         lastTargetOutputs = null
+        
+        // 2. Abort all pending animations for this activity sequence
+        handler.removeCallbacksAndMessages(null)
+        
+        // 3. Immediately return to idle
+        idleThenWander(wanderEngine, idleEngine)
+        
+        return true
     }
 
     fun chooseNextActivity(context: Context, wanderEngine: WanderEngine, idleEngine: IdleAnimationEngine) {

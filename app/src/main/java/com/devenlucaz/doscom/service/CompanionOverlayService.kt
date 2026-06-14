@@ -357,20 +357,24 @@ class CompanionOverlayService : Service() {
                         }
                     },
                     onReactedPositive = {
-                        idleEngine.targetState.blushVisible = true
-                        idleEngine.targetState.bodyOffsetY = -25f
+                        val wasBusy = com.devenlucaz.doscom.animation.RoutineEngine.interruptCurrentActivity(this@CompanionOverlayService, wanderEngine, idleEngine)
+                        idleEngine.targetState.animationName = "Cheering"
+                        idleEngine.targetState.animationPlayOnce = true
+                        
                         handler.postDelayed({
-                            idleEngine.targetState.blushVisible = false
-                            idleEngine.targetState.bodyOffsetY = 0f
-                        }, 1500)
+                            idleEngine.targetState.animationName = "Idle_A"
+                            idleEngine.targetState.animationPlayOnce = false
+                        }, 4000)
                     },
                     onReactedNegative = {
-                        idleEngine.targetState.antennaGlow = 0.2f
-                        idleEngine.targetState.mouthExpression = 2
+                        val wasBusy = com.devenlucaz.doscom.animation.RoutineEngine.interruptCurrentActivity(this@CompanionOverlayService, wanderEngine, idleEngine)
+                        idleEngine.targetState.animationName = "Hit_A"
+                        idleEngine.targetState.animationPlayOnce = true
+                        
                         handler.postDelayed({
-                            idleEngine.targetState.antennaGlow = 1.0f
-                            idleEngine.targetState.mouthExpression = 0
-                        }, 1500)
+                            idleEngine.targetState.animationName = "Idle_A"
+                            idleEngine.targetState.animationPlayOnce = false
+                        }, 2000)
                     }
                 )
                 reactionBox.show()
@@ -413,6 +417,29 @@ class CompanionOverlayService : Service() {
                             handler.postDelayed({ idleEngine.targetState.bodyOffsetY = 0f }, 1000)
                         }, 1000)
                     }
+                } else {
+                    // Normal tap interaction
+                    val wasBusy = com.devenlucaz.doscom.animation.RoutineEngine.interruptCurrentActivity(this@CompanionOverlayService, wanderEngine, idleEngine)
+                    
+                    if (wasBusy) {
+                        // He was interrupted, act startled
+                        idleEngine.targetState.animationName = "Dodge_Backward"
+                        idleEngine.targetState.animationPlayOnce = true
+                    } else if (idleEngine.targetState.animationName.contains("Sit_") || idleEngine.targetState.animationName.contains("Lie_")) {
+                        // He was sleeping/sitting, wake him up
+                        idleEngine.targetState.animationName = "Dodge_Backward"
+                        idleEngine.targetState.animationPlayOnce = true
+                    } else {
+                        // He was just idling, acknowledge tap
+                        idleEngine.targetState.animationName = "Waving"
+                        idleEngine.targetState.animationPlayOnce = true
+                    }
+                    
+                    handler.postDelayed({
+                        idleEngine.targetState.animationName = "Idle_A"
+                        idleEngine.targetState.animationPlayOnce = false
+                        wanderEngine.scheduleWander()
+                    }, 3000)
                 }
                 return true
             }
@@ -515,7 +542,15 @@ class CompanionOverlayService : Service() {
                     val deltaY = (event.rawY - initialTouchY).toInt()
 
                     if (kotlin.math.abs(deltaX) > 10 || kotlin.math.abs(deltaY) > 10) {
-                        isDragging = true
+                        if (!isDragging) {
+                            isDragging = true
+                            // They just started picking him up. Interrupt whatever he's doing.
+                            com.devenlucaz.doscom.animation.RoutineEngine.interruptCurrentActivity(this@CompanionOverlayService, wanderEngine, idleEngine)
+                            
+                            // Put him into a dangling/falling state
+                            idleEngine.targetState.animationName = "Jump_Idle"
+                            idleEngine.targetState.animationPlayOnce = false
+                        }
                     }
 
                     if (isDragging) {
@@ -528,41 +563,6 @@ class CompanionOverlayService : Service() {
                         layoutParams.y = max(-paddingPx, min(initialY + deltaY, screenHeight - view.height - statusBarHeight + paddingPx))
 
                         updateRobotLayout()
-                        
-                        val dx = event.rawX - lastDragX
-                        val dy = event.rawY - lastDragY
-                        val dist = kotlin.math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
-                        
-                        lastDragX = event.rawX
-                        lastDragY = event.rawY
-                        
-                        dragDistanceAccumulator += dist
-                        if (dragDistanceAccumulator > 20f) {
-                            dragDistanceAccumulator = 0f
-                            dragFrameIndex = (dragFrameIndex + 1) % 4
-                            
-                            val pose = com.devenlucaz.doscom.animation.PoseEngine.detectPose(
-                                layoutParams.x, layoutParams.y,
-                                screenWidth, screenHeight,
-                                view.width, view.height
-                            )
-                            
-                            val stateList = when (pose) {
-                                com.devenlucaz.doscom.animation.RobotPose.HANG_LEFT, com.devenlucaz.doscom.animation.RobotPose.HANG_RIGHT -> {
-                                    val dir = if (dy < 0) -1 else 1 
-                                    com.devenlucaz.doscom.animation.MovementEngine.generateClimbFrames(dir)
-                                }
-                                com.devenlucaz.doscom.animation.RobotPose.GRIP_TOP, com.devenlucaz.doscom.animation.RobotPose.SIT_BOTTOM -> {
-                                    val dir = if (dx > 0) 1 else -1 
-                                    com.devenlucaz.doscom.animation.MovementEngine.generateCrawlFrames(dir)
-                                }
-                                else -> null
-                            }
-                            
-                            if (stateList != null) {
-                                overlayView.state = stateList[dragFrameIndex]
-                            }
-                        }
                     }
                     true
                 }
@@ -770,37 +770,17 @@ class CompanionOverlayService : Service() {
     }
 
     private fun handleDragRelease() {
-        val screenWidth = ScreenMetrics.getScreenWidth(this)
-        val screenHeight = ScreenMetrics.getScreenHeight(this)
-        val viewW = overlayView.width
-        val viewH = overlayView.height
+        // Stop dangling and play a landing animation
+        idleEngine.targetState.animationName = "Jump_Land"
+        idleEngine.targetState.animationPlayOnce = true
         
-        val pose = com.devenlucaz.doscom.animation.PoseEngine.detectPose(
-            layoutParams.x, layoutParams.y,
-            screenWidth, screenHeight,
-            viewW, viewH
-        )
-        val targetState = com.devenlucaz.doscom.animation.PoseEngine.getTargetState(pose)
+        handler.postDelayed({
+            idleEngine.targetState.animationName = "Idle_A"
+            idleEngine.targetState.animationPlayOnce = false
+            wanderEngine.scheduleWander()
+        }, 1500)
         
-        if (pose == com.devenlucaz.doscom.animation.RobotPose.FLOATING) {
-            lerpAnimationState(overlayView.state, targetState, 400L) {
-                val idleState = com.devenlucaz.doscom.character.AnimationState()
-                lerpAnimationState(overlayView.state, idleState, 200L)
-                serviceScope.launch(Dispatchers.Main) {
-                    delay(kotlin.random.Random.nextLong(3000L, 15000L))
-                    snapToNearestEdge()
-                }
-            }
-        } else if (pose == com.devenlucaz.doscom.animation.RobotPose.GRIP_TOP) {
-            lerpAnimationState(overlayView.state, targetState, 200L) {
-                com.devenlucaz.doscom.animation.ClimbEngine.startClimb(idleEngine, handler)
-            }
-        } else {
-            if (pose == com.devenlucaz.doscom.animation.RobotPose.HANG_LEFT || pose == com.devenlucaz.doscom.animation.RobotPose.HANG_RIGHT) {
-                snapToNearestEdge()
-            }
-            lerpAnimationState(overlayView.state, targetState, 400L)
-        }
+        snapToNearestEdge()
     }
 
     private fun lerpAnimationState(

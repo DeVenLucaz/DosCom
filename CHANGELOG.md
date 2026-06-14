@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.0.2] - 2026-06-14
+### Added
+- **Physical Drag Interactions**: Replaced the old 2D sprite drag logic with fully animated 3D responses. When picked up and dragged, DosCom will dangle in the air (`Jump_Idle`). When released, he will land naturally (`Jump_Land`) before returning to his idle routine.
+- **Single Tap "Poke" Mechanic**: Tapping DosCom now triggers contextual 3D responses:
+  - If he is sleeping or sitting, he will get startled and wake up (`Dodge_Backward`).
+  - If he is idling, he will politely acknowledge the tap (`Waving`).
+  - If he is busy with an activity, he will get interrupted and stop what he's doing.
+- **Emoji Reactions (ReactionBox)**: Interacting with the glassmorphism emoji menu now triggers physical 3D animations alongside the emotional memory updates:
+  - Positive emojis trigger a happy celebration (`Cheering`).
+  - Negative emojis trigger a sad/fearful reaction (`Hit_A`).
+
+### Fixed
+- **Routine Interruption Wiring**: The `RoutineEngine.onUserInterrupted` punisher logic (built in v3.0.0) is now properly wired into the touch listeners. Tapping or dragging DosCom while he is performing a scheduled activity will immediately abort the activity, return him to idle, and send a negative reward penalty to his neural network so he learns not to do it again.
+
 ## [3.0.1] - 2026-06-14
 ### Fixed
 - **Animation Looping**: Added JS logic in `companion.html` to distinguish between looping and one-shot animations. `model-viewer` no longer indefinitely loops one-shot animations (like standing up, lying down, waving). It plays them once and freezes on the final frame.
