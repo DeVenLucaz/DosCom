@@ -105,6 +105,7 @@ class CompanionOverlayService : Service() {
 
     private val animationQueue = AnimationQueue()
     private lateinit var idleEngine: IdleAnimationEngine
+    private lateinit var wanderEngine: com.devenlucaz.doscom.animation.WanderEngine
 
     private lateinit var phoneEventReceiver: com.devenlucaz.doscom.events.PhoneEventReceiver
     private lateinit var appContextWatcher: com.devenlucaz.doscom.events.AppContextWatcher
@@ -269,6 +270,24 @@ class CompanionOverlayService : Service() {
 
         val screenWidth = ScreenMetrics.getScreenWidth(this)
         val screenHeight = ScreenMetrics.getScreenHeight(this)
+
+        wanderEngine = com.devenlucaz.doscom.animation.WanderEngine(
+            getX = { layoutParams.x },
+            getY = { layoutParams.y },
+            setPos = { newX, newY ->
+                layoutParams.x = newX
+                layoutParams.y = newY
+                updateRobotLayout()
+            },
+            getBounds = { Pair(screenWidth, screenHeight) },
+            setAnimation = { animName ->
+                idleEngine.targetState.animationName = animName
+            },
+            setFlip = { flip ->
+                idleEngine.targetState.scaleX = if (flip) -1f else 1f
+            }
+        )
+
         val visualOffsetPx = (58 * resources.displayMetrics.density).toInt()
         layoutParams = WindowManager.LayoutParams(
             paddedSizePx,
@@ -931,11 +950,13 @@ class CompanionOverlayService : Service() {
         prefsListener.onSharedPreferenceChanged(prefs, "ghost_mode")
 
         idleEngine.start()
+        wanderEngine.start()
     }
 
     private fun stopIdleBehaviors() {
         if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(prefsListener)
         idleEngine.stop()
+        wanderEngine.stop()
     }
 
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.0] - 2026-06-14
+### Added
+- **Autonomous Locomotion (WanderEngine)**: The character is no longer glued to one spot! It now features true Shimeji-style physical movement.
+- Built a custom `WanderEngine` that hooks directly into the 60FPS `Choreographer` to autonomously translate the transparent overlay's `X` and `Y` coordinates across the screen.
+- The character now randomly picks destinations along the floor and visually walks or runs (`Walking_A` / `Running_A` animations) to get there, seamlessly returning to `Idle_A` when it arrives.
+
 ## [2.6.0] - 2026-06-14
 ### Added
 - **Hybrid Confidence System**: The `IdleAnimationEngine` now measures the confidence of the LIF Spiking Neural Network (`DosCombrain`). It blends pure randomness when the brain is unconfident with pure learned behavior as the brain grows confident.
