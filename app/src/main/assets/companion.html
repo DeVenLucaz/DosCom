@@ -26,7 +26,7 @@
 <body>
     <model-viewer 
         id="alien" 
-        src="Alien.glb" 
+        src="Rig_Medium_General.glb" 
         camera-controls="false"
         disable-zoom 
         disable-pan 
@@ -35,6 +35,7 @@
         shadow-intensity="1"
         environment-image="neutral"
         autoplay
+        animation-name="Idle_A"
         camera-orbit="180deg 90deg auto">
     </model-viewer>
 
@@ -59,7 +60,7 @@
                 if (name.includes('eye')) {
                     mat.pbrMetallicRoughness.setBaseColorFactor(hexToRgb(eyeHex));
                     mat.setEmissiveFactor(hexToRgb(eyeHex));
-                } else if (name.includes('body') || name.includes('skin')) {
+                } else if (name.includes('body') || name.includes('skin') || name.includes('character_material')) {
                     mat.pbrMetallicRoughness.setBaseColorFactor(hexToRgb(bodyHex));
                 }
             }
@@ -73,6 +74,12 @@
         window.updateTransforms = function(scaleX, scaleY, rotationDeg) {
             // Apply 2D stretch/squash and wobble (Z-axis rotation) using buttery-smooth CSS compositor
             viewer.style.transform = `scale(${scaleX}, ${scaleY}) rotateZ(${rotationDeg}deg)`;
+        };
+
+        window.updateAnimation = function(animName) {
+            if (viewer.animationName !== animName) {
+                viewer.animationName = animName;
+            }
         };
     </script>
 </body>

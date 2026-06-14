@@ -6,6 +6,7 @@
 - Added dynamic coloring to match the 3D model's `Body` and `Eye` materials to the original 2D character hex colors (`#0A0E1A` and `#00FFFF`).
 
 ### Changed
+- Replaced the static `Alien.glb` with a fully animated `Rig_Medium_General.glb` from the KayKit pack, and set up the default `Idle_A` animation.
 - **Architectural Overhaul**: Replaced the native `SceneView` (Filament) implementation with a completely hardware-agnostic `WebView` + `<model-viewer>` pipeline to fix fatal `libgltfio-jni.so` crashes on older/budget Android devices.
 - Bumped `compileSdk` and `targetSdk` to `34`.
 - Refactored `CompanionRenderer.kt` into a custom `FrameLayout` that hosts the transparent `WebView` and proxies all 2D `MimeEngine` math (`scaleX`, `scaleY`, `rotateZ`) to the 3D WebGL context via CSS Compositor at 60 FPS, perfectly mimicking skeletal animations on the unrigged static `.glb` file.

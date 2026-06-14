@@ -34,7 +34,8 @@ object PoseEngine {
                 leftLegAngle = 0f,
                 rightLegAngle = 0f,
                 bodyRotation = 5f,
-                scaleX = 1f
+                scaleX = 1f,
+                animationName = "Interact"
             )
             RobotPose.HANG_RIGHT -> AnimationState(
                 rightArmAngle = 90f,
@@ -42,26 +43,30 @@ object PoseEngine {
                 leftLegAngle = 0f,
                 rightLegAngle = 0f,
                 bodyRotation = -5f,
-                scaleX = -1f
+                scaleX = -1f,
+                animationName = "Interact"
             )
             RobotPose.GRIP_TOP -> AnimationState(
                 leftArmAngle = -160f,
                 rightArmAngle = 160f,
                 leftLegAngle = 20f,
                 rightLegAngle = -20f,
-                bodyOffsetY = -10f
+                bodyOffsetY = -10f,
+                animationName = "Interact"
             )
             RobotPose.SIT_BOTTOM -> AnimationState(
                 leftLegAngle = -90f,
                 rightLegAngle = -90f,
                 leftArmAngle = -140f,
                 rightArmAngle = 0f,
-                bodyOffsetY = 15f
+                bodyOffsetY = 15f,
+                animationName = "Idle_B"
             )
             RobotPose.FLOATING -> AnimationState(
                 bodyRotation = 360f,
                 eyesWide = true,
-                mouthExpression = 2
+                mouthExpression = 2,
+                animationName = "Spawn_Air"
             )
         }
     }

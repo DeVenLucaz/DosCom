@@ -126,7 +126,8 @@ class CompanionRenderer @JvmOverloads constructor(
         val scaleX = targetScale * flipX
         val scaleY = targetScale
         val rotation = state.bodyRotation
+        val animationName = state.animationName
         
-        webView.evaluateJavascript("window.updateTransforms($scaleX, $scaleY, $rotation);", null)
+        webView.evaluateJavascript("window.updateTransforms($scaleX, $scaleY, $rotation); window.updateAnimation('$animationName');", null)
     }
 }

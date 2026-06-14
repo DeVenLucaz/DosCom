@@ -29,5 +29,8 @@ data class AnimationState(
     var scale: Float = 1f,
     
     // Props
-    var activeProp: PropType = PropType.NONE
+    var activeProp: PropType = PropType.NONE,
+    
+    // 3D Model
+    var animationName: String = "Idle_A"
 )
