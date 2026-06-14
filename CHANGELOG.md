@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.1] - 2026-06-14
+### Added
+- Fully integrated all 139 animations from the KayKit character animation pack by dynamically loading 8 different `.glb` files via a JSON mapping file (`animation_map.json`).
+- Mapped specific interactive movements to corresponding KayKit animations (e.g. `PickUp` for climbing, `Throw` for crawling, `Interact` for dragging).
+
+### Fixed
+- Fixed an issue where the background `IdleAnimationEngine` lerp math was constantly overwriting the `AnimationState`'s `animationName` back to `"Idle_A"`, preventing other animations from playing.
+
 ## [2.5.0] - 2026-06-13
 ### Added
 - Transitioned the mascot from 2D canvas drawing to a 3D model (`Alien.glb`) using `io.github.sceneview:sceneview:1.2.1`.
