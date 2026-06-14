@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.6.0] - 2026-06-14
+### Added
+- **Hybrid Confidence System**: The `IdleAnimationEngine` now measures the confidence of the LIF Spiking Neural Network (`DosCombrain`). It blends pure randomness when the brain is unconfident with pure learned behavior as the brain grows confident.
+- **Personality Hook**: Fed `PersonalityGrowth` traits (Explorer, Playful, Curious) directly into the `DosCombrain` neural network inputs, causing the mascot's behavioral outputs to drastically shift based on its evolved personality.
+- Unlocked native save/load support for `DosCombrain` weights (`brain.json`), ensuring that the character's neural pathways permanently adapt and wire uniquely for every single user based on their specific interaction habits.
+
 ## [2.5.1] - 2026-06-14
 ### Added
 - Fully integrated all 139 animations from the KayKit character animation pack by dynamically loading 8 different `.glb` files via a JSON mapping file (`animation_map.json`).

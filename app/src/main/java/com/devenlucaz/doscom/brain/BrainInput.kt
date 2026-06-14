@@ -36,14 +36,14 @@ object BrainInput {
         // 4: recent interaction sentiment
         inputs[4] = com.devenlucaz.doscom.personality.EmotionalMemory.getSentiment(context)
 
-        // 5: screen position (mock for now, assume 0.5)
-        inputs[5] = 0.5f
+        // 5: Personality trait: Explorer
+        inputs[5] = if (com.devenlucaz.doscom.brain.PersonalityGrowth.getDominantType() == com.devenlucaz.doscom.brain.PersonalityType.EXPLORER) 1.0f else 0.0f
 
-        // 6: app category (mock for now, assume 0.5)
-        inputs[6] = 0.5f
+        // 6: Personality trait: Playful
+        inputs[6] = if (com.devenlucaz.doscom.brain.PersonalityGrowth.getDominantType() == com.devenlucaz.doscom.brain.PersonalityType.PLAYFUL) 1.0f else 0.0f
 
-        // 7: idle duration (mock for now, assume 0.5)
-        inputs[7] = 0.5f
+        // 7: Personality trait: Talkative/Curious (blended)
+        inputs[7] = if (com.devenlucaz.doscom.brain.PersonalityGrowth.getDominantType() == com.devenlucaz.doscom.brain.PersonalityType.CURIOUS) 1.0f else 0.5f
 
         return inputs
     }

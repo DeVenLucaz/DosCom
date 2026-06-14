@@ -48,6 +48,7 @@ class DosCombrain {
     
     val decisionLayer = Array(48) { FloatArray(19) { gaussian() * 0.1f } }
     var lastSpikes = FloatArray(48)
+    var lastConfidence = 0f
 
     fun think(inputs: FloatArray, duration: Int = 150): IntArray {
         val spikeCounts = FloatArray(48)
@@ -60,6 +61,7 @@ class DosCombrain {
         }
         lastSpikes = spikes
 
+        var maxOutputScore = 0f
         val outputScores = FloatArray(19)
         for (i in 0 until 19) {
             var score = 0f
@@ -67,7 +69,9 @@ class DosCombrain {
                 score += spikeCounts[h] * decisionLayer[h][i]
             }
             outputScores[i] = score
+            if (score > maxOutputScore) maxOutputScore = score
         }
+        lastConfidence = maxOutputScore
 
         val decisions = IntArray(7)
         
