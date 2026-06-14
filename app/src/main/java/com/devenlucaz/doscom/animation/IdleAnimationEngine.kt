@@ -103,6 +103,7 @@ class IdleAnimationEngine(
         current.antennaGlow = target.antennaGlow
         current.scale = target.scale
         current.activeProp = target.activeProp
+        current.animationName = target.animationName
     }
 
     private val subAnimRunnable = Runnable {

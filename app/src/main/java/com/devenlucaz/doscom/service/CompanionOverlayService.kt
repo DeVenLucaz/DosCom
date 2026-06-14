@@ -802,9 +802,10 @@ class CompanionOverlayService : Service() {
                 mouthOpen = endState.mouthOpen,
                 blushVisible = endState.blushVisible,
                 tongueOut = endState.tongueOut,
-                antennaGlow = endState.antennaGlow,
-                scale = endState.scale,
-                activeProp = endState.activeProp
+                antennaGlow = lerp(startState.antennaGlow, endState.antennaGlow, fraction),
+                scale = lerp(startState.scale, endState.scale, fraction),
+                activeProp = endState.activeProp,
+                animationName = endState.animationName
             )
         }
         animator.addListener(object: android.animation.AnimatorListenerAdapter() {
