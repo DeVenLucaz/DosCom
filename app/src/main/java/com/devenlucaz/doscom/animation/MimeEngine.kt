@@ -9,9 +9,7 @@ import kotlin.math.abs
 import kotlin.math.hypot
 
 enum class MimeType {
-    WALK, SLIDE, STAIRCASE, SKATEBOARD, TIGHTROPE,
-    SHOPPING_CART, BALLOON, ROCKET, ELEVATOR,
-    CLIMB_UP, CLIMB_DOWN, FALL, MOONWALK, CRAWL
+    SLIDE
 }
 
 object MimeEngine {
@@ -24,29 +22,9 @@ object MimeEngine {
         currentMood: UserMood,
         currentHour: Int
     ): MimeType {
-        if (Math.random() < 0.01) return MimeType.MOONWALK
-        
-        val dx = toX - fromX
-        val dy = toY - fromY
-        val distance = hypot(dx, dy)
-
-        return when {
-            distance < 100f -> MimeType.WALK
-            distance in 100f..300f -> {
-                if (currentMood == UserMood.FOCUSED) MimeType.TIGHTROPE else MimeType.SKATEBOARD
-            }
-            else -> {
-                when {
-                    currentMood == UserMood.HYPED && dy > 0 -> MimeType.FALL
-                    currentMood == UserMood.HYPED && dy < 0 -> MimeType.ROCKET
-                    currentMood == UserMood.SILLY -> if (dy < 0) MimeType.BALLOON else MimeType.SHOPPING_CART
-                    currentHour >= 23 || currentHour < 6 || currentMood == UserMood.TIRED -> MimeType.CRAWL
-                    dy > 50f -> MimeType.SLIDE
-                    dy < -50f -> MimeType.STAIRCASE
-                    else -> MimeType.WALK
-                }
-            }
-        }
+        // Since we migrated to the 3D model, we no longer need the 2D sprite 
+        // skateboard/rocket logic. We simply return SLIDE for all interpolation.
+        return MimeType.SLIDE
     }
 
     // Since we need to update window layout parameters, we accept an onUpdate callback
