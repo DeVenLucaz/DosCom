@@ -90,6 +90,7 @@ class CompanionRenderer @JvmOverloads constructor(
                     val mime = when {
                         filename.endsWith(".html") -> "text/html"
                         filename.endsWith(".js") -> "application/javascript"
+                        filename.endsWith(".json") -> "application/json"
                         filename.endsWith(".glb") -> "model/gltf-binary"
                         else -> "application/octet-stream"
                     }

@@ -76,7 +76,19 @@
             viewer.style.transform = `scale(${scaleX}, ${scaleY}) rotateZ(${rotationDeg}deg)`;
         };
 
+        let animMap = {};
+        fetch('animation_map.json')
+            .then(r => r.json())
+            .then(data => { animMap = data; });
+
         window.updateAnimation = function(animName) {
+            if (animMap[animName]) {
+                const targetSrc = animMap[animName];
+                // Check if current src is different (e.g. "http://.../Rig_Medium_General.glb" vs "Rig_Medium_General.glb")
+                if (!viewer.src || !viewer.src.endsWith(targetSrc)) {
+                    viewer.src = targetSrc;
+                }
+            }
             if (viewer.animationName !== animName) {
                 viewer.animationName = animName;
             }
