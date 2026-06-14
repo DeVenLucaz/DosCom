@@ -160,10 +160,18 @@ class TimeReactionEngine(
     }
 
     private fun triggerPhotobomb() {
+        val mode = com.devenlucaz.doscom.mode.ModeManager.getMode(context)
+        if (mode == com.devenlucaz.doscom.mode.CompanionMode.ALIVE) return
+
         engine.targetState.leftArmAngle = -160f
         engine.targetState.rightArmAngle = -160f
         engine.targetState.mouthExpression = 1
         engine.targetState.eyesWide = true
+        
+        if (mode == com.devenlucaz.doscom.mode.CompanionMode.AWARE && context is com.devenlucaz.doscom.service.CompanionOverlayService) {
+            context.showSpeechBubble("Caught in 4K! 📸", 0, 0) {}
+        }
+        
         handler.postDelayed({
             engine.targetState.leftArmAngle = 0f
             engine.targetState.rightArmAngle = 0f
@@ -184,12 +192,23 @@ class TimeReactionEngine(
             windowManager.addView(keyboardView, params)
             keyboardView?.viewTreeObserver?.addOnGlobalLayoutListener {
                 val heightDiff = keyboardView!!.rootView.height - keyboardView!!.height
+                val mode = com.devenlucaz.doscom.mode.ModeManager.getMode(context)
+                
                 if (heightDiff > 150 * context.resources.displayMetrics.density) {
-                    engine.targetState.bodyOffsetY = -30f
-                    engine.targetState.eyesWide = true
+                    if (mode != com.devenlucaz.doscom.mode.CompanionMode.ALIVE) {
+                        engine.targetState.bodyOffsetY = -30f
+                        engine.targetState.animationName = "Sit_Floor_Idle"
+                        engine.targetState.animationPlayOnce = false
+                        
+                        // We could trigger a screenshot and LLM check here for AWARE mode in the future.
+                    }
                 } else {
-                    engine.targetState.bodyOffsetY = 0f
-                    engine.targetState.eyesWide = false
+                    if (mode != com.devenlucaz.doscom.mode.CompanionMode.ALIVE) {
+                        engine.targetState.bodyOffsetY = 0f
+                        if (engine.targetState.animationName == "Sit_Floor_Idle") {
+                            engine.targetState.animationName = "Idle_A"
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {}

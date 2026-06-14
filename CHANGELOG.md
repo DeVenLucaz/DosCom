@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.0.3] - 2026-06-14
+### Added
+- **Contextual Mode Architecture**: Separated application reactions into three distinct awareness levels (`ALIVE`, `AWAKE`, `AWARE`) managed by `ModeManager`.
+  - **ALIVE**: DosCom ignores foreground apps and the keyboard, acting entirely autonomously via his SNN brain.
+  - **AWAKE**: DosCom actively reacts to your screen. He dances to music apps, strikes poses for the camera app, studies a treasure map for navigation apps, crunches an abacus for calculator apps, casts magic for games, and sits on top of your keyboard when you type.
+  - **AWARE**: Full AI integration. DosCom does everything from AWAKE mode but also pops conversational speech bubbles ("Say cheese!", "Are we winning?", "Ooh, what are we listening to?").
+- **Dynamic Keyboard Sitting**: When the keyboard opens (in AWAKE or AWARE mode), DosCom automatically transitions into `Sit_Floor_Idle` and offsets his Y-position to sit perfectly on the top edge of the keyboard.
+- **Photobomb Speech**: When a screenshot is taken in AWARE mode, DosCom photobombs the screen and says "Caught in 4K! 📸".
+
 ## [3.0.2] - 2026-06-14
 ### Added
 - **Physical Drag Interactions**: Replaced the old 2D sprite drag logic with fully animated 3D responses. When picked up and dragged, DosCom will dangle in the air (`Jump_Idle`). When released, he will land naturally (`Jump_Land`) before returning to his idle routine.

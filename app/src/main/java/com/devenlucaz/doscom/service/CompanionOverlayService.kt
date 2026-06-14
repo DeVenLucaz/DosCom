@@ -1287,15 +1287,69 @@ class CompanionOverlayService : Service() {
     }
 
     private fun handleAppCategoryReaction(categoryName: String) {
+        val mode = com.devenlucaz.doscom.mode.ModeManager.getMode(this)
+        
+        // In ALIVE mode, he ignores apps entirely.
+        if (mode == com.devenlucaz.doscom.mode.CompanionMode.ALIVE) return
+        
+        // Interrupt what he's currently doing
+        com.devenlucaz.doscom.animation.RoutineEngine.interruptCurrentActivity(this, wanderEngine, idleEngine)
+        
+        var bubbleText: String? = null
+        var animDuration = 5000L
+
         when (categoryName) {
-            "MUSIC" -> idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.BOOMBOX
-            "CAMERA" -> idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.BINOCULARS
-            "MAPS" -> idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.TREASURE_MAP
-            "CALCULATOR" -> idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.ABACUS
-            else -> idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.NONE
+            "MUSIC" -> {
+                idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.BOOMBOX
+                idleEngine.targetState.animationName = "Cheering"
+                idleEngine.targetState.animationPlayOnce = false
+                bubbleText = "Ooh, what are we listening to? 🎵"
+            }
+            "CAMERA" -> {
+                idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.NONE
+                idleEngine.targetState.animationName = "Waving"
+                idleEngine.targetState.animationPlayOnce = false
+                bubbleText = "Say cheese! 📸"
+            }
+            "MAPS" -> {
+                idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.TREASURE_MAP
+                idleEngine.targetState.animationName = "Holding_A"
+                idleEngine.targetState.animationPlayOnce = false
+                bubbleText = "Where are we going? 🗺️"
+            }
+            "CALCULATOR" -> {
+                idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.ABACUS
+                idleEngine.targetState.animationName = "Working_B"
+                idleEngine.targetState.animationPlayOnce = false
+                bubbleText = "Let me double check the math... 🧮"
+            }
+            "GAMING" -> {
+                idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.NONE
+                idleEngine.targetState.animationName = "Ranged_Magic_Spellcasting"
+                idleEngine.targetState.animationPlayOnce = false
+                bubbleText = "Are we winning? 🎮"
+            }
+            "SOCIAL" -> {
+                idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.TINY_CAKE
+                idleEngine.targetState.animationName = "Sit_Floor_Idle"
+                idleEngine.targetState.animationPlayOnce = false
+                bubbleText = "Whatcha watching? 👀"
+            }
+            else -> {
+                idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.NONE
+            }
         }
-        Handler(Looper.getMainLooper()).postDelayed({
-            idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.NONE
-        }, 5000)
+        
+        if (mode == com.devenlucaz.doscom.mode.CompanionMode.AWARE && bubbleText != null) {
+            showSpeechBubble(bubbleText, layoutParams.x, layoutParams.y) {}
+        }
+        
+        if (idleEngine.targetState.animationName != "Idle_A") {
+            handler.postDelayed({
+                idleEngine.targetState.activeProp = com.devenlucaz.doscom.character.PropType.NONE
+                idleEngine.targetState.animationName = "Idle_A"
+                wanderEngine.scheduleWander()
+            }, animDuration)
+        }
     }
 }
