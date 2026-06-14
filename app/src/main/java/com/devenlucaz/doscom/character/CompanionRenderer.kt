@@ -121,6 +121,9 @@ class CompanionRenderer @JvmOverloads constructor(
         webView.evaluateJavascript("window.applyColors('$bodyColor', '$eyeColor');", null)
     }
 
+    private var lastAnimName = ""
+    private var lastPlayOnce = false
+
     private fun update3DModelState() {
         val targetScale = state.scale * 1.5f 
         val scaleX = Math.abs(targetScale * state.scaleX)
@@ -128,7 +131,23 @@ class CompanionRenderer @JvmOverloads constructor(
         val rotationZ = state.bodyRotation
         val rotationY = state.bodyRotationY
         val animationName = state.animationName
+        val playOnce = state.animationPlayOnce
         
-        webView.evaluateJavascript("window.updateTransforms($scaleX, $scaleY, $rotationZ, $rotationY); window.updateAnimation('$animationName');", null)
+        // Only re-send animation command when it actually changes
+        val animChanged = animationName != lastAnimName || playOnce != lastPlayOnce
+        lastAnimName = animationName
+        lastPlayOnce = playOnce
+
+        val animJs = if (animChanged) {
+            if (playOnce) {
+                "window.playOnce('$animationName');"
+            } else {
+                "window.updateAnimation('$animationName');"
+            }
+        } else {
+            ""
+        }
+        
+        webView.evaluateJavascript("window.updateTransforms($scaleX, $scaleY, $rotationZ, $rotationY); $animJs", null)
     }
 }

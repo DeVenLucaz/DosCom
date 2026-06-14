@@ -38,7 +38,7 @@ class WanderEngine(
     fun scheduleWander() {
         handler.postDelayed({
             pickDestination()
-        }, Random.nextLong(5000L, 15000L))
+        }, Random.nextLong(30000L, 90000L))
     }
 
     private fun pickDestination() {

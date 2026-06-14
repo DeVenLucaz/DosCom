@@ -287,6 +287,7 @@ class CompanionOverlayService : Service() {
             },
             setAnimation = { animName ->
                 idleEngine.targetState.animationName = animName
+                idleEngine.targetState.animationPlayOnce = false  // Walking/running always loop
             },
             setRotationY = { rot ->
                 idleEngine.targetState.bodyRotationY = rot

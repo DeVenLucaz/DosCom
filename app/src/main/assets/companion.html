@@ -83,17 +83,44 @@
             .then(r => r.json())
             .then(data => { animMap = data; });
 
-        window.updateAnimation = function(animName) {
+        // Switch GLB source if needed for the given animation
+        function ensureGlbLoaded(animName) {
             if (animMap[animName]) {
                 const targetSrc = animMap[animName];
-                // Check if current src is different (e.g. "http://.../Rig_Medium_General.glb" vs "Rig_Medium_General.glb")
                 if (!viewer.src || !viewer.src.endsWith(targetSrc)) {
                     viewer.src = targetSrc;
                 }
             }
+        }
+
+        // Play animation in a loop (default behavior)
+        window.updateAnimation = function(animName) {
+            ensureGlbLoaded(animName);
+            viewer.setAttribute('autoplay', '');
             if (viewer.animationName !== animName) {
                 viewer.animationName = animName;
             }
+        };
+
+        // Play animation once then freeze on last frame
+        window.playOnce = function(animName) {
+            ensureGlbLoaded(animName);
+            if (viewer.animationName !== animName) {
+                viewer.animationName = animName;
+            }
+            // Restart from beginning
+            if (viewer.currentTime !== undefined) {
+                viewer.currentTime = 0;
+            }
+            viewer.setAttribute('autoplay', '');
+            
+            // Listen for the animation to finish, then pause
+            const onFinished = () => {
+                viewer.pause();
+                viewer.removeEventListener('finished', onFinished);
+            };
+            viewer.removeEventListener('finished', onFinished);
+            viewer.addEventListener('finished', onFinished);
         };
     </script>
 </body>

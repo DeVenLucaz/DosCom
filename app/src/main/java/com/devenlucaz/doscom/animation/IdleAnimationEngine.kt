@@ -105,6 +105,7 @@ class IdleAnimationEngine(
         current.scale = target.scale
         current.activeProp = target.activeProp
         current.animationName = target.animationName
+        current.animationPlayOnce = target.animationPlayOnce
     }
 
     private val subAnimRunnable = Runnable {

@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1] - 2026-06-14
+### Fixed
+- **Animation Looping**: Added JS logic in `companion.html` to distinguish between looping and one-shot animations. `model-viewer` no longer indefinitely loops one-shot animations (like standing up, lying down, waving). It plays them once and freezes on the final frame.
+- **Activity Timings**: Re-tuned the duration of every activity in `RoutineEngine` to be more natural. Sitting/sleeping now last for 1-5 minutes instead of 5-15 seconds.
+- **Idle Breathing Room**: Added a 30-120 second gap of pure `Idle_A` time between activities so the character has time to rest and doesn't frantically switch states back-to-back.
+- **Wander Delay**: Increased the minimum delay before scheduling a new walk to 30-90 seconds to match the calmer pacing.
+
 ## [3.0.0] - 2026-06-14
 ### Added
 - **Multi-Hemisphere Spiking Neural Network**: Replaced the single-core 8→48 brain with a biologically-inspired 4-core architecture:

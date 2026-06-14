@@ -33,5 +33,6 @@ data class AnimationState(
     var activeProp: PropType = PropType.NONE,
     
     // 3D Model
-    var animationName: String = "Idle_A"
+    var animationName: String = "Idle_A",
+    var animationPlayOnce: Boolean = false
 )
