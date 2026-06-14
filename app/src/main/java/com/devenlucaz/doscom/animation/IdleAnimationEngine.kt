@@ -21,7 +21,7 @@ class IdleAnimationEngine(
     
     private var frameCount = 0L
     private var lastInteractionTime = System.currentTimeMillis()
-    private var isSleeping = false
+    var isSleeping = false
     
     val currentState = AnimationState()
     val targetState = AnimationState()
